@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,8 +17,8 @@ export function GoogleAuth({ onAuthChange }: GoogleAuthProps) {
 
   useEffect(() => {
     // Load Google Identity Services
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
     document.head.appendChild(script);
@@ -24,7 +26,8 @@ export function GoogleAuth({ onAuthChange }: GoogleAuthProps) {
     script.onload = () => {
       if (window.google) {
         window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id',
+          client_id:
+            import.meta.env.VITE_GOOGLE_CLIENT_ID || "your-google-client-id",
           callback: handleCredentialResponse,
         });
       }
@@ -40,23 +43,23 @@ export function GoogleAuth({ onAuthChange }: GoogleAuthProps) {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch('/api/auth/status');
+      const response = await fetch("/api/auth/status");
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
         onAuthChange?.(userData);
       }
     } catch (error) {
-      console.error('Auth status check failed:', error);
+      console.error("Auth status check failed:", error);
     }
   };
 
   const handleCredentialResponse = async (response: any) => {
     setIsLoading(true);
     try {
-      const authResponse = await fetch('/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const authResponse = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ credential: response.credential }),
       });
 
@@ -69,7 +72,7 @@ export function GoogleAuth({ onAuthChange }: GoogleAuthProps) {
           description: "Successfully signed in with Google.",
         });
       } else {
-        throw new Error('Authentication failed');
+        throw new Error("Authentication failed");
       }
     } catch (error) {
       toast({
@@ -90,7 +93,7 @@ export function GoogleAuth({ onAuthChange }: GoogleAuthProps) {
 
   const handleSignOut = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch("/api/auth/logout", { method: "POST" });
       setUser(null);
       onAuthChange?.(null);
       toast({
@@ -110,8 +113,8 @@ export function GoogleAuth({ onAuthChange }: GoogleAuthProps) {
     return (
       <div className="flex items-center space-x-2">
         <div className="flex items-center space-x-2">
-          <img 
-            src={user.picture} 
+          <img
+            src={user.picture}
             alt={user.name}
             className="w-8 h-8 rounded-full"
           />
