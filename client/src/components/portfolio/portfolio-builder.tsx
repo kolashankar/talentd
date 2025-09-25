@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/ui/file-upload";
-import { AIPortfolioAssistant } from "@/components/portfolio/ai-portfolio-assistant";
 import { insertPortfolioSchema, Portfolio } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -37,7 +37,13 @@ import {
   Edit,
   Bot,
   Wand2,
-  Download
+  Download,
+  Code,
+  Palette,
+  Sparkles,
+  Image as ImageIcon,
+  Layout,
+  Monitor
 } from "lucide-react";
 import { z } from "zod";
 
@@ -58,8 +64,10 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isParsingResume, setIsParsingResume] = useState(false);
-  const [showAiHelper, setShowAiHelper] = useState(true); // State to control AI helper visibility
-  const [, setLocation] = useLocation(); // Navigation hook for routing
+  const [generatedWebsite, setGeneratedWebsite] = useState<any>(null);
+  const [isGeneratingWebsite, setIsGeneratingWebsite] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [, setLocation] = useLocation();
 
   const { toast } = useToast();
   const isEditing = Boolean(portfolio?.id);
@@ -67,7 +75,7 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
   const form = useForm({
     resolver: zodResolver(insertPortfolioSchema),
     defaultValues: {
-      userId: "user-1", // In a real app, this would come from auth
+      userId: "user-1",
       name: portfolio?.name || "",
       title: portfolio?.title || "",
       bio: portfolio?.bio || "",
@@ -135,7 +143,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
       return await response.json();
     },
     onSuccess: (parsedData) => {
-      // Auto-fill form with parsed data
       Object.keys(parsedData).forEach(key => {
         if (parsedData[key] !== undefined && parsedData[key] !== null) {
           form.setValue(key as any, parsedData[key]);
@@ -162,6 +169,99 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
       });
     },
   });
+
+  const generateWebsiteMutation = useMutation({
+    mutationFn: async (data: { prompt: string; portfolioData: any; resume?: File }) => {
+      setIsGeneratingWebsite(true);
+      const formData = new FormData();
+      formData.append('prompt', data.prompt);
+      formData.append('portfolioData', JSON.stringify(data.portfolioData));
+      
+      if (data.resume) {
+        formData.append('resume', data.resume);
+      }
+
+      const response = await fetch('/api/portfolio/generate-complete', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Failed to generate website');
+      return await response.json();
+    },
+    onSuccess: (result) => {
+      setGeneratedWebsite(result);
+      setIsGeneratingWebsite(false);
+      toast({
+        title: "Website Generated Successfully",
+        description: "Your portfolio website has been generated with modern UI and animations!",
+      });
+    },
+    onError: (error: Error) => {
+      setIsGeneratingWebsite(false);
+      toast({
+        title: "Generation Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const downloadWebsite = async () => {
+    if (!generatedWebsite) return;
+
+    try {
+      const response = await fetch('/api/portfolio/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          portfolioCode: generatedWebsite.portfolioCode
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to prepare download');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = 'portfolio-website.html';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download Started",
+        description: "Your portfolio website is being downloaded.",
+      });
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Failed to download the website.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generateCompleteWebsite = () => {
+    const portfolioData = {
+      ...form.getValues(),
+      skills,
+      projects,
+      experience,
+      education
+    };
+
+    generateWebsiteMutation.mutate({
+      prompt: aiPrompt || "Create a modern, professional portfolio website with animations and great UI/UX",
+      portfolioData,
+      resume: resumeFile || undefined
+    });
+  };
 
   const onSubmit = (data: any) => {
     const formData = {
@@ -260,23 +360,23 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
     { id: "projects", label: "Projects", icon: Briefcase },
     { id: "experience", label: "Experience", icon: Briefcase },
     { id: "education", label: "Education", icon: GraduationCap },
+    { id: "ai-website", label: "AI Website Generator", icon: Wand2 },
     { id: "settings", label: "Settings", icon: Globe },
   ];
 
   if (previewMode) {
     return (
       <div className="min-h-screen bg-background">
-        {/* Preview Header */}
         <div className="border-b border-border bg-card">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <h1 className="text-2xl font-bold">Portfolio Preview</h1>
               <div className="flex items-center space-x-4">
-                <Button variant="outline" onClick={() => setPreviewMode(false)} data-testid="button-exit-preview">
+                <Button variant="outline" onClick={() => setPreviewMode(false)}>
                   <Edit className="mr-2 h-4 w-4" />
                   Exit Preview
                 </Button>
-                <Button onClick={form.handleSubmit(onSubmit)} disabled={saveMutation.isPending} data-testid="button-save-portfolio">
+                <Button onClick={form.handleSubmit(onSubmit)} disabled={saveMutation.isPending}>
                   {saveMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -294,10 +394,8 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
           </div>
         </div>
 
-        {/* Portfolio Preview */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="overflow-hidden" data-testid="portfolio-preview">
-            {/* Header */}
+          <Card className="overflow-hidden">
             <div className="bg-gradient-to-r from-primary to-accent p-8 text-white">
               <div className="flex items-center space-x-6">
                 {profileImage ? (
@@ -318,10 +416,10 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                   </div>
                 )}
                 <div>
-                  <h1 className="text-3xl font-bold mb-2" data-testid="preview-name">
+                  <h1 className="text-3xl font-bold mb-2">
                     {form.watch("name") || "Your Name"}
                   </h1>
-                  <p className="text-xl opacity-90 mb-3" data-testid="preview-title">
+                  <p className="text-xl opacity-90 mb-3">
                     {form.watch("title") || "Your Professional Title"}
                   </p>
                   <div className="flex items-center space-x-4">
@@ -337,39 +435,27 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                         <span className="text-sm">{form.watch("phone")}</span>
                       </div>
                     )}
-                    {form.watch("linkedin") && (
-                      <Linkedin className="h-4 w-4" />
-                    )}
-                    {form.watch("github") && (
-                      <Github className="h-4 w-4" />
-                    )}
-                    {form.watch("website") && (
-                      <Globe className="h-4 w-4" />
-                    )}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Content */}
             <CardContent className="p-8">
-              {/* Bio */}
               {form.watch("bio") && (
                 <div className="mb-8">
                   <h2 className="text-xl font-semibold mb-4">About</h2>
-                  <p className="text-muted-foreground leading-relaxed" data-testid="preview-bio">
+                  <p className="text-muted-foreground leading-relaxed">
                     {form.watch("bio")}
                   </p>
                 </div>
               )}
 
-              {/* Skills */}
               {skills.length > 0 && (
                 <div className="mb-8">
                   <h2 className="text-xl font-semibold mb-4">Skills</h2>
                   <div className="flex flex-wrap gap-2">
                     {skills.map((skill, index) => (
-                      <Badge key={index} variant="secondary" data-testid={`preview-skill-${index}`}>
+                      <Badge key={index} variant="secondary">
                         {skill}
                       </Badge>
                     ))}
@@ -377,13 +463,12 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                 </div>
               )}
 
-              {/* Projects */}
               {projects.length > 0 && (
                 <div className="mb-8">
                   <h2 className="text-xl font-semibold mb-4">Projects</h2>
                   <div className="grid md:grid-cols-2 gap-6">
                     {projects.map((project, index) => (
-                      <Card key={index} className="p-4" data-testid={`preview-project-${index}`}>
+                      <Card key={index} className="p-4">
                         <h3 className="font-semibold mb-2">{project.title || `Project ${index + 1}`}</h3>
                         <p className="text-sm text-muted-foreground mb-3">
                           {project.description || "Project description"}
@@ -397,74 +482,9 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                             ))}
                           </div>
                         )}
-                        <div className="flex space-x-2">
-                          {project.demoUrl && (
-                            <Button variant="outline" size="sm">
-                              <Globe className="mr-1 h-3 w-3" />
-                              Demo
-                            </Button>
-                          )}
-                          {project.githubUrl && (
-                            <Button variant="outline" size="sm">
-                              <Github className="mr-1 h-3 w-3" />
-                              Code
-                            </Button>
-                          )}
-                        </div>
                       </Card>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Experience */}
-              {experience.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-semibold mb-4">Experience</h2>
-                  <div className="space-y-4">
-                    {experience.map((exp, index) => (
-                      <div key={index} className="border-l-2 border-primary pl-4" data-testid={`preview-experience-${index}`}>
-                        <h3 className="font-semibold">{exp.title || "Job Title"}</h3>
-                        <p className="text-primary font-medium">{exp.company || "Company"}</p>
-                        <p className="text-sm text-muted-foreground mb-2">{exp.duration || "Duration"}</p>
-                        <p className="text-sm">{exp.description || "Job description"}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Education */}
-              {education.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-semibold mb-4">Education</h2>
-                  <div className="space-y-4">
-                    {education.map((edu, index) => (
-                      <div key={index} className="border-l-2 border-secondary pl-4" data-testid={`preview-education-${index}`}>
-                        <h3 className="font-semibold">{edu.degree || "Degree"}</h3>
-                        <p className="text-secondary font-medium">{edu.institution || "Institution"}</p>
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                          <span>{edu.year || "Year"}</span>
-                          {edu.grade && <span>Grade: {edu.grade}</span>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Resume */}
-              {(resumeFile || form.watch("resumeUrl")) && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-4">Resume</h2>
-                  <Card className="p-6 text-center bg-muted/30">
-                    <FileText className="h-12 w-12 text-primary mx-auto mb-4" />
-                    <p className="font-medium mb-2">Resume Available</p>
-                    <Button variant="outline" size="sm">
-                      <Download className="mr-2 h-4 w-4" />
-                      Download Resume
-                    </Button>
-                  </Card>
                 </div>
               )}
             </CardContent>
@@ -476,25 +496,24 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold" data-testid="portfolio-builder-title">
+              <h1 className="text-2xl font-bold">
                 {isEditing ? 'Edit Portfolio' : 'Create Portfolio'}
               </h1>
               <Badge variant="secondary">Portfolio Builder</Badge>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" onClick={onCancel} data-testid="button-cancel">
+              <Button variant="outline" onClick={onCancel}>
                 Cancel
               </Button>
-              <Button variant="outline" onClick={() => setPreviewMode(true)} data-testid="button-preview">
+              <Button variant="outline" onClick={() => setPreviewMode(true)}>
                 <Eye className="mr-2 h-4 w-4" />
                 Preview
               </Button>
-              <Button onClick={form.handleSubmit(onSubmit)} disabled={saveMutation.isPending} data-testid="button-save">
+              <Button onClick={form.handleSubmit(onSubmit)} disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -512,125 +531,10 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
         </div>
       </div>
 
-      {/* AI Helper Section */}
-      {showAiHelper && (
-        <div className="border-b border-border bg-muted/30">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <Card className="bg-gradient-to-r from-primary/10 to-accent/10">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Bot className="h-5 w-5" />
-                  <span>AI Portfolio Assistant</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <Label>Upload Resume for Auto-Fill</Label>
-                    <div className="mt-2">
-                      <FileUpload
-                        onFileSelect={(file) => {
-                          if (!isParsingResume) {
-                            setResumeFile(file);
-                            parseResumeMutation.mutate(file);
-                          }
-                        }}
-                        acceptedTypes={['.pdf', '.doc', '.docx']}
-                        maxSize={5 * 1024 * 1024}
-                      />
-                      {isParsingResume && (
-                        <div className="flex items-center mt-2 text-sm text-muted-foreground">
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Parsing resume with AI...
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>AI Quick Actions</Label>
-                    <div className="mt-2 space-y-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start"
-                        onClick={() => {
-                          // Generate professional summary
-                          const skills = form.watch("skills") || [];
-                          const experience = form.watch("experience") || [];
-                          if (skills.length > 0 || experience.length > 0) {
-                            const summary = `Passionate ${form.watch("title") || "professional"} with expertise in ${skills.slice(0, 3).join(", ")}. ${experience.length > 0 ? `With ${experience.length} years of experience in the industry.` : ""}`;
-                            form.setValue("bio", summary);
-                            toast({
-                              title: "Bio Generated",
-                              description: "Professional bio has been generated based on your skills and experience.",
-                            });
-                          }
-                        }}
-                      >
-                        <Wand2 className="mr-2 h-4 w-4" />
-                        Generate Professional Bio
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start"
-                        onClick={() => {
-                          // Suggest skills based on title
-                          const title = form.watch("title")?.toLowerCase() || "";
-                          let suggestedSkills: string[] = [];
-
-                          if (title.includes("developer") || title.includes("engineer")) {
-                            suggestedSkills = ["JavaScript", "React", "Node.js", "Python", "Git", "API Development"];
-                          } else if (title.includes("designer")) {
-                            suggestedSkills = ["Adobe Creative Suite", "Figma", "UI/UX Design", "Prototyping", "Typography"];
-                          } else if (title.includes("data")) {
-                            suggestedSkills = ["Python", "SQL", "Data Analysis", "Machine Learning", "Pandas", "Tableau"];
-                          } else {
-                            suggestedSkills = ["Communication", "Problem Solving", "Team Leadership", "Project Management"];
-                          }
-
-                          setSkills(prev => Array.from(new Set([...prev, ...suggestedSkills])));
-                          toast({
-                            title: "Skills Suggested",
-                            description: "Relevant skills have been added based on your title.",
-                          });
-                        }}
-                      >
-                        <Wand2 className="mr-2 h-4 w-4" />
-                        Suggest Relevant Skills
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {/* AI Portfolio Assistant Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Wand2 className="h-5 w-5" />
-              <span>AI Portfolio Generator</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AIPortfolioAssistant />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-6" data-testid="portfolio-tabs">
+            <Card className="sticky top-6">
               <CardHeader>
                 <CardTitle>Portfolio Sections</CardTitle>
               </CardHeader>
@@ -643,7 +547,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                       className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-muted transition-colors ${
                         activeTab === tab.id ? 'bg-primary text-primary-foreground' : ''
                       }`}
-                      data-testid={`tab-${tab.id}`}
                     >
                       <tab.icon className="h-4 w-4" />
                       <span className="font-medium">{tab.label}</span>
@@ -654,12 +557,10 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
             </Card>
           </div>
 
-          {/* Main Content */}
           <div className="lg:col-span-3">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Basic Information */}
               {activeTab === "basic" && (
-                <Card data-testid="basic-info-section">
+                <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <User className="h-5 w-5" />
@@ -667,14 +568,12 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Profile Image */}
                     <div>
                       <Label>Profile Image</Label>
                       <FileUpload
                         onFileSelect={handleProfileImageSelect}
                         acceptedTypes={['.jpg', '.jpeg', '.png']}
-                        maxSize={2 * 1024 * 1024} // 2MB
-                        data-testid="profile-image-upload"
+                        maxSize={2 * 1024 * 1024}
                       />
                       {profileImage && (
                         <div className="mt-3 flex items-center space-x-3">
@@ -696,22 +595,14 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <Label htmlFor="name">Full Name *</Label>
-                        <Input 
-                          {...form.register("name")} 
-                          placeholder="John Doe"
-                          data-testid="input-name"
-                        />
+                        <Input {...form.register("name")} placeholder="John Doe" />
                         {form.formState.errors.name && (
                           <p className="text-sm text-destructive mt-1">{form.formState.errors.name.message}</p>
                         )}
                       </div>
                       <div>
                         <Label htmlFor="title">Professional Title *</Label>
-                        <Input 
-                          {...form.register("title")} 
-                          placeholder="Full Stack Developer"
-                          data-testid="input-title"
-                        />
+                        <Input {...form.register("title")} placeholder="Full Stack Developer" />
                         {form.formState.errors.title && (
                           <p className="text-sm text-destructive mt-1">{form.formState.errors.title.message}</p>
                         )}
@@ -725,7 +616,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                         rows={5}
                         placeholder="Tell us about yourself, your passion, and your goals..."
                         className="resize-vertical"
-                        data-testid="textarea-bio"
                       />
                       {form.formState.errors.bio && (
                         <p className="text-sm text-destructive mt-1">{form.formState.errors.bio.message}</p>
@@ -735,50 +625,29 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <Label htmlFor="email">Email *</Label>
-                        <Input 
-                          {...form.register("email")} 
-                          type="email"
-                          placeholder="john@example.com"
-                          data-testid="input-email"
-                        />
+                        <Input {...form.register("email")} type="email" placeholder="john@example.com" />
                         {form.formState.errors.email && (
                           <p className="text-sm text-destructive mt-1">{form.formState.errors.email.message}</p>
                         )}
                       </div>
                       <div>
                         <Label htmlFor="phone">Phone</Label>
-                        <Input 
-                          {...form.register("phone")} 
-                          placeholder="+1 (555) 123-4567"
-                          data-testid="input-phone"
-                        />
+                        <Input {...form.register("phone")} placeholder="+1 (555) 123-4567" />
                       </div>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-6">
                       <div>
                         <Label htmlFor="website">Website</Label>
-                        <Input 
-                          {...form.register("website")} 
-                          placeholder="https://johndoe.com"
-                          data-testid="input-website"
-                        />
+                        <Input {...form.register("website")} placeholder="https://johndoe.com" />
                       </div>
                       <div>
                         <Label htmlFor="linkedin">LinkedIn</Label>
-                        <Input 
-                          {...form.register("linkedin")} 
-                          placeholder="https://linkedin.com/in/johndoe"
-                          data-testid="input-linkedin"
-                        />
+                        <Input {...form.register("linkedin")} placeholder="https://linkedin.com/in/johndoe" />
                       </div>
                       <div>
                         <Label htmlFor="github">GitHub</Label>
-                        <Input 
-                          {...form.register("github")} 
-                          placeholder="https://github.com/johndoe"
-                          data-testid="input-github"
-                        />
+                        <Input {...form.register("github")} placeholder="https://github.com/johndoe" />
                       </div>
                     </div>
 
@@ -790,15 +659,14 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                           onChange={(e) => setSkillInput(e.target.value)}
                           placeholder="Add a skill"
                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                          data-testid="input-skill"
                         />
-                        <Button type="button" onClick={addSkill} data-testid="button-add-skill">
+                        <Button type="button" onClick={addSkill}>
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {skills.map((skill, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1" data-testid={`skill-badge-${index}`}>
+                          <Badge key={index} variant="secondary" className="flex items-center gap-1">
                             {skill}
                             <X 
                               className="h-3 w-3 cursor-pointer" 
@@ -809,16 +677,25 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                       </div>
                     </div>
 
-                    {/* Resume Upload */}
                     <div>
-                      <Label>Resume</Label>
+                      <Label>Resume for Auto-Fill</Label>
                       <FileUpload
-                        onFileSelect={handleResumeSelect}
+                        onFileSelect={(file) => {
+                          if (!isParsingResume) {
+                            setResumeFile(file);
+                            parseResumeMutation.mutate(file);
+                          }
+                        }}
                         acceptedTypes={['.pdf', '.doc', '.docx']}
-                        maxSize={5 * 1024 * 1024} // 5MB
-                        data-testid="resume-upload"
+                        maxSize={5 * 1024 * 1024}
                       />
-                      {resumeFile && (
+                      {isParsingResume && (
+                        <div className="flex items-center mt-2 text-sm text-muted-foreground">
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Parsing resume with AI...
+                        </div>
+                      )}
+                      {resumeFile && !isParsingResume && (
                         <div className="mt-3 flex items-center space-x-3">
                           <FileText className="h-8 w-8 text-primary" />
                           <div>
@@ -834,15 +711,14 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                 </Card>
               )}
 
-              {/* Projects */}
               {activeTab === "projects" && (
-                <Card data-testid="projects-section">
+                <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center space-x-2">
                       <Briefcase className="h-5 w-5" />
                       <span>Projects</span>
                     </CardTitle>
-                    <Button type="button" onClick={addProject} data-testid="button-add-project">
+                    <Button type="button" onClick={addProject}>
                       <Plus className="mr-2 h-4 w-4" />
                       Add Project
                     </Button>
@@ -853,7 +729,7 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                         <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
                         <p className="text-muted-foreground mb-6">Add your projects to showcase your work</p>
-                        <Button onClick={addProject} data-testid="button-add-first-project">
+                        <Button onClick={addProject}>
                           <Plus className="mr-2 h-4 w-4" />
                           Add Your First Project
                         </Button>
@@ -861,7 +737,7 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                     ) : (
                       <div className="space-y-6">
                         {projects.map((project, index) => (
-                          <Card key={index} className="p-4" data-testid={`project-${index}`}>
+                          <Card key={index} className="p-4">
                             <div className="flex items-center justify-between mb-4">
                               <h3 className="font-semibold">Project {index + 1}</h3>
                               <Button 
@@ -869,7 +745,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => removeProject(index)}
-                                data-testid={`button-remove-project-${index}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -881,7 +756,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                   value={project.title}
                                   onChange={(e) => updateProject(index, 'title', e.target.value)}
                                   placeholder="My Awesome Project"
-                                  data-testid={`input-project-title-${index}`}
                                 />
                               </div>
                               <div>
@@ -890,7 +764,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                   value={project.technologies.join(', ')}
                                   onChange={(e) => updateProject(index, 'technologies', e.target.value.split(',').map(t => t.trim()).filter(t => t))}
                                   placeholder="React, Node.js, MongoDB"
-                                  data-testid={`input-project-technologies-${index}`}
                                 />
                               </div>
                             </div>
@@ -901,7 +774,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                 onChange={(e) => updateProject(index, 'description', e.target.value)}
                                 placeholder="Describe your project, what it does, and what you learned..."
                                 rows={3}
-                                data-testid={`textarea-project-description-${index}`}
                               />
                             </div>
                             <div className="grid md:grid-cols-2 gap-4 mt-4">
@@ -911,7 +783,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                   value={project.demoUrl || ''}
                                   onChange={(e) => updateProject(index, 'demoUrl', e.target.value)}
                                   placeholder="https://myproject.com"
-                                  data-testid={`input-project-demo-${index}`}
                                 />
                               </div>
                               <div>
@@ -920,7 +791,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                   value={project.githubUrl || ''}
                                   onChange={(e) => updateProject(index, 'githubUrl', e.target.value)}
                                   placeholder="https://github.com/user/repo"
-                                  data-testid={`input-project-github-${index}`}
                                 />
                               </div>
                             </div>
@@ -932,15 +802,14 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                 </Card>
               )}
 
-              {/* Experience */}
               {activeTab === "experience" && (
-                <Card data-testid="experience-section">
+                <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center space-x-2">
                       <Briefcase className="h-5 w-5" />
                       <span>Work Experience</span>
                     </CardTitle>
-                    <Button type="button" onClick={addExperience} data-testid="button-add-experience">
+                    <Button type="button" onClick={addExperience}>
                       <Plus className="mr-2 h-4 w-4" />
                       Add Experience
                     </Button>
@@ -951,7 +820,7 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                         <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-semibold mb-2">No experience yet</h3>
                         <p className="text-muted-foreground mb-6">Add your work experience and internships</p>
-                        <Button onClick={addExperience} data-testid="button-add-first-experience">
+                        <Button onClick={addExperience}>
                           <Plus className="mr-2 h-4 w-4" />
                           Add Your First Experience
                         </Button>
@@ -959,7 +828,7 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                     ) : (
                       <div className="space-y-6">
                         {experience.map((exp, index) => (
-                          <Card key={index} className="p-4" data-testid={`experience-${index}`}>
+                          <Card key={index} className="p-4">
                             <div className="flex items-center justify-between mb-4">
                               <h3 className="font-semibold">Experience {index + 1}</h3>
                               <Button 
@@ -967,7 +836,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => removeExperience(index)}
-                                data-testid={`button-remove-experience-${index}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -979,7 +847,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                   value={exp.title}
                                   onChange={(e) => updateExperience(index, 'title', e.target.value)}
                                   placeholder="Software Engineer"
-                                  data-testid={`input-experience-title-${index}`}
                                 />
                               </div>
                               <div>
@@ -988,7 +855,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                   value={exp.company}
                                   onChange={(e) => updateExperience(index, 'company', e.target.value)}
                                   placeholder="Tech Company Inc."
-                                  data-testid={`input-experience-company-${index}`}
                                 />
                               </div>
                             </div>
@@ -998,7 +864,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                 value={exp.duration}
                                 onChange={(e) => updateExperience(index, 'duration', e.target.value)}
                                 placeholder="Jan 2023 - Present"
-                                data-testid={`input-experience-duration-${index}`}
                               />
                             </div>
                             <div className="mt-4">
@@ -1008,7 +873,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                 onChange={(e) => updateExperience(index, 'description', e.target.value)}
                                 placeholder="Describe your role, responsibilities, and achievements..."
                                 rows={3}
-                                data-testid={`textarea-experience-description-${index}`}
                               />
                             </div>
                           </Card>
@@ -1019,15 +883,14 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                 </Card>
               )}
 
-              {/* Education */}
               {activeTab === "education" && (
-                <Card data-testid="education-section">
+                <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center space-x-2">
                       <GraduationCap className="h-5 w-5" />
                       <span>Education</span>
                     </CardTitle>
-                    <Button type="button" onClick={addEducation} data-testid="button-add-education">
+                    <Button type="button" onClick={addEducation}>
                       <Plus className="mr-2 h-4 w-4" />
                       Add Education
                     </Button>
@@ -1038,7 +901,7 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                         <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-semibold mb-2">No education yet</h3>
                         <p className="text-muted-foreground mb-6">Add your educational background</p>
-                        <Button onClick={addEducation} data-testid="button-add-first-education">
+                        <Button onClick={addEducation}>
                           <Plus className="mr-2 h-4 w-4" />
                           Add Your Education
                         </Button>
@@ -1046,7 +909,7 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                     ) : (
                       <div className="space-y-6">
                         {education.map((edu, index) => (
-                          <Card key={index} className="p-4" data-testid={`education-${index}`}>
+                          <Card key={index} className="p-4">
                             <div className="flex items-center justify-between mb-4">
                               <h3 className="font-semibold">Education {index + 1}</h3>
                               <Button 
@@ -1054,7 +917,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => removeEducation(index)}
-                                data-testid={`button-remove-education-${index}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -1066,7 +928,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                   value={edu.degree}
                                   onChange={(e) => updateEducation(index, 'degree', e.target.value)}
                                   placeholder="Bachelor of Computer Science"
-                                  data-testid={`input-education-degree-${index}`}
                                 />
                               </div>
                               <div>
@@ -1075,7 +936,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                   value={edu.institution}
                                   onChange={(e) => updateEducation(index, 'institution', e.target.value)}
                                   placeholder="University of Technology"
-                                  data-testid={`input-education-institution-${index}`}
                                 />
                               </div>
                             </div>
@@ -1086,7 +946,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                   value={edu.year}
                                   onChange={(e) => updateEducation(index, 'year', e.target.value)}
                                   placeholder="2020-2024"
-                                  data-testid={`input-education-year-${index}`}
                                 />
                               </div>
                               <div>
@@ -1095,7 +954,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                                   value={edu.grade || ''}
                                   onChange={(e) => updateEducation(index, 'grade', e.target.value)}
                                   placeholder="3.8/4.0"
-                                  data-testid={`input-education-grade-${index}`}
                                 />
                               </div>
                             </div>
@@ -1107,9 +965,125 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                 </Card>
               )}
 
-              {/* Settings */}
+              {activeTab === "ai-website" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Wand2 className="h-5 w-5" />
+                      <span>AI Website Generator</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-6 rounded-lg">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <Sparkles className="h-6 w-6 text-primary" />
+                        <h3 className="text-lg font-semibold">Generate Complete Portfolio Website</h3>
+                      </div>
+                      <p className="text-muted-foreground mb-4">
+                        Create a stunning, professional portfolio website with modern UI/UX, animations, and visual assets using AI.
+                      </p>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Custom Prompt (Optional)</Label>
+                          <Textarea
+                            value={aiPrompt}
+                            onChange={(e) => setAiPrompt(e.target.value)}
+                            placeholder="e.g., Create a minimalist portfolio with dark theme and smooth animations..."
+                            rows={3}
+                          />
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="flex items-center space-x-3">
+                            <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                            <span className="text-sm">Generate Images & Logos</span>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <Layout className="h-5 w-5 text-muted-foreground" />
+                            <span className="text-sm">Modern UI/UX Design</span>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <Palette className="h-5 w-5 text-muted-foreground" />
+                            <span className="text-sm">Custom Animations</span>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <Monitor className="h-5 w-5 text-muted-foreground" />
+                            <span className="text-sm">Responsive Design</span>
+                          </div>
+                        </div>
+                        
+                        <Button
+                          onClick={generateCompleteWebsite}
+                          disabled={isGeneratingWebsite}
+                          className="w-full"
+                          size="lg"
+                        >
+                          {isGeneratingWebsite ? (
+                            <>
+                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                              Generating Website...
+                            </>
+                          ) : (
+                            <>
+                              <Wand2 className="mr-2 h-5 w-5" />
+                              Generate Complete Website
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {generatedWebsite && (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold">Generated Website</h3>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" onClick={downloadWebsite}>
+                              <Download className="mr-2 h-4 w-4" />
+                              Download
+                            </Button>
+                            <Button 
+                              variant="outline"
+                              onClick={() => {
+                                const newWindow = window.open();
+                                if (newWindow && generatedWebsite.portfolioCode?.html) {
+                                  newWindow.document.write(generatedWebsite.portfolioCode.html);
+                                  newWindow.document.close();
+                                }
+                              }}
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              Preview
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-muted p-4 rounded-lg">
+                          <p className="text-sm text-muted-foreground mb-2">Generated Files:</p>
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div className="flex items-center space-x-1">
+                              <Code className="h-3 w-3" />
+                              <span>index.html</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Code className="h-3 w-3" />
+                              <span>styles.css</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Code className="h-3 w-3" />
+                              <span>script.js</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {activeTab === "settings" && (
-                <Card data-testid="settings-section">
+                <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Globe className="h-5 w-5" />
@@ -1125,7 +1099,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                       <Switch 
                         checked={form.watch("isPublic")}
                         onCheckedChange={(checked) => form.setValue("isPublic", checked)}
-                        data-testid="switch-public"
                       />
                     </div>
 
@@ -1134,7 +1107,6 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                       <Input 
                         {...form.register("customDomain")} 
                         placeholder="johndoe.dev"
-                        data-testid="input-custom-domain"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
                         Optional: Use your own domain for professional branding
@@ -1144,7 +1116,7 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                     <div>
                       <Label htmlFor="theme">Theme</Label>
                       <Select onValueChange={(value) => form.setValue("theme", value)} defaultValue={form.getValues("theme")}>
-                        <SelectTrigger data-testid="select-theme">
+                        <SelectTrigger>
                           <SelectValue placeholder="Select a theme" />
                         </SelectTrigger>
                         <SelectContent>
