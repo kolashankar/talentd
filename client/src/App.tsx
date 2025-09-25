@@ -14,7 +14,9 @@ import DSACorner from "./pages/dsa";
 import Articles from "./pages/articles";
 import NotFound from "./pages/not-found";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { lazy } from 'react';
+import ArticleDetail from "./pages/article-detail";
+import RoadmapDetail from "./pages/roadmap-detail";
+import DsaProblemDetail from "./pages/dsa-problem-detail";
 
 function Router() {
   return (
@@ -29,9 +31,9 @@ function Router() {
       <Route path="/portfolio/:id" component={PortfolioView} />
       <Route path="/resume-review" component={ResumeReviewPage} />
       <Route path="/admin" component={Admin} />
-      <Route path="/articles/:id" component={lazy(() => import('./pages/article-detail'))} />
-      <Route path="/roadmaps/:id" component={lazy(() => import('./pages/roadmap-detail'))} />
-      <Route path="/dsa/:id" component={lazy(() => import('./pages/dsa-problem-detail'))} />
+      <Route path="/articles/:id" component={ArticleDetail} />
+      <Route path="/roadmaps/:id" component={RoadmapDetail} />
+      <Route path="/dsa/:id" component={DsaProblemDetail} />
       <Route component={NotFound} />
     </Switch>
   );

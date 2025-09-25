@@ -28,7 +28,54 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState("jobs");
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [showAiGenerator, setShowAiGenerator] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminCode, setAdminCode] = useState("");
   const { toast } = useToast();
+
+  const handleAdminLogin = () => {
+    // Simple admin code check - in production, use proper authentication
+    if (adminCode === "admin123" || adminCode === "ADMIN2024") {
+      setIsAuthenticated(true);
+      toast({
+        title: "Admin Access Granted",
+        description: "Welcome to the admin dashboard.",
+      });
+    } else {
+      toast({
+        title: "Access Denied",
+        description: "Invalid admin code.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center">Admin Access</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Admin Code</label>
+              <input
+                type="password"
+                value={adminCode}
+                onChange={(e) => setAdminCode(e.target.value)}
+                className="w-full p-2 border border-border rounded-md"
+                placeholder="Enter admin code"
+                onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
+              />
+            </div>
+            <Button onClick={handleAdminLogin} className="w-full">
+              Access Admin Panel
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const { data: jobs = [], isLoading: jobsLoading } = useQuery<Job[]>({
     queryKey: ['/api/jobs'],

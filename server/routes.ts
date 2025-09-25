@@ -553,12 +553,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { content, type, templateType, prompt } = req.body;
       
+      if (!content || !content.title) {
+        return res.status(400).json({ message: "Content with title is required" });
+      }
+      
       const template = await generateContent({
         type: 'advertising-template',
-        prompt: `Create a ${templateType} template for ${type}: ${content.title}. ${prompt}`,
+        prompt: `Create a ${templateType || 'social-media'} template for ${type}: ${content.title}. ${prompt || ''}`,
         details: {
           contentData: content,
-          templateType,
+          templateType: templateType || 'social-media',
           generateImages: true,
           generateLogos: true,
           colorGrading: true
@@ -567,7 +571,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(template);
     } catch (error) {
-      res.status(500).json({ message: "Failed to generate template" });
+      console.error('Template generation error:', error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate template" });
     }
   });
 

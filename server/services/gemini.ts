@@ -171,6 +171,54 @@ export async function generateContent(request: ContentGenerationRequest): Promis
         userPrompt = dsaPrompt;
         break;
 
+      case 'advertising-template':
+        systemPrompt = `You are an expert marketing designer and copywriter. Generate comprehensive advertising templates with HTML/CSS code, marketing copy, and design specifications. Include color schemes, typography, and branding elements. Respond with JSON in this exact format: {
+          "templateName": "string",
+          "templateType": "string",
+          "htmlCode": "string (complete HTML template)",
+          "cssCode": "string (complete CSS styling)",
+          "copyText": "string (marketing copy)",
+          "colorScheme": {
+            "primary": "string",
+            "secondary": "string",
+            "accent": "string",
+            "background": "string"
+          },
+          "typography": {
+            "headingFont": "string",
+            "bodyFont": "string"
+          },
+          "assets": {
+            "logoUrl": "string",
+            "backgroundImage": "string",
+            "iconSet": ["string"]
+          },
+          "brandGuidelines": "string",
+          "downloadFiles": ["string"]
+        }`;
+        
+        let templatePrompt = `Generate a professional advertising template: ${request.prompt}.`;
+        
+        if (request.details?.templateType) {
+          templatePrompt += ` Template type: ${request.details.templateType}.`;
+        }
+        
+        if (request.details?.contentData) {
+          templatePrompt += ` Content to promote: ${JSON.stringify(request.details.contentData)}.`;
+        }
+        
+        if (request.details?.generateLogos) {
+          templatePrompt += ` Include professional logo concepts and branding elements.`;
+        }
+        
+        if (request.details?.colorGrading) {
+          templatePrompt += ` Apply professional color grading and visual hierarchy.`;
+        }
+        
+        templatePrompt += ` Make it modern, professional, and conversion-focused.`;
+        userPrompt = templatePrompt;
+        break;
+
       default:
         throw new Error('Invalid content type');
     }

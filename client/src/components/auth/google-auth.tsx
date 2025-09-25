@@ -25,7 +25,7 @@ export function GoogleAuth({ onAuthChange }: GoogleAuthProps) {
     script.onload = () => {
       if (window.google) {
         window.google.accounts.id.initialize({
-          client_id: process.env.GOOGLE_CLIENT_ID || '',
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
           callback: handleCredentialResponse,
         });
       }
