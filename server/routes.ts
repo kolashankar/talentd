@@ -5,6 +5,8 @@ import { storage } from "./storage";
 import { generateContent, analyzeResume, extractTextFromFile, parseResumeForPortfolio } from "./services/gemini";
 import { insertJobSchema, insertRoadmapSchema, insertArticleSchema, insertDsaProblemSchema, insertPortfolioSchema } from "@shared/schema";
 import { z } from "zod";
+import passport, { isAuthenticated, isAdmin } from "./auth";
+import { upload as cloudinaryUpload, uploadToCloudinary, generateUploadSignature } from "./cloudinary";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -23,6 +25,86 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication routes
+  app.get('/api/auth/status', (req, res) => {
+    if (req.isAuthenticated()) {
+      res.json({
+        authenticated: true,
+        user: {
+          id: req.user?.id,
+          username: req.user?.username,
+          email: req.user?.email,
+          role: req.user?.role,
+          profileImage: (req.user as any)?.profileImage
+        }
+      });
+    } else {
+      res.json({ authenticated: false });
+    }
+  });
+
+  // Google OAuth routes (only if OAuth is configured)
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    app.get('/api/auth/google',
+      passport.authenticate('google', { scope: ['profile', 'email'] })
+    );
+
+    app.get('/api/auth/google/callback',
+      passport.authenticate('google', { failureRedirect: '/login' }),
+      (req, res) => {
+        // Successful authentication
+        res.redirect('/');
+      }
+    );
+  } else {
+    app.get('/api/auth/google', (req, res) => {
+      res.status(500).json({ 
+        error: 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.' 
+      });
+    });
+
+    app.get('/api/auth/google/callback', (req, res) => {
+      res.redirect('/?error=oauth_not_configured');
+    });
+  }
+
+  app.post('/api/auth/logout', (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Logout failed' });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  // Cloudinary routes
+  app.get('/api/upload/signature', isAuthenticated, (req, res) => {
+    try {
+      const { folder = 'portfolio-uploads', ...params } = req.query;
+      const signatureData = generateUploadSignature({ folder, ...params });
+      res.json(signatureData);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to generate upload signature' });
+    }
+  });
+
+  app.post('/api/upload', isAuthenticated, cloudinaryUpload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file provided' });
+      }
+
+      const result = await uploadToCloudinary(req.file.buffer, {
+        folder: 'portfolio-uploads',
+        resource_type: 'auto'
+      });
+
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: 'Upload failed' });
+    }
+  });
+
   // Jobs routes
   app.get("/api/jobs", async (req, res) => {
     try {
@@ -425,10 +507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         formatScore: analysis.formatScore,
         readabilityScore: analysis.readabilityScore,
         analysis: analysis.analysis,
-        industryInsights: analysis.industryInsights,
-        skillsAnalysis: analysis.skillsAnalysis,
-        experienceAnalysis: analysis.experienceAnalysis,
-        improvementPriority: analysis.improvementPriority,
+        // Only include properties that exist in the schema
       });
 
       res.json(resumeAnalysis);
@@ -469,6 +548,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete resume analysis" });
+    }
+  });
+
+  // Enhanced AI Portfolio Generation routes
+  app.post("/api/portfolio/generate-complete", async (req, res) => {
+    try {
+      const { portfolioData, theme = 'modern', includeAnimations = true } = req.body;
+      
+      if (!portfolioData) {
+        return res.status(400).json({ message: "Portfolio data is required" });
+      }
+
+      // Generate complete portfolio website with AI
+      const prompt = `Generate a complete portfolio website for: ${JSON.stringify(portfolioData)}. Theme: ${theme}. Include animations: ${includeAnimations}`;
+      const websiteCode = await generateContent(prompt);
+
+          // Create downloadable code structure
+      const codeStructure = {
+        'index.html': websiteCode.html || websiteCode,
+        'styles.css': websiteCode.css || 'body { font-family: Arial, sans-serif; }',
+        'script.js': websiteCode.js || 'console.log("Portfolio loaded");',
+        'README.md': '# AI-Generated Portfolio\n\nThis portfolio was generated using AI technology.'
+      };
+
+      res.json({
+        success: true,
+        websiteCode,
+        codeStructure,
+        downloadUrl: `/api/portfolio/download/${Date.now()}`,
+        previewHtml: websiteCode.html || websiteCode
+      });
+    } catch (error) {
+      console.error('Portfolio generation error:', error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to generate complete portfolio website" 
+      });
+    }
+  });
+
+  app.get("/api/portfolio/download/:timestamp", async (req, res) => {
+    try {
+      // Generate sample portfolio structure for download
+      const sampleHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Generated Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>AI Generated Portfolio</h1>
+    <p>This is a sample generated portfolio. Replace with actual generated content.</p>
+    <script src="script.js"></script>
+</body>
+</html>`;
+      
+      // Set headers for HTML file download (simplified)
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', 'attachment; filename="portfolio.html"');
+      
+      res.send(sampleHtml);
+    } catch (error) {
+      console.error('Download error:', error);
+      res.status(500).json({ message: "Failed to create download" });
+    }
+  });
+
+  // AI Enhancement endpoints
+  app.post("/api/ai/suggest-improvements", async (req, res) => {
+    try {
+      const { portfolioData, targetRole } = req.body;
+      
+      const prompt = `Suggest improvements for this portfolio targeting ${targetRole}: ${JSON.stringify(portfolioData)}`;
+      const suggestions = await generateContent(prompt);
+
+      res.json({ suggestions: JSON.parse(suggestions) });
+    } catch (error) {
+      console.error('AI suggestions error:', error);
+      res.status(500).json({ message: "Failed to generate suggestions" });
     }
   });
 

@@ -54,38 +54,21 @@ export function GoogleAuth({ onAuthChange }: GoogleAuthProps) {
   const handleCredentialResponse = async (response: any) => {
     setIsLoading(true);
     try {
-      const authResponse = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credential: response.credential }),
-      });
-
-      if (authResponse.ok) {
-        const userData = await authResponse.json();
-        setUser(userData);
-        onAuthChange?.(userData);
-        toast({
-          title: "Welcome!",
-          description: "Successfully signed in with Google.",
-        });
-      } else {
-        throw new Error("Authentication failed");
-      }
+      // Instead of posting to API, redirect to Google OAuth flow
+      window.location.href = '/api/auth/google';
     } catch (error) {
       toast({
         title: "Authentication Failed",
         description: "Failed to sign in with Google. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
 
   const handleSignIn = () => {
-    if (window.google) {
-      window.google.accounts.id.prompt();
-    }
+    // Redirect to Google OAuth flow
+    window.location.href = '/api/auth/google';
   };
 
   const handleSignOut = async () => {
