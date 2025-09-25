@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/ui/file-upload";
+import { AIPortfolioAssistant } from "@/components/portfolio/ai-portfolio-assistant";
 import { insertPortfolioSchema, Portfolio } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -609,7 +610,7 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
         </div>
       )}
 
-      {/* Portfolio Generator Section */}
+      {/* AI Portfolio Assistant Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card>
           <CardHeader>
@@ -619,7 +620,7 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <PortfolioGenerator />
+            <AIPortfolioAssistant />
           </CardContent>
         </Card>
       </div>

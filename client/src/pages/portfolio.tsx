@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Portfolio } from "@shared/schema";
 import { AIPortfolioAssistant } from "@/components/portfolio/ai-portfolio-assistant";
+import { PortfolioBuilder } from "@/components/portfolio/portfolio-builder";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
