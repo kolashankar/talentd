@@ -114,7 +114,7 @@ export class MemStorage implements IStorage {
       ...insertJob, 
       id, 
       category: insertJob.category || "job",
-      skills: insertJob.skills || [],
+      skills: Array.isArray(insertJob.skills) ? insertJob.skills : [],
       isActive: insertJob.isActive ?? true,
       createdAt: new Date() 
     };
@@ -129,7 +129,7 @@ export class MemStorage implements IStorage {
     const updatedJob = { 
       ...job, 
       ...updateJob,
-      skills: updateJob.skills || job.skills || []
+      skills: Array.isArray(updateJob.skills) ? updateJob.skills : Array.isArray(job.skills) ? job.skills : []
     };
     this.jobs.set(id, updatedJob);
     return updatedJob;
@@ -155,8 +155,8 @@ export class MemStorage implements IStorage {
     const roadmap: Roadmap = { 
       ...insertRoadmap, 
       id, 
-      technologies: insertRoadmap.technologies || [],
-      steps: insertRoadmap.steps || [],
+      technologies: Array.isArray(insertRoadmap.technologies) ? insertRoadmap.technologies : [],
+      steps: Array.isArray(insertRoadmap.steps) ? insertRoadmap.steps : [],
       isPublished: insertRoadmap.isPublished ?? true,
       createdAt: new Date() 
     };
@@ -171,8 +171,8 @@ export class MemStorage implements IStorage {
     const updatedRoadmap = { 
       ...roadmap, 
       ...updateRoadmap,
-      technologies: updateRoadmap.technologies || roadmap.technologies || [],
-      steps: updateRoadmap.steps || roadmap.steps || []
+      technologies: Array.isArray(updateRoadmap.technologies) ? updateRoadmap.technologies : Array.isArray(roadmap.technologies) ? roadmap.technologies : [],
+      steps: Array.isArray(updateRoadmap.steps) ? updateRoadmap.steps : Array.isArray(roadmap.steps) ? roadmap.steps : []
     };
     this.roadmaps.set(id, updatedRoadmap);
     return updatedRoadmap;
@@ -198,7 +198,7 @@ export class MemStorage implements IStorage {
     const article: Article = { 
       ...insertArticle, 
       id, 
-      tags: insertArticle.tags || [],
+      tags: Array.isArray(insertArticle.tags) ? insertArticle.tags : [],
       isPublished: insertArticle.isPublished ?? true,
       createdAt: new Date() 
     };
@@ -239,9 +239,9 @@ export class MemStorage implements IStorage {
     const problem: DsaProblem = { 
       ...insertProblem, 
       id, 
-      hints: insertProblem.hints || [],
-      tags: insertProblem.tags || [],
-      companies: insertProblem.companies || [],
+      hints: Array.isArray(insertProblem.hints) ? insertProblem.hints : [],
+      tags: Array.isArray(insertProblem.tags) ? insertProblem.tags : [],
+      companies: Array.isArray(insertProblem.companies) ? insertProblem.companies : [],
       isPublished: insertProblem.isPublished ?? true,
       createdAt: new Date() 
     };
@@ -256,9 +256,9 @@ export class MemStorage implements IStorage {
     const updatedProblem = { 
       ...problem, 
       ...updateProblem,
-      hints: updateProblem.hints || problem.hints || [],
-      tags: updateProblem.tags || problem.tags || [],
-      companies: updateProblem.companies || problem.companies || []
+      hints: Array.isArray(updateProblem.hints) ? updateProblem.hints : Array.isArray(problem.hints) ? problem.hints : [],
+      tags: Array.isArray(updateProblem.tags) ? updateProblem.tags : Array.isArray(problem.tags) ? problem.tags : [],
+      companies: Array.isArray(updateProblem.companies) ? updateProblem.companies : Array.isArray(problem.companies) ? problem.companies : []
     };
     this.dsaProblems.set(id, updatedProblem);
     return updatedProblem;
@@ -288,10 +288,10 @@ export class MemStorage implements IStorage {
     const portfolio: Portfolio = { 
       ...insertPortfolio, 
       id, 
-      skills: insertPortfolio.skills || [],
-      projects: insertPortfolio.projects || [],
-      experience: insertPortfolio.experience || [],
-      education: insertPortfolio.education || [],
+      skills: Array.isArray(insertPortfolio.skills) ? insertPortfolio.skills : [],
+      projects: Array.isArray(insertPortfolio.projects) ? insertPortfolio.projects : [],
+      experience: Array.isArray(insertPortfolio.experience) ? insertPortfolio.experience : [],
+      education: Array.isArray(insertPortfolio.education) ? insertPortfolio.education : [],
       isPublic: insertPortfolio.isPublic ?? true,
       createdAt: new Date() 
     };
@@ -306,10 +306,10 @@ export class MemStorage implements IStorage {
     const updatedPortfolio = { 
       ...portfolio, 
       ...updatePortfolio,
-      skills: updatePortfolio.skills || portfolio.skills || [],
-      projects: updatePortfolio.projects || portfolio.projects || [],
-      experience: updatePortfolio.experience || portfolio.experience || [],
-      education: updatePortfolio.education || portfolio.education || []
+      skills: Array.isArray(updatePortfolio.skills) ? updatePortfolio.skills : Array.isArray(portfolio.skills) ? portfolio.skills : [],
+      projects: Array.isArray(updatePortfolio.projects) ? updatePortfolio.projects : Array.isArray(portfolio.projects) ? portfolio.projects : [],
+      experience: Array.isArray(updatePortfolio.experience) ? updatePortfolio.experience : Array.isArray(portfolio.experience) ? portfolio.experience : [],
+      education: Array.isArray(updatePortfolio.education) ? updatePortfolio.education : Array.isArray(portfolio.education) ? portfolio.education : []
     };
     this.portfolios.set(id, updatedPortfolio);
     return updatedPortfolio;

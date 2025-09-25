@@ -40,8 +40,6 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 
-import { PortfolioGenerator } from "@/components/portfolio/portfolio-generator";
-
 interface PortfolioBuilderProps {
   portfolio: Portfolio | null;
   onSave: () => void;
