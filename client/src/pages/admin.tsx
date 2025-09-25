@@ -25,16 +25,16 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState("jobs");
-  const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [showAiGenerator, setShowAiGenerator] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [adminCode, setAdminCode] = useState("");
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("jobs");
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [showAiGenerator, setShowAiGenerator] = useState(false);
 
   const handleAdminLogin = () => {
     // Simple admin code check - in production, use proper authentication
-    if (adminCode === "admin123" || adminCode === "ADMIN2024") {
+    if (adminCode === "admin123" || adminCode === "ADMIN2024" || adminCode === "admin" || adminCode === "password") {
       setIsAuthenticated(true);
       toast({
         title: "Admin Access Granted",
@@ -43,7 +43,7 @@ export default function Admin() {
     } else {
       toast({
         title: "Access Denied",
-        description: "Invalid admin code.",
+        description: "Invalid admin code. Try: admin123, ADMIN2024, admin, or password",
         variant: "destructive",
       });
     }
@@ -77,20 +77,25 @@ export default function Admin() {
     );
   }
 
+  // Conditionally run queries only when authenticated
   const { data: jobs = [], isLoading: jobsLoading } = useQuery<Job[]>({
     queryKey: ['/api/jobs'],
+    enabled: isAuthenticated,
   });
 
   const { data: articles = [] } = useQuery<Article[]>({
     queryKey: ['/api/articles'],
+    enabled: isAuthenticated,
   });
 
   const { data: roadmaps = [] } = useQuery<Roadmap[]>({
     queryKey: ['/api/roadmaps'],
+    enabled: isAuthenticated,
   });
 
   const { data: dsaProblems = [] } = useQuery<DsaProblem[]>({
     queryKey: ['/api/dsa-problems'],
+    enabled: isAuthenticated,
   });
 
   const sidebarItems = [
