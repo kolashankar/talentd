@@ -200,7 +200,7 @@ export default function Home() {
                     Join Community
                   </Button>
                 </div>
-                
+
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 gap-4 fade-in-up" style={{"--stagger": "4"} as any}>
                   {stats.slice(0, 2).map((stat, index) => (
@@ -238,7 +238,7 @@ export default function Home() {
                       <div className="text-xs text-gray-300">Applications Sent</div>
                     </div>
                   </div>
-                  
+
                   {/* Success Rate Chart */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm text-gray-300">
@@ -288,7 +288,7 @@ export default function Home() {
               </p>
             </div>
           </ScrollAnimations>
-          
+
           {jobsLoading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
@@ -341,7 +341,7 @@ export default function Home() {
               </p>
             </div>
           </ScrollAnimations>
-          
+
           <HorizontalScroll>
             <div className="flex space-x-6 pb-4">
               {services.map((service, index) => (
@@ -381,7 +381,7 @@ export default function Home() {
                 <p className="text-xl text-muted-foreground mb-8" data-testid="text-resume-review-description">
                   Get instant feedback on your resume with our advanced ATS system. Improve your chances of landing interviews with personalized suggestions.
                 </p>
-                
+
                 {/* Resume Upload Area */}
                 <Card className="border-2 border-dashed border-border hover:border-primary transition-colors file-upload-area mb-6">
                   <CardContent className="p-8 text-center">

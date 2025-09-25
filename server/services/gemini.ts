@@ -22,6 +22,9 @@ export interface ContentGenerationRequest {
     includeCompanyLogo?: boolean;
     generateImages?: boolean;
     generateMindmap?: boolean;
+    generateWorkflows?: boolean;
+    includeAnimations?: boolean;
+    customStyling?: boolean;
     portfolioData?: any;
     generateAnimations?: boolean;
     generateStyling?: boolean;
@@ -46,7 +49,7 @@ export async function generateContent(request: ContentGenerationRequest): Promis
       case 'job':
       case 'internship':
         const isInternship = request.type === 'internship';
-        systemPrompt = `You are an expert ${isInternship ? 'internship' : 'job'} posting creator with access to real-time web data. Generate a comprehensive, realistic ${isInternship ? 'internship' : 'job'} posting based on current market trends in India. Include genuine company information, competitive salary ranges, and authentic requirements. Include real company logo URLs when possible. Respond with JSON in this exact format: {
+        systemPrompt = `You are an expert ${isInternship ? 'internship' : 'job'} posting creator with access to real-time web data. Generate a comprehensive, realistic ${isInternship ? 'internship' : 'job'} posting based on current market trends in India. Include genuine company information, competitive salary ranges, and authentic requirements. Generate visual assets when requested. Respond with JSON in this exact format: {
           "title": "string",
           "company": "string", 
           "location": "string",
@@ -60,7 +63,11 @@ export async function generateContent(request: ContentGenerationRequest): Promis
           "skills": ["string"],
           "companyWebsite": "string",
           "applicationUrl": "string",
-          "companyLogo": "string (use https://logo.clearbit.com/[company-domain] format or real company logo URL)"
+          "companyLogo": "string (use https://logo.clearbit.com/[company-domain] format or real company logo URL)",
+          "generatedImages": ["string (relevant job/company images)"],
+          "workflowImages": ["string (workflow diagram URLs)"],
+          "mindmapImages": ["string (skills mindmap URLs)"],
+          "isAIGenerated": true
         }`;
         
         let enhancedPrompt = `Generate a realistic ${isInternship ? 'internship' : 'job'} posting for: ${request.prompt}.`;
@@ -81,6 +88,22 @@ export async function generateContent(request: ContentGenerationRequest): Promis
         
         if (request.details?.includeCompanyLogo) {
           enhancedPrompt += ` Include a realistic company logo URL using https://logo.clearbit.com/[company-domain] format for real companies.`;
+        }
+
+        if (request.details?.generateImages) {
+          enhancedPrompt += ` Generate relevant images for the job posting, company culture, and work environment.`;
+        }
+
+        if (request.details?.generateWorkflows) {
+          enhancedPrompt += ` Create workflow diagrams showing the application process and typical day-to-day work activities.`;
+        }
+
+        if (request.details?.generateMindmap) {
+          enhancedPrompt += ` Generate skill mindmaps showing required technical and soft skills with visual connections.`;
+        }
+
+        if (request.details?.includeAnimations) {
+          enhancedPrompt += ` Include suggestions for interactive animations and transitions for the job posting display.`;
         }
         
         enhancedPrompt += ` Ensure all details are authentic and competitive for the Indian job market.`;

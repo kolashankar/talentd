@@ -29,6 +29,11 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
     location: "",
     fetchFromWeb: false,
     includeCompanyLogo: false,
+    generateImages: false,
+    generateWorkflows: false,
+    generateMindmaps: false,
+    includeAnimations: false,
+    customStyling: false,
   });
   const { toast } = useToast();
 
@@ -235,43 +240,117 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
         {renderTypeSpecificFields()}
 
         {/* Enhanced Features */}
-        <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
-          <h4 className="font-medium text-sm">Enhanced AI Features</h4>
-
+        <div className="space-y-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="fetchFromWeb"
-              checked={details.fetchFromWeb}
-              onChange={(e) => setDetails({ ...details, fetchFromWeb: e.target.checked })}
-              className="rounded"
-            />
-            <Label htmlFor="fetchFromWeb" className="text-sm">
-              Fetch real data from web sources (Jobs, Articles)
-            </Label>
+            <Bot className="h-5 w-5 text-purple-600" />
+            <h4 className="font-medium text-lg text-purple-800">Enhanced AI Features</h4>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="includeCompanyLogo"
-              checked={details.includeCompanyLogo}
-              onChange={(e) => setDetails({ ...details, includeCompanyLogo: e.target.checked })}
-              className="rounded"
-            />
-            <Label htmlFor="includeCompanyLogo" className="text-sm">
-              Automatically fetch company logo
-            </Label>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="fetchFromWeb"
+                  checked={details.fetchFromWeb}
+                  onChange={(e) => setDetails({ ...details, fetchFromWeb: e.target.checked })}
+                  className="rounded"
+                />
+                <Label htmlFor="fetchFromWeb" className="text-sm font-medium">
+                  🌐 Fetch real data from web sources
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="includeCompanyLogo"
+                  checked={details.includeCompanyLogo}
+                  onChange={(e) => setDetails({ ...details, includeCompanyLogo: e.target.checked })}
+                  className="rounded"
+                />
+                <Label htmlFor="includeCompanyLogo" className="text-sm font-medium">
+                  🏢 Generate company logos
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="generateImages"
+                  checked={details.generateImages}
+                  onChange={(e) => setDetails({ ...details, generateImages: e.target.checked })}
+                  className="rounded"
+                />
+                <Label htmlFor="generateImages" className="text-sm font-medium">
+                  🖼️ Generate relevant images
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="generateWorkflows"
+                  checked={details.generateWorkflows}
+                  onChange={(e) => setDetails({ ...details, generateWorkflows: e.target.checked })}
+                  className="rounded"
+                />
+                <Label htmlFor="generateWorkflows" className="text-sm font-medium">
+                  ⚡ Create workflow diagrams
+                </Label>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="generateMindmaps"
+                  checked={details.generateMindmaps}
+                  onChange={(e) => setDetails({ ...details, generateMindmaps: e.target.checked })}
+                  className="rounded"
+                />
+                <Label htmlFor="generateMindmaps" className="text-sm font-medium">
+                  🧠 Generate mindmaps
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="includeAnimations"
+                  checked={details.includeAnimations}
+                  onChange={(e) => setDetails({ ...details, includeAnimations: e.target.checked })}
+                  className="rounded"
+                />
+                <Label htmlFor="includeAnimations" className="text-sm font-medium">
+                  ✨ Add animations & transitions
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="customStyling"
+                  checked={details.customStyling}
+                  onChange={(e) => setDetails({ ...details, customStyling: e.target.checked })}
+                  className="rounded"
+                />
+                <Label htmlFor="customStyling" className="text-sm font-medium">
+                  🎨 Apply custom styling
+                </Label>
+              </div>
+            </div>
           </div>
 
           {(contentType === 'job' || contentType === 'internship') && (
             <div>
-              <Label htmlFor="location">Location Focus</Label>
+              <Label htmlFor="location" className="font-medium">Location Focus</Label>
               <Input
                 value={details.location}
                 onChange={(e) => setDetails({ ...details, location: e.target.value })}
                 placeholder="e.g., India, Bangalore, Remote"
-                className="text-sm"
+                className="text-sm mt-2"
               />
             </div>
           )}

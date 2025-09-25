@@ -43,6 +43,9 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
   const [hintInput, setHintInput] = useState("");
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [companyLogo, setCompanyLogo] = useState<File | null>(null);
+  const [workflowImages, setWorkflowImages] = useState<string[]>([]);
+  const [mindmapImages, setMindmapImages] = useState<string[]>([]);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
 
   const { toast } = useToast();
   const isEditing = Boolean(item?.id);
@@ -81,6 +84,11 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
       setCompanies(item.companies || []);
       setSteps(item.steps || []);
       setHints(item.hints || []);
+      
+      // Handle AI-generated visual content
+      setWorkflowImages(item.workflowImages || []);
+      setMindmapImages(item.mindmapImages || []);
+      setGeneratedImages(item.generatedImages || []);
 
       // Update form values with AI-generated content
       Object.keys(item).forEach(key => {
@@ -88,6 +96,14 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
           form.setValue(key as any, item[key]);
         }
       });
+
+      // Auto-fill AI generated content with visual feedback
+      if (item.isAIGenerated) {
+        toast({
+          title: "AI Content Loaded",
+          description: "Content has been auto-filled with AI-generated data including images and visuals.",
+        });
+      }
     }
   }, [item, form]);
 

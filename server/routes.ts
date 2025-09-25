@@ -484,22 +484,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         portfolioData = await parseResumeForPortfolio(resumeText);
       }
 
-      // Generate complete portfolio website with AI
+      // Generate complete portfolio website with AI and enhanced features
       const completePortfolio = await generateContent({
         type: 'portfolio-website',
-        prompt: `Create a complete portfolio website with HTML, CSS, JavaScript, animations, and modern design. ${prompt}`,
+        prompt: `Create a stunning, professional portfolio website with modern UI/UX design, animations, and visual assets. ${prompt}`,
         details: { 
           portfolioData,
           generateImages: true,
           generateAnimations: true,
-          generateStyling: true 
+          generateStyling: true,
+          generateLogos: true,
+          includeAnimations: true,
+          customStyling: true,
+          generateWorkflows: true,
+          generateMindmap: true
         }
       });
 
-      res.json(completePortfolio);
+      // Structure the response with portfolio data and code
+      const response = {
+        portfolioData: completePortfolio,
+        portfolioCode: {
+          html: completePortfolio.htmlCode || completePortfolio.html || '',
+          css: completePortfolio.cssCode || completePortfolio.css || '',
+          js: completePortfolio.jsCode || completePortfolio.js || ''
+        }
+      };
+
+      res.json(response);
     } catch (error) {
       console.error('Portfolio generation error:', error);
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate portfolio" });
+    }
+  });
+
+  // Portfolio Download Route
+  app.post("/api/portfolio/download", async (req, res) => {
+    try {
+      const { portfolioCode } = req.body;
+      
+      if (!portfolioCode) {
+        return res.status(400).json({ message: "Portfolio code is required" });
+      }
+
+      // Create a simple ZIP-like response with the portfolio files
+      const portfolioFiles = {
+        'index.html': portfolioCode.html || '<html><body><h1>Generated Portfolio</h1></body></html>',
+        'styles.css': portfolioCode.css || 'body { font-family: Arial, sans-serif; }',
+        'script.js': portfolioCode.js || 'console.log("Portfolio loaded");',
+        'README.md': '# AI-Generated Portfolio\n\nThis portfolio was generated using AI technology.\n\n## Files\n- index.html: Main HTML file\n- styles.css: CSS styles\n- script.js: JavaScript functionality\n\n## Usage\nOpen index.html in your web browser to view the portfolio.'
+      };
+
+      // For simplicity, we'll send the HTML content as a downloadable file
+      // In a real implementation, you'd create a proper ZIP file
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', 'attachment; filename="portfolio.html"');
+      res.send(portfolioFiles['index.html']);
+    } catch (error) {
+      console.error('Portfolio download error:', error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to prepare download" });
     }
   });
 
