@@ -6,7 +6,7 @@ import { JobCard } from "@/components/job-card";
 import { useQuery } from "@tanstack/react-query";
 import { Job } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { GoogleAuth } from "@/components/auth/google-auth";
