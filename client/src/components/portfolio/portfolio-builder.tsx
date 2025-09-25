@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,8 +58,8 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isParsingResume, setIsParsingResume] = useState(false);
   const [showAiHelper, setShowAiHelper] = useState(true); // State to control AI helper visibility
-  const [location, setLocation] = useState(""); // State to manage navigation for viewing portfolio
-
+  const [, setLocation] = useLocation(); // Navigation hook for routing
+  
   const { toast } = useToast();
   const isEditing = Boolean(portfolio?.id);
 
@@ -528,12 +529,13 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                     <div className="mt-2">
                       <FileUpload
                         onFileSelect={(file) => {
-                          setResumeFile(file);
-                          parseResumeMutation.mutate(file);
+                          if (!isParsingResume) {
+                            setResumeFile(file);
+                            parseResumeMutation.mutate(file);
+                          }
                         }}
                         acceptedTypes={['.pdf', '.doc', '.docx']}
                         maxSize={5 * 1024 * 1024}
-                        disabled={isParsingResume}
                       />
                       {isParsingResume && (
                         <div className="flex items-center mt-2 text-sm text-muted-foreground">
@@ -588,7 +590,7 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
                             suggestedSkills = ["Communication", "Problem Solving", "Team Leadership", "Project Management"];
                           }
 
-                          setSkills(prev => [...new Set([...prev, ...suggestedSkills])]);
+                          setSkills(prev => Array.from(new Set([...prev, ...suggestedSkills])));
                           toast({
                             title: "Skills Suggested",
                             description: "Relevant skills have been added based on your title.",

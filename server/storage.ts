@@ -292,7 +292,7 @@ export class MemStorage implements IStorage {
       projects: insertPortfolio.projects || [],
       experience: insertPortfolio.experience || [],
       education: insertPortfolio.education || [],
-      isPublic: insertPortfolio.isPublic ?? false,
+      isPublic: insertPortfolio.isPublic ?? true,
       createdAt: new Date() 
     };
     this.portfolios.set(id, portfolio);
