@@ -24,18 +24,14 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 
-export default function Admin() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const [adminCode, setAdminCode] = useState("");
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("jobs");
-  const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [showAiGenerator, setShowAiGenerator] = useState(false);
 
   const handleAdminLogin = () => {
     // Simple admin code check - in production, use proper authentication
     if (adminCode === "admin123" || adminCode === "ADMIN2024" || adminCode === "admin" || adminCode === "password") {
-      setIsAuthenticated(true);
+      onLogin();
       toast({
         title: "Admin Access Granted",
         description: "Welcome to the admin dashboard.",
@@ -49,53 +45,53 @@ export default function Admin() {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center">Admin Access</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Admin Code</label>
-              <input
-                type="password"
-                value={adminCode}
-                onChange={(e) => setAdminCode(e.target.value)}
-                className="w-full p-2 border border-border rounded-md"
-                placeholder="Enter admin code"
-                onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
-              />
-            </div>
-            <Button onClick={handleAdminLogin} className="w-full">
-              Access Admin Panel
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center">Admin Access</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Admin Code</label>
+            <input
+              type="password"
+              value={adminCode}
+              onChange={(e) => setAdminCode(e.target.value)}
+              className="w-full p-2 border border-border rounded-md"
+              placeholder="Enter admin code"
+              onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
+            />
+          </div>
+          <Button onClick={handleAdminLogin} className="w-full">
+            Access Admin Panel
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
-  // Conditionally run queries only when authenticated
+function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState("jobs");
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [showAiGenerator, setShowAiGenerator] = useState(false);
+
+  // All queries run unconditionally in this component
   const { data: jobs = [], isLoading: jobsLoading } = useQuery<Job[]>({
     queryKey: ['/api/jobs'],
-    enabled: isAuthenticated,
   });
 
   const { data: articles = [] } = useQuery<Article[]>({
     queryKey: ['/api/articles'],
-    enabled: isAuthenticated,
   });
 
   const { data: roadmaps = [] } = useQuery<Roadmap[]>({
     queryKey: ['/api/roadmaps'],
-    enabled: isAuthenticated,
   });
 
   const { data: dsaProblems = [] } = useQuery<DsaProblem[]>({
     queryKey: ['/api/dsa-problems'],
-    enabled: isAuthenticated,
   });
 
   const sidebarItems = [
@@ -424,4 +420,14 @@ export default function Admin() {
       </div>
     </div>
   );
+}
+
+export default function Admin() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  if (!isAuthenticated) {
+    return <AdminLogin onLogin={() => setIsAuthenticated(true)} />;
+  }
+
+  return <AdminDashboard />;
 }
