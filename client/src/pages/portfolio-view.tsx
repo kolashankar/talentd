@@ -67,6 +67,7 @@ export default function PortfolioView() {
 
   const { data: portfolio, isLoading, error } = useQuery<Portfolio>({
     queryKey: [`/api/portfolios/${id}`],
+    enabled: !!id,
   });
 
   if (isLoading) {

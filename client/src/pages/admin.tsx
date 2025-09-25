@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContentForm } from "@/components/admin/content-form";
 import { AiGenerator } from "@/components/admin/ai-generator";
+import { AdminAgent } from "@/components/admin/admin-agent";
 import { useQuery } from "@tanstack/react-query";
 import { Job, Article, Roadmap, DsaProblem } from "@shared/schema";
 import { 
@@ -321,6 +322,19 @@ export default function Admin() {
                 setSelectedItem(content);
                 setShowAiGenerator(false);
               }} />
+            )}
+
+            {/* Admin Agent Panel */}
+            {selectedItem && (
+              <AdminAgent 
+                className="mt-6"
+                selectedContent={selectedItem}
+                contentType={activeTab}
+                onTemplateGenerated={(template) => {
+                  // Handle generated template
+                  console.log('Template generated:', template);
+                }}
+              />
             )}
           </div>
 

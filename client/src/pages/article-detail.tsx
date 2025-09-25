@@ -42,6 +42,8 @@ export default function ArticleDetail() {
 
   const { data: article, isLoading, error } = useQuery<Article>({
     queryKey: [`/api/articles/${id}`],
+    enabled: !!id,
+    retry: 3,
   });
 
   const formatDate = (dateString: string) => {

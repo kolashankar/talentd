@@ -472,6 +472,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced Portfolio Generation
+  app.post("/api/portfolio/generate-complete", upload.single('resume'), async (req, res) => {
+    try {
+      const prompt = req.body.prompt || '';
+      let portfolioData = {};
+      
+      if (req.file) {
+        const base64Data = req.file.buffer.toString('base64');
+        const resumeText = await extractTextFromFile(base64Data, req.file.mimetype);
+        portfolioData = await parseResumeForPortfolio(resumeText);
+      }
+
+      // Generate complete portfolio website with AI
+      const completePortfolio = await generateContent({
+        type: 'portfolio-website',
+        prompt: `Create a complete portfolio website with HTML, CSS, JavaScript, animations, and modern design. ${prompt}`,
+        details: { 
+          portfolioData,
+          generateImages: true,
+          generateAnimations: true,
+          generateStyling: true 
+        }
+      });
+
+      res.json(completePortfolio);
+    } catch (error) {
+      console.error('Portfolio generation error:', error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to generate portfolio" });
+    }
+  });
+
+  // Portfolio Download
+  app.post("/api/portfolio/download", async (req, res) => {
+    try {
+      const { portfolioCode } = req.body;
+      // Create ZIP file with 5-level folder structure
+      // Implementation would create a proper folder structure
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', 'attachment; filename="portfolio-website.zip"');
+      // Send ZIP file
+      res.send(Buffer.from('Portfolio ZIP content'));
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create download" });
+    }
+  });
+
+  // Google Auth routes
+  app.post("/api/auth/google", async (req, res) => {
+    try {
+      const { credential } = req.body;
+      // Verify Google JWT token and create user session
+      // Implementation would verify the token and create session
+      res.json({ success: true, user: { name: "User", email: "user@example.com" } });
+    } catch (error) {
+      res.status(401).json({ message: "Authentication failed" });
+    }
+  });
+
+  app.get("/api/auth/status", async (req, res) => {
+    try {
+      // Check session status
+      res.json({ authenticated: false });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to check auth status" });
+    }
+  });
+
+  app.post("/api/auth/logout", async (req, res) => {
+    try {
+      // Clear session
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to logout" });
+    }
+  });
+
+  // Admin Template Generation
+  app.post("/api/admin/generate-template", async (req, res) => {
+    try {
+      const { content, type, templateType, prompt } = req.body;
+      
+      const template = await generateContent({
+        type: 'advertising-template',
+        prompt: `Create a ${templateType} template for ${type}: ${content.title}. ${prompt}`,
+        details: {
+          contentData: content,
+          templateType,
+          generateImages: true,
+          generateLogos: true,
+          colorGrading: true
+        }
+      });
+
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate template" });
+    }
+  });
+
+  app.post("/api/admin/download-template", async (req, res) => {
+    try {
+      const { template } = req.body;
+      // Create template files ZIP
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', 'attachment; filename="template.zip"');
+      res.send(Buffer.from('Template ZIP content'));
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create template download" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

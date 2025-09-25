@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
+import { GoogleAuth } from "@/components/auth/google-auth";
 import { 
   FileText, 
   TrendingUp, 
@@ -21,7 +22,8 @@ import {
   MapPin,
   DollarSign,
   Briefcase,
-  GraduationCap
+  GraduationCap,
+  BarChart3
 } from "lucide-react";
 
 export default function Home() {
@@ -153,10 +155,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm" data-testid="button-signin">
-                <Users className="mr-2 h-4 w-4" />
-                Sign In
-              </Button>
+              <GoogleAuth />
               <Button size="sm" data-testid="button-join-community">
                 Join Community
               </Button>
@@ -165,55 +164,113 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero Section with Parallax */}
+      {/* Hero Section with Enhanced UI */}
       <ParallaxHero
         backgroundImage="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&h=1560"
-        overlay="rgba(15, 23, 42, 0.7)"
+        overlay="rgba(15, 23, 42, 0.8)"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
-          <div className="text-center">
-            <ScrollAnimations>
-              <div className="mb-6 fade-in-up">
-                <Badge variant="secondary" className="inline-flex items-center bg-accent/20 text-accent px-4 py-2 rounded-full text-sm font-medium mb-4">
-                  ✨ India's #1 Platform for Tech Freshers
-                </Badge>
-              </div>
-              <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 fade-in-up" style={{"--stagger": "1"} as any}>
-                From <span className="text-reveal">Campus</span> to <span className="text-accent">Career</span>
-              </h1>
-              <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto fade-in-up" style={{"--stagger": "2"} as any}>
-                Join 50,000+ freshers who landed tech jobs with our entry-level opportunities, proven learning paths, and supportive community.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center fade-in-up" style={{"--stagger": "3"} as any}>
-                <Button size="lg" className="text-lg font-semibold hover:scale-105 transition-all" data-testid="button-find-jobs">
-                  <Briefcase className="mr-2 h-5 w-5" />
-                  Find Jobs
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="text-lg font-semibold bg-transparent border-white text-white hover:bg-white hover:text-primary hover:scale-105 transition-all"
-                  data-testid="button-join-community-hero"
-                >
-                  <Users className="mr-2 h-5 w-5" />
-                  Join Community
-                </Button>
-              </div>
-              
-              {/* Community Stats */}
-              <div className="flex flex-wrap justify-center gap-8 mt-16 fade-in-up" style={{"--stagger": "4"} as any}>
-                {stats.map((stat, index) => (
-                  <div key={index} className="text-center">
-                    <div className="text-3xl font-bold text-accent" data-testid={`stat-value-${stat.label.toLowerCase().replace(' ', '-')}`}>
-                      {stat.value}
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Side - Content */}
+            <div>
+              <ScrollAnimations>
+                <div className="mb-6 fade-in-up">
+                  <Badge variant="secondary" className="inline-flex items-center bg-accent/20 text-accent px-4 py-2 rounded-full text-sm font-medium mb-4">
+                    ✨ India's #1 Platform for Tech Freshers
+                  </Badge>
+                </div>
+                <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 fade-in-up" style={{"--stagger": "1"} as any}>
+                  Launch Your <span className="text-accent">Tech Career</span> Today
+                </h1>
+                <p className="text-xl text-gray-300 mb-8 fade-in-up" style={{"--stagger": "2"} as any}>
+                  Join 50,000+ freshers who landed tech jobs with our AI-powered platform, personalized learning paths, and supportive community.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 mb-8 fade-in-up" style={{"--stagger": "3"} as any}>
+                  <Button size="lg" className="text-lg font-semibold hover:scale-105 transition-all" data-testid="button-find-jobs">
+                    <Briefcase className="mr-2 h-5 w-5" />
+                    Find Jobs
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="text-lg font-semibold bg-transparent border-white text-white hover:bg-white hover:text-primary hover:scale-105 transition-all"
+                    data-testid="button-join-community-hero"
+                  >
+                    <Users className="mr-2 h-5 w-5" />
+                    Join Community
+                  </Button>
+                </div>
+                
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 gap-4 fade-in-up" style={{"--stagger": "4"} as any}>
+                  {stats.slice(0, 2).map((stat, index) => (
+                    <div key={index} className="text-center p-4 bg-white/10 rounded-lg backdrop-blur-sm">
+                      <div className="text-2xl font-bold text-accent" data-testid={`stat-value-${stat.label.toLowerCase().replace(' ', '-')}`}>
+                        {stat.value}
+                      </div>
+                      <div className="text-gray-300 text-sm" data-testid={`stat-label-${stat.label.toLowerCase().replace(' ', '-')}`}>
+                        {stat.label}
+                      </div>
                     </div>
-                    <div className="text-gray-300" data-testid={`stat-label-${stat.label.toLowerCase().replace(' ', '-')}`}>
-                      {stat.label}
+                  ))}
+                </div>
+              </ScrollAnimations>
+            </div>
+
+            {/* Right Side - Analytics Dashboard */}
+            <div className="fade-in-up" style={{"--stagger": "5"} as any}>
+              <Card className="bg-white/10 backdrop-blur-md border-white/20">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center">
+                    <BarChart3 className="mr-2 h-5 w-5" />
+                    Live Analytics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Real-time metrics */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-accent">1,247</div>
+                      <div className="text-xs text-gray-300">Jobs Posted Today</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-secondary">892</div>
+                      <div className="text-xs text-gray-300">Applications Sent</div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </ScrollAnimations>
+                  
+                  {/* Success Rate Chart */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-gray-300">
+                      <span>Success Rate</span>
+                      <span>78%</span>
+                    </div>
+                    <div className="w-full bg-gray-600 rounded-full h-2">
+                      <div className="bg-accent h-2 rounded-full" style={{width: "78%"}}></div>
+                    </div>
+                  </div>
+
+                  {/* Recent Activity */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-white">Recent Activity</h4>
+                    <div className="space-y-1 text-xs text-gray-300">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span>Raj got hired at Google</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span>New React roadmap published</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                        <span>50+ new internships added</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </ParallaxHero>

@@ -9,7 +9,7 @@ import { GoogleGenAI } from "@google/genai";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export interface ContentGenerationRequest {
-  type: 'job' | 'internship' | 'article' | 'roadmap' | 'dsa-problem';
+  type: 'job' | 'internship' | 'article' | 'roadmap' | 'dsa-problem' | 'portfolio-website' | 'advertising-template';
   prompt: string;
   details?: {
     company?: string;
@@ -20,6 +20,15 @@ export interface ContentGenerationRequest {
     location?: string;
     fetchFromWeb?: boolean;
     includeCompanyLogo?: boolean;
+    generateImages?: boolean;
+    generateMindmap?: boolean;
+    portfolioData?: any;
+    generateAnimations?: boolean;
+    generateStyling?: boolean;
+    contentData?: any;
+    templateType?: string;
+    colorGrading?: boolean;
+    generateLogos?: boolean;
   };
 }
 

@@ -196,7 +196,7 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
           </div>
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         {/* Content Type Selection */}
         <div>
@@ -237,7 +237,7 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
         {/* Enhanced Features */}
         <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
           <h4 className="font-medium text-sm">Enhanced AI Features</h4>
-          
+
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"
@@ -309,7 +309,7 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
             <Badge variant="secondary">Professional Quality</Badge>
           </div>
           <p className="text-xs text-muted-foreground">
-            Our AI generates professional, detailed content based on your requirements. 
+            Our AI generates professional, detailed content with images, logos, and visual assets based on your requirements. 
             Review and edit the generated content before publishing.
           </p>
         </div>

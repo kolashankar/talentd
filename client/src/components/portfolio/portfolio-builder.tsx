@@ -40,6 +40,8 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 
+import { PortfolioGenerator } from "@/components/portfolio/portfolio-generator";
+
 interface PortfolioBuilderProps {
   portfolio: Portfolio | null;
   onSave: () => void;
@@ -59,7 +61,7 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
   const [isParsingResume, setIsParsingResume] = useState(false);
   const [showAiHelper, setShowAiHelper] = useState(true); // State to control AI helper visibility
   const [, setLocation] = useLocation(); // Navigation hook for routing
-  
+
   const { toast } = useToast();
   const isEditing = Boolean(portfolio?.id);
 
@@ -608,6 +610,21 @@ export function PortfolioBuilder({ portfolio, onSave, onCancel }: PortfolioBuild
           </div>
         </div>
       )}
+
+      {/* Portfolio Generator Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Wand2 className="h-5 w-5" />
+              <span>AI Portfolio Generator</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PortfolioGenerator />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

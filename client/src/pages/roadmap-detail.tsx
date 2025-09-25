@@ -53,6 +53,8 @@ export default function RoadmapDetail() {
 
   const { data: roadmap, isLoading, error } = useQuery<Roadmap>({
     queryKey: [`/api/roadmaps/${id}`],
+    enabled: !!id,
+    retry: 3,
   });
 
   const getDifficultyColor = (difficulty: string) => {
