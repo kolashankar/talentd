@@ -639,11 +639,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const prompt = req.body.prompt || '';
       let portfolioData = {};
+      let details = {};
+      
+      // Parse portfolio data from form if provided
+      if (req.body.portfolioData) {
+        try {
+          portfolioData = JSON.parse(req.body.portfolioData);
+        } catch (e) {
+          console.log('Failed to parse portfolioData:', e);
+        }
+      }
+      
+      // Parse details from form if provided
+      if (req.body.details) {
+        try {
+          details = JSON.parse(req.body.details);
+        } catch (e) {
+          console.log('Failed to parse details:', e);
+        }
+      }
       
       if (req.file) {
         const base64Data = req.file.buffer.toString('base64');
         const resumeText = await extractTextFromFile(base64Data, req.file.mimetype);
-        portfolioData = await parseResumeForPortfolio(resumeText);
+        const resumeData = await parseResumeForPortfolio(resumeText);
+        // Merge resume data with existing portfolio data
+        portfolioData = { ...resumeData, ...portfolioData };
+      }
+
+      // Ensure we have some portfolio data
+      if (!portfolioData.name && !portfolioData.title) {
+        return res.status(400).json({ 
+          message: "Portfolio data is required. Please fill in basic information (name, title) or upload a resume." 
+        });
       }
 
       // Generate complete portfolio website with AI and enhanced features
@@ -659,7 +687,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           includeAnimations: true,
           customStyling: true,
           generateWorkflows: true,
-          generateMindmap: true
+          generateMindmap: true,
+          fetchFromWeb: true,
+          includeCompanyLogo: true,
+          ...details
         }
       });
 
@@ -814,7 +845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin Template Generation
-  app.post("/api/admin/generate-template", async (req, res) => {
+  app.post("/api/admin/generate-template", isAuthenticated, async (req, res) => {
     try {
       const { content, type, templateType, prompt } = req.body;
       
@@ -830,7 +861,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           templateType: templateType || 'social-media',
           generateImages: true,
           generateLogos: true,
-          colorGrading: true
+          colorGrading: true,
+          fetchFromWeb: true
         }
       });
 
@@ -841,14 +873,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/download-template", async (req, res) => {
+  app.post("/api/admin/download-template", isAuthenticated, async (req, res) => {
     try {
       const { template } = req.body;
-      // Create template files ZIP
-      res.setHeader('Content-Type', 'application/zip');
-      res.setHeader('Content-Disposition', 'attachment; filename="template.zip"');
-      res.send(Buffer.from('Template ZIP content'));
+      
+      if (!template) {
+        return res.status(400).json({ message: "Template data is required" });
+      }
+      
+      // Create template files content
+      const templateFiles = {
+        'template.html': template.htmlCode || '<html><body><h1>Generated Template</h1></body></html>',
+        'styles.css': template.cssCode || 'body { font-family: Arial, sans-serif; }',
+        'script.js': template.jsCode || 'console.log("Template loaded");',
+        'README.md': `# ${template.templateName || 'Generated Template'}\n\nThis template was generated using AI.\n\n## Files\n- template.html: Main template file\n- styles.css: CSS styles\n- script.js: JavaScript functionality`,
+        'brand-guidelines.txt': template.brandGuidelines || 'Brand guidelines for the template'
+      };
+      
+      // For simplicity, send the main HTML file
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', 'attachment; filename="template.html"');
+      res.send(templateFiles['template.html']);
     } catch (error) {
+      console.error('Template download error:', error);
       res.status(500).json({ message: "Failed to create template download" });
     }
   });

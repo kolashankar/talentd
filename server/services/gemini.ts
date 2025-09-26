@@ -194,6 +194,81 @@ export async function generateContent(request: ContentGenerationRequest): Promis
         userPrompt = dsaPrompt;
         break;
 
+      case 'portfolio-website':
+        systemPrompt = `You are an expert web developer and designer specializing in creating stunning, professional portfolio websites. Generate complete, modern portfolio websites with HTML, CSS, and JavaScript. Include responsive design, animations, and professional styling. When enhanced features are requested, integrate real data, generate relevant images, create visual assets, and implement advanced functionality. Respond with JSON in this exact format: {
+          "portfolioData": {
+            "name": "string",
+            "title": "string", 
+            "bio": "string",
+            "skills": ["string"],
+            "projects": [{"title": "string", "description": "string", "technologies": ["string"], "demoUrl": "string", "githubUrl": "string"}],
+            "experience": [{"title": "string", "company": "string", "duration": "string", "description": "string"}],
+            "education": [{"degree": "string", "institution": "string", "year": "string"}]
+          },
+          "portfolioCode": {
+            "html": "string (complete responsive HTML with modern structure)",
+            "css": "string (complete CSS with animations, gradients, modern styling)",
+            "js": "string (complete JavaScript with animations, interactions)"
+          },
+          "generatedAssets": {
+            "profileImage": "string (professional headshot URL from Unsplash)",
+            "projectImages": ["string (project screenshot URLs)"],
+            "companyLogos": ["string (company logo URLs)"],
+            "skillIcons": ["string (skill icon URLs)"],
+            "backgroundImages": ["string (hero/section background URLs)"]
+          },
+          "animations": {
+            "heroAnimations": "string (CSS animations for hero section)",
+            "scrollAnimations": "string (scroll-triggered animations)",
+            "hoverEffects": "string (interactive hover effects)",
+            "transitionEffects": "string (smooth page transitions)"
+          },
+          "enhancedFeatures": {
+            "contactForm": "string (functional contact form HTML/JS)",
+            "skillsVisualization": "string (animated skills charts)",
+            "projectGallery": "string (interactive project showcase)",
+            "resumeDownload": "string (downloadable resume feature)"
+          }
+        }`;
+        
+        let portfolioPrompt = `Generate a complete, professional portfolio website: ${request.prompt}.`;
+        
+        if (request.details?.portfolioData) {
+          portfolioPrompt += ` Use this portfolio data: ${JSON.stringify(request.details.portfolioData)}.`;
+        }
+        
+        if (request.details?.fetchFromWeb) {
+          portfolioPrompt += ` Fetch real data from web sources, use current design trends, and incorporate industry best practices for portfolio websites.`;
+        }
+        
+        if (request.details?.generateImages) {
+          portfolioPrompt += ` Generate high-quality, professional images from Unsplash for profile photos, project screenshots, company logos, and background visuals. Use URLs like https://images.unsplash.com/photo-[id]?w=800&h=600&fit=crop for relevant images.`;
+        }
+        
+        if (request.details?.generateAnimations) {
+          portfolioPrompt += ` Include modern CSS animations, scroll-triggered effects, hover interactions, and smooth transitions throughout the website.`;
+        }
+        
+        if (request.details?.generateLogos) {
+          portfolioPrompt += ` Generate or include company logos using https://logo.clearbit.com/[domain] format and skill icons from reliable CDNs.`;
+        }
+        
+        if (request.details?.customStyling) {
+          portfolioPrompt += ` Apply custom styling with modern gradients, shadows, typography, and responsive design that works on all devices.`;
+        }
+        
+        if (request.details?.generateWorkflows) {
+          portfolioPrompt += ` Include workflow diagrams and visual representations of development processes and project timelines.`;
+        }
+        
+        if (request.details?.generateMindmap) {
+          portfolioPrompt += ` Create visual skill mindmaps and technology relationship diagrams.`;
+        }
+        
+        portfolioPrompt += ` Make the website fully responsive, accessible, and optimized for performance. Include modern features like dark mode toggle, smooth scrolling, and professional animations.`;
+        userPrompt = portfolioPrompt;
+        break;
+
       case 'advertising-template':
         systemPrompt = `You are an expert marketing designer and copywriter. Generate comprehensive advertising templates with HTML/CSS code, marketing copy, and design specifications. Include color schemes, typography, and branding elements. Respond with JSON in this exact format: {
           "templateName": "string",

@@ -144,9 +144,18 @@ export function PortfolioBuilder({
   });
 
   const generateWebsiteMutation = useMutation({
-    mutationFn: async (data: { prompt: string; resumeFile?: File }) => {
+    mutationFn: async (data: { prompt: string; resumeFile?: File; portfolioData?: any; details?: any }) => {
       const formData = new FormData();
       formData.append('prompt', data.prompt);
+      
+      if (data.portfolioData) {
+        formData.append('portfolioData', JSON.stringify(data.portfolioData));
+      }
+      
+      if (data.details) {
+        formData.append('details', JSON.stringify(data.details));
+      }
+      
       if (data.resumeFile) {
         formData.append('resume', data.resumeFile);
       }
@@ -295,7 +304,44 @@ export function PortfolioBuilder({
       return;
     }
 
-    generateWebsiteMutation.mutate({ prompt: aiPrompt, resumeFile: resumeFile || undefined });
+    // Collect current portfolio data from form
+    const currentPortfolioData = {
+      name: form.watch("name"),
+      title: form.watch("title"),
+      bio: form.watch("bio"),
+      email: form.watch("email"),
+      phone: form.watch("phone"),
+      website: form.watch("website"),
+      linkedin: form.watch("linkedin"),
+      github: form.watch("github"),
+      skills: skills,
+      projects: projects,
+      experience: experience,
+      education: education,
+      profileImage: profileImage ? URL.createObjectURL(profileImage) : form.watch("profileImage"),
+    };
+
+    // Enhanced details with current form data
+    const enhancedDetails = {
+      portfolioData: currentPortfolioData,
+      generateImages: true,
+      generateAnimations: true,
+      generateStyling: true,
+      generateLogos: true,
+      includeAnimations: true,
+      customStyling: true,
+      generateWorkflows: true,
+      generateMindmap: true,
+      fetchFromWeb: true,
+      includeCompanyLogo: true
+    };
+
+    generateWebsiteMutation.mutate({ 
+      prompt: aiPrompt, 
+      resumeFile: resumeFile || undefined,
+      portfolioData: currentPortfolioData,
+      details: enhancedDetails
+    });
   };
 
   const handleEditWebsite = () => {

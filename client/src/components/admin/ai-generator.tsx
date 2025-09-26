@@ -39,7 +39,22 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
 
   const generateMutation = useMutation({
     mutationFn: async (data: { type: string; prompt: string; details: any }) => {
-      const response = await apiRequest('POST', '/api/ai/generate-content', data);
+      const enhancedData = {
+        ...data,
+        details: {
+          ...data.details,
+          // Ensure all enhanced features are passed
+          fetchFromWeb: details.fetchFromWeb,
+          includeCompanyLogo: details.includeCompanyLogo,
+          generateImages: details.generateImages,
+          generateWorkflows: details.generateWorkflows,
+          generateMindmaps: details.generateMindmaps,
+          includeAnimations: details.includeAnimations,
+          customStyling: details.customStyling
+        }
+      };
+      
+      const response = await apiRequest('POST', '/api/ai/generate-content', enhancedData);
       const result = await response.json();
       return result;
     },
@@ -256,7 +271,7 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
                   onChange={(e) => setDetails({ ...details, fetchFromWeb: e.target.checked })}
                   className="rounded"
                 />
-                <Label htmlFor="fetchFromWeb" className="text-sm font-medium">
+                <Label htmlFor="fetchFromWeb" className="text-sm font-medium cursor-pointer">
                   🌐 Fetch real data from web sources
                 </Label>
               </div>
