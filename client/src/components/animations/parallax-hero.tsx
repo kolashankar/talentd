@@ -14,7 +14,7 @@ export function ParallaxHero({
   backgroundImage,
   overlay = "rgba(0, 0, 0, 0.5)",
   className,
-  speed = 0.5,
+  speed = 0.1, // Reduced speed for smoother scrolling
 }: ParallaxHeroProps) {
   const [scrollY, setScrollY] = useState(0);
 
@@ -30,28 +30,23 @@ export function ParallaxHero({
   return (
     <section 
       className={cn("relative min-h-screen flex items-center overflow-hidden", className)}
-      style={{
-        backgroundImage: `linear-gradient(${overlay}, ${overlay}), url('${backgroundImage}')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        transform: `translateY(${scrollY * speed}px)`,
-      }}
     >
-      <div className="relative z-10 w-full">
-        {children}
-      </div>
-      
-      {/* Additional parallax layer for depth */}
+      {/* Fixed background layer */}
       <div 
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0 z-0"
         style={{
-          backgroundImage: `url('${backgroundImage}')`,
-          backgroundSize: '120%',
+          backgroundImage: `linear-gradient(${overlay}, ${overlay}), url('${backgroundImage}')`,
+          backgroundSize: 'cover',
           backgroundPosition: 'center',
-          transform: `translateY(${scrollY * (speed * 0.3)}px) scale(1.1)`,
+          backgroundAttachment: 'fixed',
+          transform: `translateY(${scrollY * speed}px)`,
         }}
       />
+      
+      {/* Content layer */}
+      <div className="relative z-20 w-full">
+        {children}
+      </div>
     </section>
   );
 }

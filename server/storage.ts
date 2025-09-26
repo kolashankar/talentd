@@ -1,438 +1,242 @@
+import { eq, desc } from "drizzle-orm";
+import { db } from "./database";
+import * as schema from "@shared/schema";
 import { type User, type InsertUser, type Job, type InsertJob, type Roadmap, type InsertRoadmap, type Article, type InsertArticle, type DsaProblem, type InsertDsaProblem, type Portfolio, type InsertPortfolio, type ResumeAnalysis, type InsertResumeAnalysis } from "@shared/schema";
-import { randomUUID } from "crypto";
 
 export interface IStorage {
   // User operations
-  getUser(id: string): Promise<User | undefined>;
+  getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
   // Job operations
   getJobs(category?: string): Promise<Job[]>;
-  getJob(id: string): Promise<Job | undefined>;
+  getJob(id: number): Promise<Job | undefined>;
   createJob(job: InsertJob): Promise<Job>;
-  updateJob(id: string, job: Partial<InsertJob>): Promise<Job | undefined>;
-  deleteJob(id: string): Promise<boolean>;
+  updateJob(id: number, job: Partial<InsertJob>): Promise<Job | undefined>;
+  deleteJob(id: number): Promise<boolean>;
 
   // Roadmap operations
   getRoadmaps(): Promise<Roadmap[]>;
-  getRoadmap(id: string): Promise<Roadmap | undefined>;
+  getRoadmap(id: number): Promise<Roadmap | undefined>;
   createRoadmap(roadmap: InsertRoadmap): Promise<Roadmap>;
-  updateRoadmap(id: string, roadmap: Partial<InsertRoadmap>): Promise<Roadmap | undefined>;
-  deleteRoadmap(id: string): Promise<boolean>;
+  updateRoadmap(id: number, roadmap: Partial<InsertRoadmap>): Promise<Roadmap | undefined>;
+  deleteRoadmap(id: number): Promise<boolean>;
 
   // Article operations
   getArticles(): Promise<Article[]>;
-  getArticle(id: string): Promise<Article | undefined>;
+  getArticle(id: number): Promise<Article | undefined>;
   createArticle(article: InsertArticle): Promise<Article>;
-  updateArticle(id: string, article: Partial<InsertArticle>): Promise<Article | undefined>;
-  deleteArticle(id: string): Promise<boolean>;
+  updateArticle(id: number, article: Partial<InsertArticle>): Promise<Article | undefined>;
+  deleteArticle(id: number): Promise<boolean>;
 
   // DSA Problem operations
   getDsaProblems(): Promise<DsaProblem[]>;
-  getDsaProblem(id: string): Promise<DsaProblem | undefined>;
+  getDsaProblem(id: number): Promise<DsaProblem | undefined>;
   createDsaProblem(problem: InsertDsaProblem): Promise<DsaProblem>;
-  updateDsaProblem(id: string, problem: Partial<InsertDsaProblem>): Promise<DsaProblem | undefined>;
-  deleteDsaProblem(id: string): Promise<boolean>;
+  updateDsaProblem(id: number, problem: Partial<InsertDsaProblem>): Promise<DsaProblem | undefined>;
+  deleteDsaProblem(id: number): Promise<boolean>;
 
   // Portfolio operations
   getPortfolios(): Promise<Portfolio[]>;
-  getPortfolio(id: string): Promise<Portfolio | undefined>;
-  getPortfolioByUserId(userId: string): Promise<Portfolio | undefined>;
+  getPortfolio(id: number): Promise<Portfolio | undefined>;
+  getPortfolioByUserId(userId: number): Promise<Portfolio | undefined>;
   createPortfolio(portfolio: InsertPortfolio): Promise<Portfolio>;
-  updatePortfolio(id: string, portfolio: Partial<InsertPortfolio>): Promise<Portfolio | undefined>;
-  deletePortfolio(id: string): Promise<boolean>;
+  updatePortfolio(id: number, portfolio: Partial<InsertPortfolio>): Promise<Portfolio | undefined>;
+  deletePortfolio(id: number): Promise<boolean>;
 
   // Resume Analysis operations
-  getResumeAnalyses(userId?: string): Promise<ResumeAnalysis[]>;
-  getResumeAnalysis(id: string): Promise<ResumeAnalysis | undefined>;
+  getResumeAnalyses(userId?: number): Promise<ResumeAnalysis[]>;
+  getResumeAnalysis(id: number): Promise<ResumeAnalysis | undefined>;
   createResumeAnalysis(analysis: InsertResumeAnalysis): Promise<ResumeAnalysis>;
-  deleteResumeAnalysis(id: string): Promise<boolean>;
+  deleteResumeAnalysis(id: number): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private jobs: Map<string, Job>;
-  private roadmaps: Map<string, Roadmap>;
-  private articles: Map<string, Article>;
-  private dsaProblems: Map<string, DsaProblem>;
-  private portfolios: Map<string, Portfolio>;
-  private resumeAnalyses: Map<string, ResumeAnalysis>;
-
-  constructor() {
-    this.users = new Map();
-    this.jobs = new Map();
-    this.roadmaps = new Map();
-    this.articles = new Map();
-    this.dsaProblems = new Map();
-    this.portfolios = new Map();
-    this.resumeAnalyses = new Map();
-    
-    // Initialize with sample data to prevent empty state
-    this.initializeSampleData();
-  }
-
-  private initializeSampleData() {
-    // Create admin user
-    const adminId = "admin-1";
-    this.users.set(adminId, {
-      id: adminId,
-      username: "admin",
-      email: "admin@example.com",
-      password: "admin123",
-      role: "admin",
-      createdAt: new Date(),
-    });
-
-    // Sample jobs
-    const sampleJob = {
-      id: "job-1",
-      title: "Software Engineer Intern",
-      company: "Tech Corp",
-      location: "San Francisco, CA",
-      salaryRange: "$60,000 - $80,000",
-      jobType: "internship",
-      experienceLevel: "fresher",
-      description: "Exciting opportunity for a software engineering intern to work on cutting-edge projects.",
-      requirements: "Computer Science degree, JavaScript, React knowledge",
-      skills: ["JavaScript", "React", "Node.js"],
-      companyLogo: "https://via.placeholder.com/200x200/4F46E5/white?text=TC",
-      applicationUrl: "https://techcorp.com/careers",
-      isActive: true,
-      category: "internship",
-      createdAt: new Date(),
-    };
-    this.jobs.set(sampleJob.id, sampleJob);
-
-    // Sample roadmap
-    const sampleRoadmap = {
-      id: "roadmap-1",
-      title: "Frontend Developer Roadmap",
-      description: "Complete guide to becoming a frontend developer",
-      content: "Learn HTML, CSS, JavaScript, React, and modern development practices.",
-      difficulty: "beginner",
-      estimatedTime: "3-6 months",
-      technologies: ["HTML", "CSS", "JavaScript", "React"],
-      steps: [
-        { title: "Learn HTML", description: "Master HTML basics", resources: [] },
-        { title: "Learn CSS", description: "Style your websites", resources: [] },
-      ],
-      isPublished: true,
-      createdAt: new Date(),
-    };
-    this.roadmaps.set(sampleRoadmap.id, sampleRoadmap);
-
-    // Sample article
-    const sampleArticle = {
-      id: "article-1",
-      title: "Getting Started with React",
-      content: "React is a popular JavaScript library for building user interfaces...",
-      excerpt: "Learn the basics of React development",
-      author: "Tech Writer",
-      category: "Technology",
-      tags: ["React", "JavaScript", "Frontend"],
-      isPublished: true,
-      readTime: 5,
-      createdAt: new Date(),
-    };
-    this.articles.set(sampleArticle.id, sampleArticle);
-
-    // Sample DSA problem
-    const sampleDsaProblem = {
-      id: "dsa-1",
-      title: "Two Sum",
-      description: "Given an array of integers, return indices of two numbers that add up to a target.",
-      difficulty: "easy",
-      category: "Array",
-      solution: "Use a hash map to store complements and find the solution in O(n) time.",
-      hints: ["Think about using a hash map", "Store complements as you iterate"],
-      timeComplexity: "O(n)",
-      spaceComplexity: "O(n)",
-      tags: ["Array", "Hash Map"],
-      companies: ["Google", "Facebook"],
-      isPublished: true,
-      createdAt: new Date(),
-    };
-    this.dsaProblems.set(sampleDsaProblem.id, sampleDsaProblem);
-  }
+export class PostgresStorage implements IStorage {
 
   // User operations
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getUser(id: number): Promise<User | undefined> {
+    const result = await db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1);
+    return result[0];
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
+    const result = await db.select().from(schema.users).where(eq(schema.users.username, username)).limit(1);
+    return result[0];
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.email === email);
+    const result = await db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
+    return result[0];
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { 
-      ...insertUser, 
-      id, 
-      role: insertUser.role || "user",
-      createdAt: new Date() 
-    };
-    this.users.set(id, user);
-    return user;
+    const result = await db.insert(schema.users).values(insertUser).returning();
+    return result[0];
   }
 
   // Job operations
   async getJobs(category?: string): Promise<Job[]> {
-    const jobs = Array.from(this.jobs.values()).filter(job => job.isActive);
+    let query = db.select().from(schema.jobs).where(eq(schema.jobs.isActive, true));
+
     if (category) {
-      return jobs.filter(job => job.category === category);
+      query = query.where(eq(schema.jobs.category, category));
     }
-    return jobs.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+
+    return query.orderBy(desc(schema.jobs.createdAt));
   }
 
-  async getJob(id: string): Promise<Job | undefined> {
-    return this.jobs.get(id);
+  async getJob(id: number): Promise<Job | undefined> {
+    const result = await db.select().from(schema.jobs).where(eq(schema.jobs.id, id)).limit(1);
+    return result[0];
   }
 
   async createJob(insertJob: InsertJob): Promise<Job> {
-    const id = randomUUID();
-    const job: Job = { 
-      ...insertJob, 
-      id, 
-      category: insertJob.category || "job",
-      skills: Array.isArray(insertJob.skills) ? insertJob.skills : [],
-      isActive: insertJob.isActive ?? true,
-      createdAt: new Date() 
-    };
-    this.jobs.set(id, job);
-    return job;
+    const result = await db.insert(schema.jobs).values(insertJob).returning();
+    return result[0];
   }
 
-  async updateJob(id: string, updateJob: Partial<InsertJob>): Promise<Job | undefined> {
-    const job = this.jobs.get(id);
-    if (!job) return undefined;
-    
-    const updatedJob = { 
-      ...job, 
-      ...updateJob,
-      skills: Array.isArray(updateJob.skills) ? updateJob.skills : Array.isArray(job.skills) ? job.skills : []
-    };
-    this.jobs.set(id, updatedJob);
-    return updatedJob;
+  async updateJob(id: number, updateJob: Partial<InsertJob>): Promise<Job | undefined> {
+    const result = await db.update(schema.jobs).set(updateJob).where(eq(schema.jobs.id, id)).returning();
+    return result[0];
   }
 
-  async deleteJob(id: string): Promise<boolean> {
-    return this.jobs.delete(id);
+  async deleteJob(id: number): Promise<boolean> {
+    const result = await db.delete(schema.jobs).where(eq(schema.jobs.id, id));
+    return result.rowCount > 0;
   }
 
   // Roadmap operations
   async getRoadmaps(): Promise<Roadmap[]> {
-    return Array.from(this.roadmaps.values())
-      .filter(roadmap => roadmap.isPublished)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    return db.select().from(schema.roadmaps).where(eq(schema.roadmaps.isPublished, true)).orderBy(desc(schema.roadmaps.createdAt));
   }
 
-  async getRoadmap(id: string): Promise<Roadmap | undefined> {
-    return this.roadmaps.get(id);
+  async getRoadmap(id: number): Promise<Roadmap | undefined> {
+    const result = await db.select().from(schema.roadmaps).where(eq(schema.roadmaps.id, id)).limit(1);
+    return result[0];
   }
 
   async createRoadmap(insertRoadmap: InsertRoadmap): Promise<Roadmap> {
-    const id = randomUUID();
-    const roadmap: Roadmap = { 
-      ...insertRoadmap, 
-      id, 
-      technologies: Array.isArray(insertRoadmap.technologies) ? insertRoadmap.technologies : [],
-      steps: Array.isArray(insertRoadmap.steps) ? insertRoadmap.steps : [],
-      isPublished: insertRoadmap.isPublished ?? true,
-      createdAt: new Date() 
-    };
-    this.roadmaps.set(id, roadmap);
-    return roadmap;
+    const result = await db.insert(schema.roadmaps).values(insertRoadmap).returning();
+    return result[0];
   }
 
-  async updateRoadmap(id: string, updateRoadmap: Partial<InsertRoadmap>): Promise<Roadmap | undefined> {
-    const roadmap = this.roadmaps.get(id);
-    if (!roadmap) return undefined;
-    
-    const updatedRoadmap = { 
-      ...roadmap, 
-      ...updateRoadmap,
-      technologies: Array.isArray(updateRoadmap.technologies) ? updateRoadmap.technologies : Array.isArray(roadmap.technologies) ? roadmap.technologies : [],
-      steps: Array.isArray(updateRoadmap.steps) ? updateRoadmap.steps : Array.isArray(roadmap.steps) ? roadmap.steps : []
-    };
-    this.roadmaps.set(id, updatedRoadmap);
-    return updatedRoadmap;
+  async updateRoadmap(id: number, updateRoadmap: Partial<InsertRoadmap>): Promise<Roadmap | undefined> {
+    const result = await db.update(schema.roadmaps).set(updateRoadmap).where(eq(schema.roadmaps.id, id)).returning();
+    return result[0];
   }
 
-  async deleteRoadmap(id: string): Promise<boolean> {
-    return this.roadmaps.delete(id);
+  async deleteRoadmap(id: number): Promise<boolean> {
+    const result = await db.delete(schema.roadmaps).where(eq(schema.roadmaps.id, id));
+    return result.rowCount > 0;
   }
 
   // Article operations
   async getArticles(): Promise<Article[]> {
-    return Array.from(this.articles.values())
-      .filter(article => article.isPublished)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    return db.select().from(schema.articles).where(eq(schema.articles.isPublished, true)).orderBy(desc(schema.articles.createdAt));
   }
 
-  async getArticle(id: string): Promise<Article | undefined> {
-    return this.articles.get(id);
+  async getArticle(id: number): Promise<Article | undefined> {
+    const result = await db.select().from(schema.articles).where(eq(schema.articles.id, id)).limit(1);
+    return result[0];
   }
 
   async createArticle(insertArticle: InsertArticle): Promise<Article> {
-    const id = randomUUID();
-    const article: Article = { 
-      ...insertArticle, 
-      id, 
-      tags: Array.isArray(insertArticle.tags) ? insertArticle.tags : [],
-      isPublished: insertArticle.isPublished ?? true,
-      createdAt: new Date() 
-    };
-    this.articles.set(id, article);
-    return article;
+    const result = await db.insert(schema.articles).values(insertArticle).returning();
+    return result[0];
   }
 
-  async updateArticle(id: string, updateArticle: Partial<InsertArticle>): Promise<Article | undefined> {
-    const article = this.articles.get(id);
-    if (!article) return undefined;
-    
-    const updatedArticle = { 
-      ...article, 
-      ...updateArticle,
-      tags: updateArticle.tags || article.tags || []
-    };
-    this.articles.set(id, updatedArticle);
-    return updatedArticle;
+  async updateArticle(id: number, updateArticle: Partial<InsertArticle>): Promise<Article | undefined> {
+    const result = await db.update(schema.articles).set(updateArticle).where(eq(schema.articles.id, id)).returning();
+    return result[0];
   }
 
-  async deleteArticle(id: string): Promise<boolean> {
-    return this.articles.delete(id);
+  async deleteArticle(id: number): Promise<boolean> {
+    const result = await db.delete(schema.articles).where(eq(schema.articles.id, id));
+    return result.rowCount > 0;
   }
 
   // DSA Problem operations
   async getDsaProblems(): Promise<DsaProblem[]> {
-    return Array.from(this.dsaProblems.values())
-      .filter(problem => problem.isPublished)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    return db.select().from(schema.dsaProblems).where(eq(schema.dsaProblems.isPublished, true)).orderBy(desc(schema.dsaProblems.createdAt));
   }
 
-  async getDsaProblem(id: string): Promise<DsaProblem | undefined> {
-    return this.dsaProblems.get(id);
+  async getDsaProblem(id: number): Promise<DsaProblem | undefined> {
+    const result = await db.select().from(schema.dsaProblems).where(eq(schema.dsaProblems.id, id)).limit(1);
+    return result[0];
   }
 
   async createDsaProblem(insertProblem: InsertDsaProblem): Promise<DsaProblem> {
-    const id = randomUUID();
-    const problem: DsaProblem = { 
-      ...insertProblem, 
-      id, 
-      hints: Array.isArray(insertProblem.hints) ? insertProblem.hints : [],
-      tags: Array.isArray(insertProblem.tags) ? insertProblem.tags : [],
-      companies: Array.isArray(insertProblem.companies) ? insertProblem.companies : [],
-      isPublished: insertProblem.isPublished ?? true,
-      createdAt: new Date() 
-    };
-    this.dsaProblems.set(id, problem);
-    return problem;
+    const result = await db.insert(schema.dsaProblems).values(insertProblem).returning();
+    return result[0];
   }
 
-  async updateDsaProblem(id: string, updateProblem: Partial<InsertDsaProblem>): Promise<DsaProblem | undefined> {
-    const problem = this.dsaProblems.get(id);
-    if (!problem) return undefined;
-    
-    const updatedProblem = { 
-      ...problem, 
-      ...updateProblem,
-      hints: Array.isArray(updateProblem.hints) ? updateProblem.hints : Array.isArray(problem.hints) ? problem.hints : [],
-      tags: Array.isArray(updateProblem.tags) ? updateProblem.tags : Array.isArray(problem.tags) ? problem.tags : [],
-      companies: Array.isArray(updateProblem.companies) ? updateProblem.companies : Array.isArray(problem.companies) ? problem.companies : []
-    };
-    this.dsaProblems.set(id, updatedProblem);
-    return updatedProblem;
+  async updateDsaProblem(id: number, updateProblem: Partial<InsertDsaProblem>): Promise<DsaProblem | undefined> {
+    const result = await db.update(schema.dsaProblems).set(updateProblem).where(eq(schema.dsaProblems.id, id)).returning();
+    return result[0];
   }
 
-  async deleteDsaProblem(id: string): Promise<boolean> {
-    return this.dsaProblems.delete(id);
+  async deleteDsaProblem(id: number): Promise<boolean> {
+    const result = await db.delete(schema.dsaProblems).where(eq(schema.dsaProblems.id, id));
+    return result.rowCount > 0;
   }
 
   // Portfolio operations
   async getPortfolios(): Promise<Portfolio[]> {
-    return Array.from(this.portfolios.values())
-      .filter(portfolio => portfolio.isPublic)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    return db.select().from(schema.portfolios).where(eq(schema.portfolios.isPublic, true)).orderBy(desc(schema.portfolios.createdAt));
   }
 
-  async getPortfolio(id: string): Promise<Portfolio | undefined> {
-    return this.portfolios.get(id);
+  async getPortfolio(id: number): Promise<Portfolio | undefined> {
+    const result = await db.select().from(schema.portfolios).where(eq(schema.portfolios.id, id)).limit(1);
+    return result[0];
   }
 
-  async getPortfolioByUserId(userId: string): Promise<Portfolio | undefined> {
-    return Array.from(this.portfolios.values()).find(portfolio => portfolio.userId === userId);
+  async getPortfolioByUserId(userId: number): Promise<Portfolio | undefined> {
+    const result = await db.select().from(schema.portfolios).where(eq(schema.portfolios.userId, userId)).limit(1);
+    return result[0];
   }
 
   async createPortfolio(insertPortfolio: InsertPortfolio): Promise<Portfolio> {
-    const id = randomUUID();
-    const portfolio: Portfolio = { 
-      ...insertPortfolio, 
-      id, 
-      skills: Array.isArray(insertPortfolio.skills) ? insertPortfolio.skills : [],
-      projects: Array.isArray(insertPortfolio.projects) ? insertPortfolio.projects : [],
-      experience: Array.isArray(insertPortfolio.experience) ? insertPortfolio.experience : [],
-      education: Array.isArray(insertPortfolio.education) ? insertPortfolio.education : [],
-      isPublic: insertPortfolio.isPublic ?? true,
-      createdAt: new Date() 
-    };
-    this.portfolios.set(id, portfolio);
-    return portfolio;
+    const result = await db.insert(schema.portfolios).values(insertPortfolio).returning();
+    return result[0];
   }
 
-  async updatePortfolio(id: string, updatePortfolio: Partial<InsertPortfolio>): Promise<Portfolio | undefined> {
-    const portfolio = this.portfolios.get(id);
-    if (!portfolio) return undefined;
-    
-    const updatedPortfolio = { 
-      ...portfolio, 
-      ...updatePortfolio,
-      skills: Array.isArray(updatePortfolio.skills) ? updatePortfolio.skills : Array.isArray(portfolio.skills) ? portfolio.skills : [],
-      projects: Array.isArray(updatePortfolio.projects) ? updatePortfolio.projects : Array.isArray(portfolio.projects) ? portfolio.projects : [],
-      experience: Array.isArray(updatePortfolio.experience) ? updatePortfolio.experience : Array.isArray(portfolio.experience) ? portfolio.experience : [],
-      education: Array.isArray(updatePortfolio.education) ? updatePortfolio.education : Array.isArray(portfolio.education) ? portfolio.education : []
-    };
-    this.portfolios.set(id, updatedPortfolio);
-    return updatedPortfolio;
+  async updatePortfolio(id: number, updatePortfolio: Partial<InsertPortfolio>): Promise<Portfolio | undefined> {
+    const result = await db.update(schema.portfolios).set(updatePortfolio).where(eq(schema.portfolios.id, id)).returning();
+    return result[0];
   }
 
-  async deletePortfolio(id: string): Promise<boolean> {
-    return this.portfolios.delete(id);
+  async deletePortfolio(id: number): Promise<boolean> {
+    const result = await db.delete(schema.portfolios).where(eq(schema.portfolios.id, id));
+    return result.rowCount > 0;
   }
 
   // Resume Analysis operations
-  async getResumeAnalyses(userId?: string): Promise<ResumeAnalysis[]> {
-    const analyses = Array.from(this.resumeAnalyses.values());
+  async getResumeAnalyses(userId?: number): Promise<ResumeAnalysis[]> {
+    let query = db.select().from(schema.resumeAnalyses);
+
     if (userId) {
-      return analyses.filter(analysis => analysis.userId === userId);
+      query = query.where(eq(schema.resumeAnalyses.userId, userId));
     }
-    return analyses.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+
+    return query.orderBy(desc(schema.resumeAnalyses.createdAt));
   }
 
-  async getResumeAnalysis(id: string): Promise<ResumeAnalysis | undefined> {
-    return this.resumeAnalyses.get(id);
+  async getResumeAnalysis(id: number): Promise<ResumeAnalysis | undefined> {
+    const result = await db.select().from(schema.resumeAnalyses).where(eq(schema.resumeAnalyses.id, id)).limit(1);
+    return result[0];
   }
 
   async createResumeAnalysis(insertAnalysis: InsertResumeAnalysis): Promise<ResumeAnalysis> {
-    const id = randomUUID();
-    const analysis: ResumeAnalysis = { 
-      ...insertAnalysis, 
-      id, 
-      createdAt: new Date() 
-    };
-    this.resumeAnalyses.set(id, analysis);
-    return analysis;
+    const result = await db.insert(schema.resumeAnalyses).values(insertAnalysis).returning();
+    return result[0];
   }
 
-  async deleteResumeAnalysis(id: string): Promise<boolean> {
-    return this.resumeAnalyses.delete(id);
+  async deleteResumeAnalysis(id: number): Promise<boolean> {
+    const result = await db.delete(schema.resumeAnalyses).where(eq(schema.resumeAnalyses.id, id));
+    return result.rowCount > 0;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new PostgresStorage();

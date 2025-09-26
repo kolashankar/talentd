@@ -8,8 +8,10 @@ import { Job } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link } from "wouter";
 import { GoogleAuth } from "@/components/auth/google-auth";
+import { useState } from "react";
 import { 
   FileText, 
   TrendingUp, 
@@ -23,10 +25,13 @@ import {
   DollarSign,
   Briefcase,
   GraduationCap,
-  BarChart3
+  BarChart3,
+  Menu
 } from "lucide-react";
 
 export default function Home() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const { data: jobs = [], isLoading: jobsLoading } = useQuery<Job[]>({
     queryKey: ['/api/jobs'],
   });
@@ -164,10 +169,66 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <GoogleAuth />
-              <Button size="sm" data-testid="button-join-community">
-                Join Community
-              </Button>
+              <div className="hidden md:flex items-center space-x-4">
+                <GoogleAuth />
+                <Button size="sm" data-testid="button-join-community">
+                  Join Community
+                </Button>
+              </div>
+              
+              {/* Mobile Menu */}
+              <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                <SheetTrigger asChild className="md:hidden">
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-5 w-5" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <div className="flex flex-col space-y-6 pt-8">
+                    <div className="text-2xl font-bold text-primary">TalentFresh</div>
+                    
+                    <div className="flex flex-col space-y-4">
+                      <GoogleAuth />
+                      <Button size="sm" className="w-full" data-testid="button-join-community-mobile">
+                        Join Community
+                      </Button>
+                    </div>
+                    
+                    <div className="border-t pt-6">
+                      <nav className="flex flex-col space-y-4">
+                        <Link href="/jobs" className="text-lg text-muted-foreground hover:text-primary transition-colors">
+                          Jobs
+                        </Link>
+                        <Link href="/internships" className="text-lg text-muted-foreground hover:text-primary transition-colors">
+                          Internships
+                        </Link>
+                        <Link href="/roadmaps" className="text-lg text-muted-foreground hover:text-primary transition-colors">
+                          Roadmaps
+                        </Link>
+                        <Link href="/dsa" className="text-lg text-muted-foreground hover:text-primary transition-colors">
+                          DSA Corner
+                        </Link>
+                        <Link href="/articles" className="text-lg text-muted-foreground hover:text-primary transition-colors">
+                          Articles
+                        </Link>
+                        <Link href="/privacy-policy" className="text-lg text-muted-foreground hover:text-primary transition-colors">
+                          Privacy Policy
+                        </Link>
+                        <Link href="/terms-of-service" className="text-lg text-muted-foreground hover:text-primary transition-colors">
+                          Terms of Service
+                        </Link>
+                        <Link href="/support" className="text-lg text-muted-foreground hover:text-primary transition-colors">
+                          Support
+                        </Link>
+                        <Link href="/admin" className="text-lg text-muted-foreground hover:text-primary transition-colors">
+                          Admin
+                        </Link>
+                      </nav>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
