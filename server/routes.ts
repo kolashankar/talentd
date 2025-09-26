@@ -118,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/jobs/:id", async (req, res) => {
     try {
-      const job = await storage.getJob(req.params.id);
+      const job = await storage.getJob(parseInt(req.params.id));
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
       }
@@ -144,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/jobs/:id", async (req, res) => {
     try {
       const jobData = insertJobSchema.partial().parse(req.body);
-      const job = await storage.updateJob(req.params.id, jobData);
+      const job = await storage.updateJob(parseInt(req.params.id), jobData);
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
       }
@@ -159,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/jobs/:id", async (req, res) => {
     try {
-      const deleted = await storage.deleteJob(req.params.id);
+      const deleted = await storage.deleteJob(parseInt(req.params.id));
       if (!deleted) {
         return res.status(404).json({ message: "Job not found" });
       }
@@ -501,16 +501,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Store the analysis
       const resumeAnalysis = await storage.createResumeAnalysis({
-        userId: req.body.userId || null,
+        userId: (req.user as any)?.id || null,
         filename: req.file.originalname,
-        fileUrl: `/uploads/${req.file.filename}`,
+        fileUrl: `resume-${Date.now()}-${req.file.originalname}`,
         atsScore: analysis.atsScore,
         keywordMatches: analysis.keywordMatches,
         suggestions: analysis.suggestions,
         formatScore: analysis.formatScore,
         readabilityScore: analysis.readabilityScore,
         analysis: analysis.analysis,
-        // Only include properties that exist in the schema
       });
 
       res.json(resumeAnalysis);

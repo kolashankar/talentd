@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { FileUpload } from "@/components/ui/file-upload";
 import { ATSAnalyzer } from "@/components/resume/ats-analyzer";
+import { GoogleAuth } from "@/components/auth/google-auth";
 import { ScrollAnimations } from "@/components/animations/scroll-animations";
 import { ParallaxHero } from "@/components/animations/parallax-hero";
 import { useToast } from "@/hooks/use-toast";
@@ -27,10 +28,25 @@ export default function ResumeReview() {
   const [analysisResult, setAnalysisResult] = useState<ResumeAnalysis | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState("");
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const { toast } = useToast();
+
+  // Check authentication status
+  const { data: authStatus, isLoading: isCheckingAuth } = useQuery({
+    queryKey: ['/api/auth/status'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/status', {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to check auth status');
+      return response.json();
+    },
+    retry: false,
+  });
 
   const { data: previousAnalyses = [] } = useQuery<ResumeAnalysis[]>({
     queryKey: ['/api/resume/analyses'],
+    enabled: authStatus?.authenticated,
   });
 
   const analyzeMutation = useMutation({
@@ -38,10 +54,11 @@ export default function ResumeReview() {
       const response = await fetch('/api/resume/analyze', {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       });
       
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({ message: 'Analysis failed' }));
         throw new Error(error.message || 'Analysis failed');
       }
       
@@ -68,6 +85,16 @@ export default function ResumeReview() {
   };
 
   const handleAnalyze = () => {
+    if (!authStatus?.authenticated) {
+      setShowAuthDialog(true);
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to analyze your resume",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!selectedFile) {
       toast({
         title: "No File Selected",
@@ -108,6 +135,62 @@ export default function ResumeReview() {
         return <Badge variant="secondary">{score}</Badge>;
     }
   };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (!authStatus?.authenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Hero Section */}
+        <ParallaxHero
+          backgroundImage="https://images.unsplash.com/photo-1586281380349-632531db7ed4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&h=1560"
+          overlay="rgba(15, 23, 42, 0.8)"
+          className="h-96"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
+            <div className="text-center">
+              <ScrollAnimations>
+                <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 fade-in-up">
+                  AI Resume Reviewer
+                </h1>
+                <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto fade-in-up">
+                  Get instant feedback on your resume with our advanced ATS analysis system
+                </p>
+              </ScrollAnimations>
+            </div>
+          </div>
+        </ParallaxHero>
+
+        {/* Auth Section */}
+        <section className="py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <ScrollAnimations>
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold mb-4 fade-in-up">
+                  Sign In to Analyze Your Resume
+                </h2>
+                <p className="text-muted-foreground fade-in-up">
+                  Get personalized ATS feedback and improvement suggestions
+                </p>
+              </div>
+              <div className="max-w-md mx-auto fade-in-up">
+                <GoogleAuth 
+                  showDialog={showAuthDialog}
+                  onClose={() => setShowAuthDialog(false)}
+                />
+              </div>
+            </ScrollAnimations>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

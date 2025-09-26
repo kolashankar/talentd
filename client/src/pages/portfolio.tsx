@@ -6,6 +6,7 @@ import { PortfolioBuilder } from "@/components/portfolio/portfolio-builder";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { GoogleAuth } from "@/components/auth/google-auth";
 import { ScrollAnimations } from "@/components/animations/scroll-animations";
 import { ParallaxHero } from "@/components/animations/parallax-hero";
 import { queryClient } from "@/lib/queryClient";
@@ -30,11 +31,26 @@ export default function PortfolioPage() {
     null,
   );
   const [showBuilder, setShowBuilder] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const { data: portfolios = [], isLoading } = useQuery<Portfolio[]>({
+  // Check authentication status
+  const { data: authStatus, isLoading: isCheckingAuth } = useQuery({
+    queryKey: ["/api/auth/status"],
+    queryFn: async () => {
+      const response = await fetch("/api/auth/status", {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to check auth status");
+      return response.json();
+    },
+    retry: false,
+  });
+
+  const { data: portfolios = [], isLoading, refetch } = useQuery<Portfolio[]>({
     queryKey: ["/api/portfolios"],
+    enabled: authStatus?.authenticated,
   });
 
   const deletePortfolioMutation = useMutation({
@@ -61,11 +77,19 @@ export default function PortfolioPage() {
   });
 
   const handleCreateNew = () => {
+    if (!authStatus?.authenticated) {
+      setShowAuthDialog(true);
+      return;
+    }
     setEditingPortfolio(null);
     setShowBuilder(true);
   };
 
   const handleEdit = (portfolio: Portfolio) => {
+    if (!authStatus?.authenticated) {
+      setShowAuthDialog(true);
+      return;
+    }
     setEditingPortfolio(portfolio);
     setShowBuilder(true);
   };
@@ -73,15 +97,89 @@ export default function PortfolioPage() {
   const handleSave = () => {
     setShowBuilder(false);
     setEditingPortfolio(null);
-    queryClient.invalidateQueries({ queryKey: ["/api/portfolios"] });
+    refetch();
   };
+
+  const handleCancel = () => {
+    setShowBuilder(false);
+    setEditingPortfolio(null);
+  };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (!authStatus?.authenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Hero Section */}
+        <ParallaxHero
+          backgroundImage="https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&h=1560"
+          overlay="rgba(15, 23, 42, 0.8)"
+          className="h-96"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
+            <div className="text-center">
+              <ScrollAnimations>
+                <h1
+                  className="text-4xl md:text-6xl font-bold text-white mb-6 fade-in-up"
+                  data-testid="heading-portfolio"
+                >
+                  Portfolio Builder
+                </h1>
+                <p
+                  className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto fade-in-up"
+                  style={{ "--stagger": "1" } as any}
+                >
+                  Create stunning professional portfolios with AI assistance
+                </p>
+              </ScrollAnimations>
+            </div>
+          </div>
+        </ParallaxHero>
+
+        {/* Auth Section */}
+        <section className="py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <ScrollAnimations>
+              <div className="text-center mb-12">
+                <h2
+                  className="text-3xl font-bold mb-4 fade-in-up"
+                  data-testid="heading-sign-in"
+                >
+                  Sign In to Get Started
+                </h2>
+                <p
+                  className="text-muted-foreground fade-in-up"
+                  data-testid="text-sign-in-subtitle"
+                >
+                  Access the portfolio builder and create your professional
+                  online presence
+                </p>
+              </div>
+              <div className="max-w-md mx-auto fade-in-up">
+                <GoogleAuth
+                  showDialog={showAuthDialog}
+                  onClose={() => setShowAuthDialog(false)}
+                />
+              </div>
+            </ScrollAnimations>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   if (showBuilder) {
     return (
       <PortfolioBuilder
         portfolio={editingPortfolio}
         onSave={handleSave}
-        onCancel={() => setShowBuilder(false)}
+        onCancel={handleCancel}
       />
     );
   }
