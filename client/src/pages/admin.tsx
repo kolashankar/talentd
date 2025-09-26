@@ -347,30 +347,7 @@ function AdminDashboard() {
               </CardContent>
             </Card>
 
-            {/* AI Generator Panel */}
-            {showAiGenerator && (
-              <AiGenerator className="mt-6" onContentGenerated={(content) => {
-                // Map AI content type to admin tab type
-                let targetTab = activeTab;
-                if (content.difficulty && (content.timeComplexity || content.spaceComplexity)) {
-                  targetTab = 'dsa-corner';
-                } else if (content.steps || content.technologies) {
-                  targetTab = 'roadmaps';
-                } else if (content.content && content.author) {
-                  targetTab = 'articles';
-                } else if (content.company && content.location) {
-                  targetTab = 'jobs';
-                }
-                
-                // Switch to the appropriate tab if needed
-                if (targetTab !== activeTab) {
-                  setActiveTab(targetTab);
-                }
-                
-                setSelectedItem(content);
-                setShowAiGenerator(false);
-              }} />
-            )}
+            
 
             {/* Admin Agent Panel */}
             {selectedItem && (
@@ -388,6 +365,33 @@ function AdminDashboard() {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
+            {/* AI Generator Panel */}
+            {showAiGenerator && (
+              <Card className="mb-6">
+                <AiGenerator onContentGenerated={(content) => {
+                  // Map AI content type to admin tab type
+                  let targetTab = activeTab;
+                  if (content.difficulty && (content.timeComplexity || content.spaceComplexity)) {
+                    targetTab = 'dsa-corner';
+                  } else if (content.steps || content.technologies) {
+                    targetTab = 'roadmaps';
+                  } else if (content.content && content.author) {
+                    targetTab = 'articles';
+                  } else if (content.company && content.location) {
+                    targetTab = 'jobs';
+                  }
+                  
+                  // Switch to the appropriate tab if needed
+                  if (targetTab !== activeTab) {
+                    setActiveTab(targetTab);
+                  }
+                  
+                  setSelectedItem(content);
+                  setShowAiGenerator(false);
+                }} />
+              </Card>
+            )}
+
             {selectedItem ? (
               <ContentForm
                 type={activeTab}

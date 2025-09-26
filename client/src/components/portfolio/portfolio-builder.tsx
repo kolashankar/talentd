@@ -42,6 +42,11 @@ import {
   Bot,
   Wand2,
   Download,
+  Code,
+  Palette,
+  Sparkles,
+  Share,
+  Copy,
 } from "lucide-react";
 import { z } from "zod";
 
@@ -66,11 +71,19 @@ export function PortfolioBuilder({
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isParsingResume, setIsParsingResume] = useState(false);
-  const [showAiHelper, setShowAiHelper] = useState(true); // State to control AI helper visibility
-  const [location, setLocation] = useState(""); // State to manage navigation for viewing portfolio
+  const [showAiHelper, setShowAiHelper] = useState(true);
+  const [location, setLocation] = useState("");
+
+  // AI Portfolio Assistant states
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [generatedWebsite, setGeneratedWebsite] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [websiteCode, setWebsiteCode] = useState({ html: "", css: "", js: "" });
+  const [editPrompt, setEditPrompt] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   const { toast } = useToast();
-  const isEditing = Boolean(portfolio?.id);
+  const isEditingPortfolio = Boolean(portfolio?.id);
 
   const form = useForm({
     resolver: zodResolver(insertPortfolioSchema),
@@ -98,18 +111,18 @@ export function PortfolioBuilder({
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
-      const endpoint = isEditing
+      const endpoint = isEditingPortfolio
         ? `/api/portfolios/${portfolio?.id}`
         : "/api/portfolios";
-      const method = isEditing ? "PUT" : "POST";
+      const method = isEditingPortfolio ? "PUT" : "POST";
       const response = await apiRequest(method, endpoint, data);
       return await response.json();
     },
     onSuccess: (result) => {
       toast({
         title: "Success",
-        description: `Portfolio ${isEditing ? "updated" : "created"} successfully`,
-        action: !isEditing ? (
+        description: `Portfolio ${isEditingPortfolio ? "updated" : "created"} successfully`,
+        action: !isEditingPortfolio ? (
           <Button
             variant="outline"
             size="sm"
@@ -130,6 +143,102 @@ export function PortfolioBuilder({
     },
   });
 
+  const generateWebsiteMutation = useMutation({
+    mutationFn: async (data: { prompt: string; resumeFile?: File }) => {
+      const formData = new FormData();
+      formData.append('prompt', data.prompt);
+      if (data.resumeFile) {
+        formData.append('resume', data.resumeFile);
+      }
+
+      const response = await fetch('/api/portfolio/generate-complete', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Failed to generate website');
+      return response.json();
+    },
+    onSuccess: (result) => {
+      setGeneratedWebsite(result.portfolioData);
+      setWebsiteCode(result.portfolioCode);
+      toast({
+        title: "Website Generated!",
+        description: "Your AI-powered portfolio website has been created successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Generation Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const editWebsiteMutation = useMutation({
+    mutationFn: async (editPrompt: string) => {
+      const response = await apiRequest('POST', '/api/ai/generate-content', {
+        type: 'portfolio-edit',
+        prompt: `Edit this portfolio website: ${editPrompt}. Current code: ${JSON.stringify(websiteCode)}`,
+        details: {
+          generateImages: true,
+          generateAnimations: true,
+          customStyling: true
+        }
+      });
+      return response.json();
+    },
+    onSuccess: (result) => {
+      if (result.htmlCode || result.html) {
+        setWebsiteCode({
+          html: result.htmlCode || result.html || websiteCode.html,
+          css: result.cssCode || result.css || websiteCode.css,
+          js: result.jsCode || result.js || websiteCode.js
+        });
+      }
+      toast({
+        title: "Website Updated!",
+        description: "Your portfolio has been edited successfully",
+      });
+      setEditPrompt("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Edit Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const downloadWebsiteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/portfolio/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ portfolioCode: websiteCode }),
+      });
+
+      if (!response.ok) throw new Error('Download failed');
+      return response.blob();
+    },
+    onSuccess: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = 'portfolio-website.html';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast({
+        title: "Download Started",
+        description: "Your portfolio website is being downloaded",
+      });
+    },
+  });
+
   const parseResumeMutation = useMutation({
     mutationFn: async (file: File) => {
       setIsParsingResume(true);
@@ -142,10 +251,9 @@ export function PortfolioBuilder({
       });
 
       if (!response.ok) throw new Error("Failed to parse resume");
-      return await response.json();
+      return response.json();
     },
     onSuccess: (parsedData) => {
-      // Auto-fill form with parsed data
       Object.keys(parsedData).forEach((key) => {
         if (parsedData[key] !== undefined && parsedData[key] !== null) {
           form.setValue(key as any, parsedData[key]);
@@ -160,8 +268,7 @@ export function PortfolioBuilder({
       setIsParsingResume(false);
       toast({
         title: "Resume Parsed Successfully",
-        description:
-          "Your portfolio has been auto-filled with resume data. Please review and edit as needed.",
+        description: "Your portfolio has been auto-filled with resume data. Please review and edit as needed.",
       });
     },
     onError: (error: Error) => {
@@ -173,6 +280,32 @@ export function PortfolioBuilder({
       });
     },
   });
+
+  const handleGenerateWebsite = () => {
+    if (!aiPrompt.trim()) {
+      toast({
+        title: "Missing Prompt",
+        description: "Please provide a description for your portfolio website",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    generateWebsiteMutation.mutate({ prompt: aiPrompt, resumeFile: resumeFile || undefined });
+  };
+
+  const handleEditWebsite = () => {
+    if (!editPrompt.trim()) {
+      toast({
+        title: "Missing Edit Instructions",
+        description: "Please describe what changes you'd like to make",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    editWebsiteMutation.mutate(editPrompt);
+  };
 
   const onSubmit = (data: any) => {
     const formData = {
@@ -284,13 +417,13 @@ export function PortfolioBuilder({
     { id: "projects", label: "Projects", icon: Briefcase },
     { id: "experience", label: "Experience", icon: Briefcase },
     { id: "education", label: "Education", icon: GraduationCap },
+    { id: "ai-assistant", label: "AI Assistant", icon: Bot },
     { id: "settings", label: "Settings", icon: Globe },
   ];
 
   if (previewMode) {
     return (
       <div className="min-h-screen bg-background">
-        {/* Preview Header */}
         <div className="border-b border-border bg-card">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -317,7 +450,7 @@ export function PortfolioBuilder({
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      {isEditing ? "Update Portfolio" : "Create Portfolio"}
+                      {isEditingPortfolio ? "Update Portfolio" : "Create Portfolio"}
                     </>
                   )}
                 </Button>
@@ -326,219 +459,240 @@ export function PortfolioBuilder({
           </div>
         </div>
 
-        {/* Portfolio Preview */}
+        {/* Generated Website Preview or Form Preview */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="overflow-hidden" data-testid="portfolio-preview">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-primary to-accent p-8 text-white">
-              <div className="flex items-center space-x-6">
-                {profileImage ? (
-                  <img
-                    src={URL.createObjectURL(profileImage)}
-                    alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover border-4 border-white/20"
+          {websiteCode.html ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Generated Website Preview</h2>
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm" onClick={() => setPreviewMode(false)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </Button>
+                  <Button size="sm" onClick={() => downloadWebsiteMutation.mutate()}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download
+                  </Button>
+                </div>
+              </div>
+              <Card className="overflow-hidden">
+                <CardContent className="p-0">
+                  <iframe
+                    srcDoc={websiteCode.html}
+                    className="w-full h-[600px] border-0"
+                    title="Portfolio Preview"
                   />
-                ) : form.watch("profileImage") ? (
-                  <img
-                    src={form.watch("profileImage")}
-                    alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover border-4 border-white/20"
-                  />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center">
-                    <User className="h-12 w-12" />
-                  </div>
-                )}
-                <div>
-                  <h1
-                    className="text-3xl font-bold mb-2"
-                    data-testid="preview-name"
-                  >
-                    {form.watch("name") || "Your Name"}
-                  </h1>
-                  <p
-                    className="text-xl opacity-90 mb-3"
-                    data-testid="preview-title"
-                  >
-                    {form.watch("title") || "Your Professional Title"}
-                  </p>
-                  <div className="flex items-center space-x-4">
-                    {form.watch("email") && (
-                      <div className="flex items-center space-x-1">
-                        <Mail className="h-4 w-4" />
-                        <span className="text-sm">{form.watch("email")}</span>
-                      </div>
-                    )}
-                    {form.watch("phone") && (
-                      <div className="flex items-center space-x-1">
-                        <Phone className="h-4 w-4" />
-                        <span className="text-sm">{form.watch("phone")}</span>
-                      </div>
-                    )}
-                    {form.watch("linkedin") && <Linkedin className="h-4 w-4" />}
-                    {form.watch("github") && <Github className="h-4 w-4" />}
-                    {form.watch("website") && <Globe className="h-4 w-4" />}
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <Card className="overflow-hidden" data-testid="portfolio-preview">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-primary to-accent p-8 text-white">
+                <div className="flex items-center space-x-6">
+                  {profileImage ? (
+                    <img
+                      src={URL.createObjectURL(profileImage)}
+                      alt="Profile"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-white/20"
+                    />
+                  ) : form.watch("profileImage") ? (
+                    <img
+                      src={form.watch("profileImage")}
+                      alt="Profile"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-white/20"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center">
+                      <User className="h-12 w-12" />
+                    </div>
+                  )}
+                  <div>
+                    <h1 className="text-3xl font-bold mb-2" data-testid="preview-name">
+                      {form.watch("name") || "Your Name"}
+                    </h1>
+                    <p className="text-xl opacity-90 mb-3" data-testid="preview-title">
+                      {form.watch("title") || "Your Professional Title"}
+                    </p>
+                    <div className="flex items-center space-x-4">
+                      {form.watch("email") && (
+                        <div className="flex items-center space-x-1">
+                          <Mail className="h-4 w-4" />
+                          <span className="text-sm">{form.watch("email")}</span>
+                        </div>
+                      )}
+                      {form.watch("phone") && (
+                        <div className="flex items-center space-x-1">
+                          <Phone className="h-4 w-4" />
+                          <span className="text-sm">{form.watch("phone")}</span>
+                        </div>
+                      )}
+                      {form.watch("linkedin") && <Linkedin className="h-4 w-4" />}
+                      {form.watch("github") && <Github className="h-4 w-4" />}
+                      {form.watch("website") && <Globe className="h-4 w-4" />}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Content */}
-            <CardContent className="p-8">
-              {/* Bio */}
-              {form.watch("bio") && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-semibold mb-4">About</h2>
-                  <p
-                    className="text-muted-foreground leading-relaxed"
-                    data-testid="preview-bio"
-                  >
-                    {form.watch("bio")}
-                  </p>
-                </div>
-              )}
-
-              {/* Skills */}
-              {skills.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-semibold mb-4">Skills</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {skills.map((skill, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        data-testid={`preview-skill-${index}`}
-                      >
-                        {skill}
-                      </Badge>
-                    ))}
+              {/* Content */}
+              <CardContent className="p-8">
+                {/* Bio */}
+                {form.watch("bio") && (
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">About</h2>
+                    <p
+                      className="text-muted-foreground leading-relaxed"
+                      data-testid="preview-bio"
+                    >
+                      {form.watch("bio")}
+                    </p>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Projects */}
-              {projects.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-semibold mb-4">Projects</h2>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {projects.map((project, index) => (
-                      <Card
-                        key={index}
-                        className="p-4"
-                        data-testid={`preview-project-${index}`}
-                      >
-                        <h3 className="font-semibold mb-2">
-                          {project.title || `Project ${index + 1}`}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          {project.description || "Project description"}
-                        </p>
-                        {project.technologies &&
-                          project.technologies.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mb-3">
-                              {project.technologies.map((tech, techIndex) => (
-                                <Badge
-                                  key={techIndex}
-                                  variant="outline"
-                                  className="text-xs"
-                                >
-                                  {tech}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        <div className="flex space-x-2">
-                          {project.demoUrl && (
-                            <Button variant="outline" size="sm">
-                              <Globe className="mr-1 h-3 w-3" />
-                              Demo
-                            </Button>
-                          )}
-                          {project.githubUrl && (
-                            <Button variant="outline" size="sm">
-                              <Github className="mr-1 h-3 w-3" />
-                              Code
-                            </Button>
-                          )}
+                {/* Skills */}
+                {skills.length > 0 && (
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">Skills</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {skills.map((skill, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          data-testid={`preview-skill-${index}`}
+                        >
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Projects */}
+                {projects.length > 0 && (
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">Projects</h2>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {projects.map((project, index) => (
+                        <Card
+                          key={index}
+                          className="p-4"
+                          data-testid={`preview-project-${index}`}
+                        >
+                          <h3 className="font-semibold mb-2">
+                            {project.title || `Project ${index + 1}`}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            {project.description || "Project description"}
+                          </p>
+                          {project.technologies &&
+                            project.technologies.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mb-3">
+                                {project.technologies.map((tech, techIndex) => (
+                                  <Badge
+                                    key={techIndex}
+                                    variant="outline"
+                                    className="text-xs"
+                                  >
+                                    {tech}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          <div className="flex space-x-2">
+                            {project.demoUrl && (
+                              <Button variant="outline" size="sm">
+                                <Globe className="mr-1 h-3 w-3" />
+                                Demo
+                              </Button>
+                            )}
+                            {project.githubUrl && (
+                              <Button variant="outline" size="sm">
+                                <Github className="mr-1 h-3 w-3" />
+                                Code
+                              </Button>
+                            )}
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Experience */}
+                {experience.length > 0 && (
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">Experience</h2>
+                    <div className="space-y-4">
+                      {experience.map((exp, index) => (
+                        <div
+                          key={index}
+                          className="border-l-2 border-primary pl-4"
+                          data-testid={`preview-experience-${index}`}
+                        >
+                          <h3 className="font-semibold">
+                            {exp.title || "Job Title"}
+                          </h3>
+                          <p className="text-primary font-medium">
+                            {exp.company || "Company"}
+                          </p>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {exp.duration || "Duration"}
+                          </p>
+                          <p className="text-sm">
+                            {exp.description || "Job description"}
+                          </p>
                         </div>
-                      </Card>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Experience */}
-              {experience.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-semibold mb-4">Experience</h2>
-                  <div className="space-y-4">
-                    {experience.map((exp, index) => (
-                      <div
-                        key={index}
-                        className="border-l-2 border-primary pl-4"
-                        data-testid={`preview-experience-${index}`}
-                      >
-                        <h3 className="font-semibold">
-                          {exp.title || "Job Title"}
-                        </h3>
-                        <p className="text-primary font-medium">
-                          {exp.company || "Company"}
-                        </p>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {exp.duration || "Duration"}
-                        </p>
-                        <p className="text-sm">
-                          {exp.description || "Job description"}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Education */}
-              {education.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-xl font-semibold mb-4">Education</h2>
-                  <div className="space-y-4">
-                    {education.map((edu, index) => (
-                      <div
-                        key={index}
-                        className="border-l-2 border-secondary pl-4"
-                        data-testid={`preview-education-${index}`}
-                      >
-                        <h3 className="font-semibold">
-                          {edu.degree || "Degree"}
-                        </h3>
-                        <p className="text-secondary font-medium">
-                          {edu.institution || "Institution"}
-                        </p>
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                          <span>{edu.year || "Year"}</span>
-                          {edu.grade && <span>Grade: {edu.grade}</span>}
+                {/* Education */}
+                {education.length > 0 && (
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">Education</h2>
+                    <div className="space-y-4">
+                      {education.map((edu, index) => (
+                        <div
+                          key={index}
+                          className="border-l-2 border-secondary pl-4"
+                          data-testid={`preview-education-${index}`}
+                        >
+                          <h3 className="font-semibold">
+                            {edu.degree || "Degree"}
+                          </h3>
+                          <p className="text-secondary font-medium">
+                            {edu.institution || "Institution"}
+                          </p>
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                            <span>{edu.year || "Year"}</span>
+                            {edu.grade && <span>Grade: {edu.grade}</span>}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Resume */}
-              {(resumeFile || form.watch("resumeUrl")) && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-4">Resume</h2>
-                  <Card className="p-6 text-center bg-muted/30">
-                    <FileText className="h-12 w-12 text-primary mx-auto mb-4" />
-                    <p className="font-medium mb-2">Resume Available</p>
-                    <Button variant="outline" size="sm">
-                      <Download className="mr-2 h-4 w-4" />
-                      Download Resume
-                    </Button>
-                  </Card>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                {/* Resume */}
+                {(resumeFile || form.watch("resumeUrl")) && (
+                  <div>
+                    <h2 className="text-xl font-semibold mb-4">Resume</h2>
+                    <Card className="p-6 text-center bg-muted/30">
+                      <FileText className="h-12 w-12 text-primary mx-auto mb-4" />
+                      <p className="font-medium mb-2">Resume Available</p>
+                      <Button variant="outline" size="sm">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Resume
+                      </Button>
+                    </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     );
@@ -546,25 +700,17 @@ export function PortfolioBuilder({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <h1
-                className="text-2xl font-bold"
-                data-testid="portfolio-builder-title"
-              >
-                {isEditing ? "Edit Portfolio" : "Create Portfolio"}
+              <h1 className="text-2xl font-bold" data-testid="portfolio-builder-title">
+                {isEditingPortfolio ? "Edit Portfolio" : "Create Portfolio"}
               </h1>
               <Badge variant="secondary">Portfolio Builder</Badge>
             </div>
             <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                onClick={onCancel}
-                data-testid="button-cancel"
-              >
+              <Button variant="outline" onClick={onCancel} data-testid="button-cancel">
                 Cancel
               </Button>
               <Button
@@ -588,7 +734,7 @@ export function PortfolioBuilder({
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    {isEditing ? "Update" : "Create"}
+                    {isEditingPortfolio ? "Update" : "Create"}
                   </>
                 )}
               </Button>
@@ -597,7 +743,6 @@ export function PortfolioBuilder({
         </div>
       </div>
 
-      {/* AI Helper Section */}
       {showAiHelper && (
         <div className="border-b border-border bg-muted/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -639,7 +784,6 @@ export function PortfolioBuilder({
                         size="sm"
                         className="w-full justify-start"
                         onClick={() => {
-                          // Generate professional summary
                           const skills = form.watch("skills") || [];
                           const experience = form.watch("experience") || [];
                           if (skills.length > 0 || experience.length > 0) {
@@ -647,8 +791,7 @@ export function PortfolioBuilder({
                             form.setValue("bio", summary);
                             toast({
                               title: "Bio Generated",
-                              description:
-                                "Professional bio has been generated based on your skills and experience.",
+                              description: "Professional bio has been generated based on your skills and experience.",
                             });
                           }
                         }}
@@ -662,56 +805,23 @@ export function PortfolioBuilder({
                         size="sm"
                         className="w-full justify-start"
                         onClick={() => {
-                          // Suggest skills based on title
-                          const title =
-                            form.watch("title")?.toLowerCase() || "";
+                          const title = form.watch("title")?.toLowerCase() || "";
                           let suggestedSkills: string[] = [];
 
-                          if (
-                            title.includes("developer") ||
-                            title.includes("engineer")
-                          ) {
-                            suggestedSkills = [
-                              "JavaScript",
-                              "React",
-                              "Node.js",
-                              "Python",
-                              "Git",
-                              "API Development",
-                            ];
+                          if (title.includes("developer") || title.includes("engineer")) {
+                            suggestedSkills = ["JavaScript", "React", "Node.js", "Python", "Git", "API Development"];
                           } else if (title.includes("designer")) {
-                            suggestedSkills = [
-                              "Adobe Creative Suite",
-                              "Figma",
-                              "UI/UX Design",
-                              "Prototyping",
-                              "Typography",
-                            ];
+                            suggestedSkills = ["Adobe Creative Suite", "Figma", "UI/UX Design", "Prototyping", "Typography"];
                           } else if (title.includes("data")) {
-                            suggestedSkills = [
-                              "Python",
-                              "SQL",
-                              "Data Analysis",
-                              "Machine Learning",
-                              "Pandas",
-                              "Tableau",
-                            ];
+                            suggestedSkills = ["Python", "SQL", "Data Analysis", "Machine Learning", "Pandas", "Tableau"];
                           } else {
-                            suggestedSkills = [
-                              "Communication",
-                              "Problem Solving",
-                              "Team Leadership",
-                              "Project Management",
-                            ];
+                            suggestedSkills = ["Communication", "Problem Solving", "Team Leadership", "Project Management"];
                           }
 
-                          setSkills((prev) => [
-                            ...new Set([...prev, ...suggestedSkills]),
-                          ]);
+                          setSkills((prev) => [...new Set([...prev, ...suggestedSkills])]);
                           toast({
                             title: "Skills Suggested",
-                            description:
-                              "Relevant skills have been added based on your title.",
+                            description: "Relevant skills have been added based on your title.",
                           });
                         }}
                       >
@@ -727,10 +837,8 @@ export function PortfolioBuilder({
         </div>
       )}
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
           <div className="lg:col-span-1">
             <Card className="sticky top-6" data-testid="portfolio-tabs">
               <CardHeader>
@@ -743,9 +851,7 @@ export function PortfolioBuilder({
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-muted transition-colors ${
-                        activeTab === tab.id
-                          ? "bg-primary text-primary-foreground"
-                          : ""
+                        activeTab === tab.id ? "bg-primary text-primary-foreground" : ""
                       }`}
                       data-testid={`tab-${tab.id}`}
                     >
@@ -758,9 +864,194 @@ export function PortfolioBuilder({
             </Card>
           </div>
 
-          {/* Main Content */}
           <div className="lg:col-span-3">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* AI Assistant Tab */}
+              {activeTab === "ai-assistant" && (
+                <Card data-testid="ai-assistant-section">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Bot className="h-5 w-5" />
+                      <span>AI Portfolio Website Generator</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Website Generation */}
+                    <div>
+                      <Label htmlFor="ai-prompt">Describe Your Dream Portfolio *</Label>
+                      <Textarea
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        placeholder="Describe what kind of portfolio website you want. For example: 'Create a modern, minimalist portfolio for a full-stack developer with dark theme, smooth animations, and professional project showcases. Include contact form and social links.'"
+                        rows={4}
+                        className="resize-vertical"
+                        data-testid="ai-prompt-textarea"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Be specific about design style, colors, layout, and features you want
+                      </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <Button
+                        type="button"
+                        onClick={handleGenerateWebsite}
+                        disabled={generateWebsiteMutation.isPending || !aiPrompt.trim()}
+                        className="w-full"
+                        size="lg"
+                        data-testid="generate-website-button"
+                      >
+                        {generateWebsiteMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            Generating Website...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="mr-2 h-5 w-5" />
+                            Generate Website
+                          </>
+                        )}
+                      </Button>
+
+                      {websiteCode.html && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setPreviewMode(true)}
+                          className="w-full"
+                          size="lg"
+                        >
+                          <Eye className="mr-2 h-5 w-5" />
+                          Preview Website
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Website Editing */}
+                    {websiteCode.html && (
+                      <Card className="border-accent/20 bg-accent/5">
+                        <CardHeader>
+                          <CardTitle className="flex items-center space-x-2 text-lg">
+                            <Edit className="h-4 w-4" />
+                            <span>Edit Your Website</span>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div>
+                            <Label>What changes would you like to make?</Label>
+                            <Textarea
+                              value={editPrompt}
+                              onChange={(e) => setEditPrompt(e.target.value)}
+                              placeholder="Describe the changes you want. For example: 'Make the header background blue, add a testimonials section, change the font to modern sans-serif, add hover effects to buttons'"
+                              rows={3}
+                              className="resize-vertical"
+                            />
+                          </div>
+
+                          <div className="flex space-x-2">
+                            <Button
+                              type="button"
+                              onClick={handleEditWebsite}
+                              disabled={editWebsiteMutation.isPending || !editPrompt.trim()}
+                              className="flex-1"
+                            >
+                              {editWebsiteMutation.isPending ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Applying Changes...
+                                </>
+                              ) : (
+                                <>
+                                  <Palette className="mr-2 h-4 w-4" />
+                                  Apply Changes
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Download & Share */}
+                    {websiteCode.html && (
+                      <Card className="border-green-200 bg-green-50">
+                        <CardHeader>
+                          <CardTitle className="flex items-center space-x-2 text-lg text-green-800">
+                            <Download className="h-4 w-4" />
+                            <span>Download & Share</span>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="grid md:grid-cols-3 gap-3">
+                            <Button
+                              type="button"
+                              onClick={() => downloadWebsiteMutation.mutate()}
+                              disabled={downloadWebsiteMutation.isPending}
+                              variant="outline"
+                              className="border-green-300 text-green-700 hover:bg-green-100"
+                            >
+                              {downloadWebsiteMutation.isPending ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                <Download className="mr-2 h-4 w-4" />
+                              )}
+                              Download Code
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="border-green-300 text-green-700 hover:bg-green-100"
+                              onClick={() => {
+                                navigator.clipboard.writeText(websiteCode.html);
+                                toast({ title: "Copied!", description: "HTML code copied to clipboard" });
+                              }}
+                            >
+                              <Copy className="mr-2 h-4 w-4" />
+                              Copy HTML
+                            </Button>
+
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="border-green-300 text-green-700 hover:bg-green-100"
+                            >
+                              <Share className="mr-2 h-4 w-4" />
+                              Share Link
+                            </Button>
+                          </div>
+
+                          <div className="text-sm text-green-700 bg-white/50 p-3 rounded-lg">
+                            <p className="font-medium mb-1">✨ Your website includes:</p>
+                            <ul className="text-xs space-y-1">
+                              <li>• Responsive design for all devices</li>
+                              <li>• Modern animations and effects</li>
+                              <li>• Optimized images and assets</li>
+                              <li>• Clean, professional code structure</li>
+                              <li>• Ready to deploy anywhere</li>
+                            </ul>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {generatedWebsite && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Generated Portfolio Data</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto max-h-48">
+                            {JSON.stringify(generatedWebsite, null, 2)}
+                          </pre>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Basic Information */}
               {activeTab === "basic" && (
                 <Card data-testid="basic-info-section">
@@ -901,17 +1192,10 @@ export function PortfolioBuilder({
                           value={skillInput}
                           onChange={(e) => setSkillInput(e.target.value)}
                           placeholder="Add a skill"
-                          onKeyPress={(e) =>
-                            e.key === "Enter" &&
-                            (e.preventDefault(), addSkill())
-                          }
+                          onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
                           data-testid="input-skill"
                         />
-                        <Button
-                          type="button"
-                          onClick={addSkill}
-                          data-testid="button-add-skill"
-                        >
+                        <Button type="button" onClick={addSkill} data-testid="button-add-skill">
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>

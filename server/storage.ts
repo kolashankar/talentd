@@ -68,6 +68,93 @@ export class MemStorage implements IStorage {
     this.dsaProblems = new Map();
     this.portfolios = new Map();
     this.resumeAnalyses = new Map();
+    
+    // Initialize with sample data to prevent empty state
+    this.initializeSampleData();
+  }
+
+  private initializeSampleData() {
+    // Create admin user
+    const adminId = "admin-1";
+    this.users.set(adminId, {
+      id: adminId,
+      username: "admin",
+      email: "admin@example.com",
+      password: "admin123",
+      role: "admin",
+      createdAt: new Date(),
+    });
+
+    // Sample jobs
+    const sampleJob = {
+      id: "job-1",
+      title: "Software Engineer Intern",
+      company: "Tech Corp",
+      location: "San Francisco, CA",
+      salaryRange: "$60,000 - $80,000",
+      jobType: "internship",
+      experienceLevel: "fresher",
+      description: "Exciting opportunity for a software engineering intern to work on cutting-edge projects.",
+      requirements: "Computer Science degree, JavaScript, React knowledge",
+      skills: ["JavaScript", "React", "Node.js"],
+      companyLogo: "https://via.placeholder.com/200x200/4F46E5/white?text=TC",
+      applicationUrl: "https://techcorp.com/careers",
+      isActive: true,
+      category: "internship",
+      createdAt: new Date(),
+    };
+    this.jobs.set(sampleJob.id, sampleJob);
+
+    // Sample roadmap
+    const sampleRoadmap = {
+      id: "roadmap-1",
+      title: "Frontend Developer Roadmap",
+      description: "Complete guide to becoming a frontend developer",
+      content: "Learn HTML, CSS, JavaScript, React, and modern development practices.",
+      difficulty: "beginner",
+      estimatedTime: "3-6 months",
+      technologies: ["HTML", "CSS", "JavaScript", "React"],
+      steps: [
+        { title: "Learn HTML", description: "Master HTML basics", resources: [] },
+        { title: "Learn CSS", description: "Style your websites", resources: [] },
+      ],
+      isPublished: true,
+      createdAt: new Date(),
+    };
+    this.roadmaps.set(sampleRoadmap.id, sampleRoadmap);
+
+    // Sample article
+    const sampleArticle = {
+      id: "article-1",
+      title: "Getting Started with React",
+      content: "React is a popular JavaScript library for building user interfaces...",
+      excerpt: "Learn the basics of React development",
+      author: "Tech Writer",
+      category: "Technology",
+      tags: ["React", "JavaScript", "Frontend"],
+      isPublished: true,
+      readTime: 5,
+      createdAt: new Date(),
+    };
+    this.articles.set(sampleArticle.id, sampleArticle);
+
+    // Sample DSA problem
+    const sampleDsaProblem = {
+      id: "dsa-1",
+      title: "Two Sum",
+      description: "Given an array of integers, return indices of two numbers that add up to a target.",
+      difficulty: "easy",
+      category: "Array",
+      solution: "Use a hash map to store complements and find the solution in O(n) time.",
+      hints: ["Think about using a hash map", "Store complements as you iterate"],
+      timeComplexity: "O(n)",
+      spaceComplexity: "O(n)",
+      tags: ["Array", "Hash Map"],
+      companies: ["Google", "Facebook"],
+      isPublished: true,
+      createdAt: new Date(),
+    };
+    this.dsaProblems.set(sampleDsaProblem.id, sampleDsaProblem);
   }
 
   // User operations

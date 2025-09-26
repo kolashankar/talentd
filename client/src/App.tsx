@@ -17,6 +17,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ArticleDetail from "./pages/article-detail";
 import RoadmapDetail from "./pages/roadmap-detail";
 import DsaProblemDetail from "./pages/dsa-problem-detail";
+import PrivacyPolicy from "./pages/privacy-policy";
+import TermsOfService from "./pages/terms-of-service";
+import Support from "./pages/support";
 
 function Router() {
   return (
@@ -34,6 +37,9 @@ function Router() {
       <Route path="/articles/:id" component={ArticleDetail} />
       <Route path="/roadmaps/:id" component={RoadmapDetail} />
       <Route path="/dsa/:id" component={DsaProblemDetail} />
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/terms-of-service" component={TermsOfService} />
+      <Route path="/support" component={Support} />
       <Route component={NotFound} />
     </Switch>
   );

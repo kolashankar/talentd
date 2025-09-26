@@ -358,8 +358,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Portfolio routes
-  app.get("/api/portfolios", async (req, res) => {
+  // Portfolio routes (Protected)
+  app.get("/api/portfolios", requireAuth, async (req, res) => {
     try {
       const portfolios = await storage.getPortfolios();
       res.json(portfolios);
@@ -392,9 +392,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/portfolios", async (req, res) => {
+  app.post("/api/portfolios", requireAuth, async (req, res) => {
     try {
-      const portfolioData = insertPortfolioSchema.parse(req.body);
+      const portfolioData = insertPortfolioSchema.parse({
+        ...req.body,
+        userId: (req.user as any)?.id
+      });
       const portfolio = await storage.createPortfolio(portfolioData);
       res.status(201).json(portfolio);
     } catch (error) {
@@ -476,8 +479,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Resume Analysis routes
-  app.post("/api/resume/analyze", upload.single('resume'), async (req, res) => {
+  // Resume Analysis routes (Protected)
+  app.post("/api/resume/analyze", requireAuth, upload.single('resume'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "Resume file is required" });
@@ -631,8 +634,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Enhanced Portfolio Generation
-  app.post("/api/portfolio/generate-complete", upload.single('resume'), async (req, res) => {
+  // Enhanced Portfolio Generation (Protected)
+  app.post("/api/portfolio/generate-complete", requireAuth, upload.single('resume'), async (req, res) => {
     try {
       const prompt = req.body.prompt || '';
       let portfolioData = {};

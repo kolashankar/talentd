@@ -19,7 +19,7 @@ import {
 } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { X, Plus, Save, Loader2 } from "lucide-react";
+import { X, Plus, Save, Loader2, Wand2 } from "lucide-react";
 import { z } from "zod";
 
 interface ContentFormProps {
@@ -46,6 +46,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
   const [workflowImages, setWorkflowImages] = useState<string[]>([]);
   const [mindmapImages, setMindmapImages] = useState<string[]>([]);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [isGeneratingAssets, setIsGeneratingAssets] = useState(false); // State to track AI asset generation
 
   const { toast } = useToast();
   const isEditing = Boolean(item?.id);
@@ -84,7 +85,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
       setCompanies(item.companies || []);
       setSteps(item.steps || []);
       setHints(item.hints || []);
-      
+
       // Handle AI-generated visual content
       setWorkflowImages(item.workflowImages || []);
       setMindmapImages(item.mindmapImages || []);
@@ -107,13 +108,63 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
     }
   }, [item, form]);
 
+  // Mutation for AI asset generation
+  const generateAssetsMutation = useMutation({
+    mutationFn: async ({ title, type }: { title: string; type: string }) => {
+      const response = await apiRequest('POST', '/api/ai/generate-assets', { title, type });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      setIsGeneratingAssets(false);
+      toast({
+        title: "Assets Generated",
+        description: "AI has generated relevant assets for your content.",
+      });
+      // Update state with generated assets
+      if (data.workflowImages) setWorkflowImages(data.workflowImages);
+      if (data.mindmapImages) setMindmapImages(data.mindmapImages);
+      if (data.generatedImages) setGeneratedImages(data.generatedImages);
+
+      // Optionally, update form values if needed
+      if (data.featuredImage) form.setValue("featuredImage", data.featuredImage);
+      if (data.image) form.setValue("image", data.image);
+    },
+    onError: (error: Error) => {
+      setIsGeneratingAssets(false);
+      toast({
+        title: "Error Generating Assets",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       const endpoint = getApiEndpoint();
       const method = isEditing ? 'PUT' : 'POST';
       const url = isEditing ? `${endpoint}/${item.id}` : endpoint;
 
-      return await apiRequest(method, url, data);
+      // Ensure AI-generated assets are included in the data sent for saving
+      const payload = {
+        ...data,
+        skills,
+        tags,
+        technologies,
+        companies,
+        steps,
+        hints,
+        workflowImages,
+        mindmapImages,
+        generatedImages,
+        // Add placeholder URLs for images (in a real app, you'd upload to a file service)
+        featuredImage: uploadedImage ? `https://placeholder.com/600x400/${uploadedImage.name}` : data.featuredImage,
+        companyLogo: companyLogo ? `https://placeholder.com/200x200/${companyLogo.name}` : data.companyLogo,
+        image: uploadedImage ? `https://placeholder.com/600x400/${uploadedImage.name}` : data.image,
+      };
+
+      return await apiRequest(method, url, payload);
     },
     onSuccess: () => {
       toast({
@@ -161,6 +212,10 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
       featuredImage: uploadedImage ? `https://placeholder.com/600x400/${uploadedImage.name}` : undefined,
       companyLogo: companyLogo ? `https://placeholder.com/200x200/${companyLogo.name}` : undefined,
       image: uploadedImage ? `https://placeholder.com/600x400/${uploadedImage.name}` : undefined,
+      // Include AI-generated assets in the form data
+      workflowImages,
+      mindmapImages,
+      generatedImages,
     };
 
     saveMutation.mutate(formData);
@@ -196,11 +251,33 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
       <div className="grid md:grid-cols-2 gap-6">
         <div>
           <Label htmlFor="title">Job Title *</Label>
-          <Input 
-            {...form.register("title")} 
-            placeholder="e.g., Software Engineer Intern"
-            data-testid="input-title"
-          />
+          <div className="flex gap-2">
+            <Input 
+              {...form.register("title")} 
+              placeholder="e.g., Software Engineer Intern"
+              data-testid="input-title"
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              onClick={() => {
+                const title = form.watch("title");
+                if (title) {
+                  setIsGeneratingAssets(true);
+                  generateAssetsMutation.mutate({ title, type });
+                }
+              }}
+              disabled={!form.watch("title") || generateAssetsMutation.isPending || isGeneratingAssets}
+              variant="outline"
+              size="sm"
+            >
+              {generateAssetsMutation.isPending || isGeneratingAssets ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
           {form.formState.errors.title && (
             <p className="text-sm text-destructive mt-1">{form.formState.errors.title.message}</p>
           )}
@@ -292,7 +369,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         <Textarea 
           {...form.register("responsibilities")} 
           rows={4}
-          placeholder="List key job responsibilities..."
+          placeholder="List job responsibilities..."
           className="resize-vertical"
           data-testid="textarea-responsibilities"
         />
@@ -391,6 +468,43 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         />
         <Label>Active Job Posting</Label>
       </div>
+
+      {/* Display AI-generated images */}
+      {(workflowImages.length > 0 || mindmapImages.length > 0 || generatedImages.length > 0) && (
+        <div className="space-y-4">
+          <Label>AI Generated Assets</Label>
+          {workflowImages.length > 0 && (
+            <div>
+              <Label>Workflow Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {workflowImages.map((imgUrl, index) => (
+                  <img key={index} src={imgUrl} alt={`Workflow ${index + 1}`} className="w-32 h-32 object-cover rounded-md" />
+                ))}
+              </div>
+            </div>
+          )}
+          {mindmapImages.length > 0 && (
+            <div>
+              <Label>Mindmap Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {mindmapImages.map((imgUrl, index) => (
+                  <img key={index} src={imgUrl} alt={`Mindmap ${index + 1}`} className="w-32 h-32 object-cover rounded-md" />
+                ))}
+              </div>
+            </div>
+          )}
+          {generatedImages.length > 0 && (
+            <div>
+              <Label>Generated Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {generatedImages.map((imgUrl, index) => (
+                  <img key={index} src={imgUrl} alt={`Generated ${index + 1}`} className="w-32 h-32 object-cover rounded-md" />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 
@@ -398,11 +512,36 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
     <>
       <div>
         <Label htmlFor="title">Article Title *</Label>
-        <Input 
-          {...form.register("title")} 
-          placeholder="Enter article title"
-          data-testid="input-title"
-        />
+        <div className="flex gap-2">
+          <Input 
+            {...form.register("title")} 
+            placeholder="Enter article title"
+            data-testid="input-title"
+            className="flex-1"
+          />
+          <Button
+            type="button"
+            onClick={() => {
+              const title = form.watch("title");
+              if (title) {
+                setIsGeneratingAssets(true);
+                generateAssetsMutation.mutate({ title, type });
+              }
+            }}
+            disabled={!form.watch("title") || generateAssetsMutation.isPending || isGeneratingAssets}
+            variant="outline"
+            size="sm"
+          >
+            {generateAssetsMutation.isPending || isGeneratingAssets ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Wand2 className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+        {form.formState.errors.title && (
+          <p className="text-sm text-destructive mt-1">{form.formState.errors.title.message}</p>
+        )}
       </div>
 
       <div>
@@ -510,6 +649,43 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
           <Label>Published</Label>
         </div>
       </div>
+
+      {/* Display AI-generated images */}
+      {(workflowImages.length > 0 || mindmapImages.length > 0 || generatedImages.length > 0) && (
+        <div className="space-y-4">
+          <Label>AI Generated Assets</Label>
+          {workflowImages.length > 0 && (
+            <div>
+              <Label>Workflow Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {workflowImages.map((imgUrl, index) => (
+                  <img key={index} src={imgUrl} alt={`Workflow ${index + 1}`} className="w-32 h-32 object-cover rounded-md" />
+                ))}
+              </div>
+            </div>
+          )}
+          {mindmapImages.length > 0 && (
+            <div>
+              <Label>Mindmap Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {mindmapImages.map((imgUrl, index) => (
+                  <img key={index} src={imgUrl} alt={`Mindmap ${index + 1}`} className="w-32 h-32 object-cover rounded-md" />
+                ))}
+              </div>
+            </div>
+          )}
+          {generatedImages.length > 0 && (
+            <div>
+              <Label>Generated Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {generatedImages.map((imgUrl, index) => (
+                  <img key={index} src={imgUrl} alt={`Generated ${index + 1}`} className="w-32 h-32 object-cover rounded-md" />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 
@@ -517,11 +693,36 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
     <>
       <div>
         <Label htmlFor="title">Roadmap Title *</Label>
-        <Input 
-          {...form.register("title")} 
-          placeholder="e.g., Frontend Developer Roadmap"
-          data-testid="input-title"
-        />
+        <div className="flex gap-2">
+          <Input 
+            {...form.register("title")} 
+            placeholder="e.g., Frontend Developer Roadmap"
+            data-testid="input-title"
+            className="flex-1"
+          />
+          <Button
+            type="button"
+            onClick={() => {
+              const title = form.watch("title");
+              if (title) {
+                setIsGeneratingAssets(true);
+                generateAssetsMutation.mutate({ title, type });
+              }
+            }}
+            disabled={!form.watch("title") || generateAssetsMutation.isPending || isGeneratingAssets}
+            variant="outline"
+            size="sm"
+          >
+            {generateAssetsMutation.isPending || isGeneratingAssets ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Wand2 className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+        {form.formState.errors.title && (
+          <p className="text-sm text-destructive mt-1">{form.formState.errors.title.message}</p>
+        )}
       </div>
 
       <div>
@@ -669,6 +870,43 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         />
         <Label>Published</Label>
       </div>
+
+      {/* Display AI-generated images */}
+      {(workflowImages.length > 0 || mindmapImages.length > 0 || generatedImages.length > 0) && (
+        <div className="space-y-4">
+          <Label>AI Generated Assets</Label>
+          {workflowImages.length > 0 && (
+            <div>
+              <Label>Workflow Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {workflowImages.map((imgUrl, index) => (
+                  <img key={index} src={imgUrl} alt={`Workflow ${index + 1}`} className="w-32 h-32 object-cover rounded-md" />
+                ))}
+              </div>
+            </div>
+          )}
+          {mindmapImages.length > 0 && (
+            <div>
+              <Label>Mindmap Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {mindmapImages.map((imgUrl, index) => (
+                  <img key={index} src={imgUrl} alt={`Mindmap ${index + 1}`} className="w-32 h-32 object-cover rounded-md" />
+                ))}
+              </div>
+            </div>
+          )}
+          {generatedImages.length > 0 && (
+            <div>
+              <Label>Generated Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {generatedImages.map((imgUrl, index) => (
+                  <img key={index} src={imgUrl} alt={`Generated ${index + 1}`} className="w-32 h-32 object-cover rounded-md" />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 
@@ -676,11 +914,36 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
     <>
       <div>
         <Label htmlFor="title">Problem Title *</Label>
-        <Input 
-          {...form.register("title")} 
-          placeholder="e.g., Two Sum"
-          data-testid="input-title"
-        />
+        <div className="flex gap-2">
+          <Input 
+            {...form.register("title")} 
+            placeholder="e.g., Two Sum"
+            data-testid="input-title"
+            className="flex-1"
+          />
+          <Button
+            type="button"
+            onClick={() => {
+              const title = form.watch("title");
+              if (title) {
+                setIsGeneratingAssets(true);
+                generateAssetsMutation.mutate({ title, type });
+              }
+            }}
+            disabled={!form.watch("title") || generateAssetsMutation.isPending || isGeneratingAssets}
+            variant="outline"
+            size="sm"
+          >
+            {generateAssetsMutation.isPending || isGeneratingAssets ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Wand2 className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+        {form.formState.errors.title && (
+          <p className="text-sm text-destructive mt-1">{form.formState.errors.title.message}</p>
+        )}
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -849,6 +1112,43 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         />
         <Label>Published</Label>
       </div>
+
+      {/* Display AI-generated images */}
+      {(workflowImages.length > 0 || mindmapImages.length > 0 || generatedImages.length > 0) && (
+        <div className="space-y-4">
+          <Label>AI Generated Assets</Label>
+          {workflowImages.length > 0 && (
+            <div>
+              <Label>Workflow Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {workflowImages.map((imgUrl, index) => (
+                  <img key={index} src={imgUrl} alt={`Workflow ${index + 1}`} className="w-32 h-32 object-cover rounded-md" />
+                ))}
+              </div>
+            </div>
+          )}
+          {mindmapImages.length > 0 && (
+            <div>
+              <Label>Mindmap Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {mindmapImages.map((imgUrl, index) => (
+                  <img key={index} src={imgUrl} alt={`Mindmap ${index + 1}`} className="w-32 h-32 object-cover rounded-md" />
+                ))}
+              </div>
+            </div>
+          )}
+          {generatedImages.length > 0 && (
+            <div>
+              <Label>Generated Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {generatedImages.map((imgUrl, index) => (
+                  <img key={index} src={imgUrl} alt={`Generated ${index + 1}`} className="w-32 h-32 object-cover rounded-md" />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 
@@ -897,13 +1197,13 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
             </Button>
             <Button 
               type="submit" 
-              disabled={saveMutation.isPending}
+              disabled={saveMutation.isPending || isGeneratingAssets}
               data-testid="button-save"
             >
-              {saveMutation.isPending ? (
+              {saveMutation.isPending || isGeneratingAssets ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  {isGeneratingAssets ? "Generating Assets..." : "Saving..."}
                 </>
               ) : (
                 <>
