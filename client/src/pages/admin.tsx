@@ -76,6 +76,7 @@ function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("jobs");
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [showAiGenerator, setShowAiGenerator] = useState(false);
+  const { toast } = useToast();
 
   // All queries run unconditionally in this component
   const { data: jobs = [], isLoading: jobsLoading } = useQuery<Job[]>({
@@ -349,47 +350,54 @@ function AdminDashboard() {
 
             
 
-            {/* Admin Agent Panel */}
-            {selectedItem && (
-              <AdminAgent 
-                className="mt-6"
-                selectedContent={selectedItem}
-                contentType={activeTab}
-                onTemplateGenerated={(template) => {
-                  // Handle generated template
-                  console.log('Template generated:', template);
-                }}
-              />
-            )}
+            
           </div>
 
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* AI Generator Panel */}
             {showAiGenerator && (
-              <Card className="mb-6">
-                <AiGenerator onContentGenerated={(content) => {
-                  // Map AI content type to admin tab type
-                  let targetTab = activeTab;
-                  if (content.difficulty && (content.timeComplexity || content.spaceComplexity)) {
-                    targetTab = 'dsa-corner';
-                  } else if (content.steps || content.technologies) {
-                    targetTab = 'roadmaps';
-                  } else if (content.content && content.author) {
-                    targetTab = 'articles';
-                  } else if (content.company && content.location) {
-                    targetTab = 'jobs';
-                  }
-                  
-                  // Switch to the appropriate tab if needed
-                  if (targetTab !== activeTab) {
-                    setActiveTab(targetTab);
-                  }
-                  
-                  setSelectedItem(content);
-                  setShowAiGenerator(false);
-                }} />
-              </Card>
+              <div className="space-y-6 mb-6">
+                <Card>
+                  <AiGenerator onContentGenerated={(content) => {
+                    // Map AI content type to admin tab type
+                    let targetTab = activeTab;
+                    if (content.difficulty && (content.timeComplexity || content.spaceComplexity)) {
+                      targetTab = 'dsa-corner';
+                    } else if (content.steps || content.technologies) {
+                      targetTab = 'roadmaps';
+                    } else if (content.content && content.author) {
+                      targetTab = 'articles';
+                    } else if (content.company && content.location) {
+                      targetTab = 'jobs';
+                    }
+                    
+                    // Switch to the appropriate tab if needed
+                    if (targetTab !== activeTab) {
+                      setActiveTab(targetTab);
+                    }
+                    
+                    setSelectedItem(content);
+                    setShowAiGenerator(false);
+                  }} />
+                </Card>
+
+                {/* Admin Agent Panel - Moved from sidebar */}
+                {selectedItem && (
+                  <AdminAgent 
+                    selectedContent={selectedItem}
+                    contentType={activeTab}
+                    onTemplateGenerated={(template) => {
+                      // Handle generated template
+                      console.log('Template generated:', template);
+                      toast({
+                        title: "Template Generated",
+                        description: "Marketing template has been created successfully.",
+                      });
+                    }}
+                  />
+                )}
+              </div>
             )}
 
             {selectedItem ? (

@@ -663,13 +663,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      // Generate sample HTML/CSS/JS for the portfolio
+      const sampleHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Generated Portfolio</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; color: white; padding: 50px 0; }
+        .content { background: white; border-radius: 10px; padding: 40px; margin: 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .skills { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+        .skill { background: #667eea; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; }
+        .projects { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 30px 0; }
+        .project { border: 1px solid #ddd; border-radius: 8px; padding: 20px; transition: transform 0.3s; }
+        .project:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>${completePortfolio.name || 'Professional Portfolio'}</h1>
+            <p>${completePortfolio.title || 'Software Developer'}</p>
+        </div>
+        <div class="content">
+            <h2>About Me</h2>
+            <p>${completePortfolio.bio || 'Passionate developer with expertise in modern technologies.'}</p>
+            <h2>Skills</h2>
+            <div class="skills">
+                ${(completePortfolio.skills || ['JavaScript', 'React', 'Node.js', 'Python']).map(skill => `<span class="skill">${skill}</span>`).join('')}
+            </div>
+            <h2>Projects</h2>
+            <div class="projects">
+                <div class="project">
+                    <h3>AI Portfolio Generator</h3>
+                    <p>A cutting-edge portfolio generator using artificial intelligence to create personalized websites.</p>
+                </div>
+                <div class="project">
+                    <h3>Modern Web App</h3>
+                    <p>Full-stack application with React frontend and Node.js backend, featuring real-time updates.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        console.log('AI Generated Portfolio Loaded');
+        // Add smooth scrolling and animations
+        document.querySelectorAll('.project').forEach(project => {
+            project.addEventListener('mouseenter', () => {
+                project.style.background = '#f8f9fa';
+            });
+            project.addEventListener('mouseleave', () => {
+                project.style.background = 'white';
+            });
+        });
+    </script>
+</body>
+</html>`;
+
       // Structure the response with portfolio data and code
       const response = {
         portfolioData: completePortfolio,
         portfolioCode: {
-          html: completePortfolio.htmlCode || completePortfolio.html || '',
-          css: completePortfolio.cssCode || completePortfolio.css || '',
-          js: completePortfolio.jsCode || completePortfolio.js || ''
+          html: sampleHTML,
+          css: '/* CSS included in HTML */',
+          js: '/* JavaScript included in HTML */'
         }
       };
 

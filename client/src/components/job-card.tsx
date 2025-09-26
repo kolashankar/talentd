@@ -17,24 +17,24 @@ export function JobCard({ job, className, style, 'data-testid': testId, onViewDe
   const getCategoryBadge = (category: string) => {
     switch (category) {
       case 'internship':
-        return <Badge variant="secondary" className="bg-accent/20 text-accent">Internship</Badge>;
+        return <Badge variant="secondary" className="bg-accent/20 text-accent text-xs">Internship</Badge>;
       case 'fresher-job':
-        return <Badge variant="default" className="bg-primary/20 text-primary">Fresher</Badge>;
+        return <Badge variant="default" className="bg-primary/20 text-primary text-xs">Fresher</Badge>;
       default:
-        return <Badge variant="outline">Job</Badge>;
+        return <Badge variant="outline" className="text-xs">Job</Badge>;
     }
   };
 
   const getExperienceBadge = (level: string) => {
     switch (level) {
       case 'fresher':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800">Fresher</Badge>;
+        return <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">Fresher</Badge>;
       case 'entry':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Entry Level</Badge>;
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">Entry Level</Badge>;
       case 'junior':
-        return <Badge variant="secondary" className="bg-purple-100 text-purple-800">Junior</Badge>;
+        return <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">Junior</Badge>;
       default:
-        return <Badge variant="outline">{level}</Badge>;
+        return <Badge variant="outline" className="text-xs">{level}</Badge>;
     }
   };
 
@@ -49,7 +49,7 @@ export function JobCard({ job, className, style, 'data-testid': testId, onViewDe
     return (
       <Badge 
         variant="secondary" 
-        className={colors[type as keyof typeof colors] || 'bg-muted text-muted-foreground'}
+        className={`text-xs ${colors[type as keyof typeof colors] || 'bg-muted text-muted-foreground'}`}
       >
         {type.charAt(0).toUpperCase() + type.slice(1)}
       </Badge>
@@ -59,21 +59,21 @@ export function JobCard({ job, className, style, 'data-testid': testId, onViewDe
   return (
     <Card 
       className={cn(
-        "hover:shadow-lg transition-all transform hover:-translate-y-1 card-hover",
+        "hover:shadow-lg transition-all transform hover:-translate-y-1 card-hover h-full",
         className
       )}
       style={style}
       data-testid={testId}
     >
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
+      <CardContent className="p-4 h-full flex flex-col">
+        <div className="flex items-start justify-between mb-3">
           {/* Company Logo */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
             {job.companyLogo ? (
               <img 
                 src={job.companyLogo} 
                 alt={`${job.company} logo`}
-                className="w-12 h-12 rounded-lg object-contain"
+                className="w-10 h-10 rounded-lg object-contain flex-shrink-0"
                 data-testid={`${testId}-logo`}
                 onError={(e) => {
                   // Fallback to clearbit logo service
@@ -82,66 +82,68 @@ export function JobCard({ job, className, style, 'data-testid': testId, onViewDe
                 }}
               />
             ) : (
-              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                <span className="text-sm font-semibold text-muted-foreground">
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                <span className="text-xs font-semibold text-muted-foreground">
                   {job.company.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
-            <div>
-              <p className="text-sm text-muted-foreground" data-testid={`${testId}-company`}>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-muted-foreground truncate" data-testid={`${testId}-company`}>
                 {job.company}
               </p>
               {getCategoryBadge(job.category)}
             </div>
           </div>
           
-          {/* Job Type Badge */}
-          {getExperienceBadge(job.experienceLevel)}
+          {/* Experience Badge */}
+          <div className="ml-2 flex-shrink-0">
+            {getExperienceBadge(job.experienceLevel)}
+          </div>
         </div>
 
         {/* Job Title */}
-        <h3 className="text-lg font-semibold mb-2 line-clamp-2" data-testid={`${testId}-title`}>
+        <h3 className="text-base font-semibold mb-3 line-clamp-2 leading-tight" data-testid={`${testId}-title`}>
           {job.title}
         </h3>
 
         {/* Job Details */}
-        <div className="space-y-2 mb-4">
+        <div className="space-y-1.5 mb-3 flex-1">
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <MapPin className="h-4 w-4" />
-            <span data-testid={`${testId}-location`}>{job.location}</span>
+            <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="truncate" data-testid={`${testId}-location`}>{job.location}</span>
           </div>
           
           {job.salaryRange && (
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <DollarSign className="h-4 w-4" />
-              <span data-testid={`${testId}-salary`}>{job.salaryRange}</span>
+              <DollarSign className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate" data-testid={`${testId}-salary`}>{job.salaryRange}</span>
             </div>
           )}
           
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span data-testid={`${testId}-type`}>{job.jobType}</span>
+            <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="truncate" data-testid={`${testId}-type`}>{job.jobType}</span>
           </div>
         </div>
 
         {/* Skills */}
         {job.skills && job.skills.length > 0 && (
-          <div className="mb-4">
+          <div className="mb-3">
             <div className="flex flex-wrap gap-1">
               {job.skills.slice(0, 3).map((skill, index) => (
                 <Badge 
                   key={index} 
                   variant="outline" 
-                  className="text-xs"
+                  className="text-xs px-2 py-0.5"
                   data-testid={`${testId}-skill-${index}`}
                 >
                   {skill}
                 </Badge>
               ))}
               {job.skills.length > 3 && (
-                <Badge variant="secondary" className="text-xs">
-                  +{job.skills.length - 3} more
+                <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                  +{job.skills.length - 3}
                 </Badge>
               )}
             </div>
@@ -149,14 +151,16 @@ export function JobCard({ job, className, style, 'data-testid': testId, onViewDe
         )}
 
         {/* Action Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-border">
-          <div className="flex items-center space-x-2">
-            {getJobTypeBadge(job.jobType)}
-            {job.isActive && (
-              <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
-                Active
-              </Badge>
-            )}
+        <div className="space-y-3 mt-auto">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-1.5">
+              {getJobTypeBadge(job.jobType)}
+              {job.isActive && (
+                <Badge variant="default" className="bg-green-100 text-green-800 text-xs px-2 py-0.5">
+                  Active
+                </Badge>
+              )}
+            </div>
           </div>
           
           <div className="flex space-x-2">
@@ -165,9 +169,10 @@ export function JobCard({ job, className, style, 'data-testid': testId, onViewDe
               size="sm" 
               onClick={() => onViewDetails?.(job)}
               data-testid={`${testId}-view-details-button`}
+              className="flex-1 text-xs px-2 py-1.5 h-8"
             >
-              <Eye className="mr-1 h-4 w-4" />
-              View Details
+              <Eye className="mr-1 h-3 w-3" />
+              Details
             </Button>
             <Button 
               variant="default" 
@@ -179,17 +184,17 @@ export function JobCard({ job, className, style, 'data-testid': testId, onViewDe
                   window.open(job.companyWebsite, '_blank');
                 }
               }}
-              className="text-primary-foreground"
+              className="flex-1 text-xs px-2 py-1.5 h-8"
               data-testid={`${testId}-apply-button`}
             >
-              Apply Now
-              <ExternalLink className="ml-1 h-4 w-4" />
+              Apply
+              <ExternalLink className="ml-1 h-3 w-3" />
             </Button>
           </div>
         </div>
 
         {/* Posted Date */}
-        <div className="mt-3 text-xs text-muted-foreground" data-testid={`${testId}-posted-date`}>
+        <div className="mt-2 text-xs text-muted-foreground" data-testid={`${testId}-posted-date`}>
           Posted {new Date(job.createdAt!).toLocaleDateString()}
         </div>
       </CardContent>

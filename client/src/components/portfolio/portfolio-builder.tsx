@@ -154,9 +154,13 @@ export function PortfolioBuilder({
       const response = await fetch('/api/portfolio/generate-complete', {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Include cookies for session authentication
       });
 
-      if (!response.ok) throw new Error('Failed to generate website');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to generate website' }));
+        throw new Error(errorData.message || 'Failed to generate website');
+      }
       return response.json();
     },
     onSuccess: (result) => {

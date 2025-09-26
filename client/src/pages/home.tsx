@@ -149,6 +149,15 @@ export default function Home() {
                 <Link href="/articles" className="text-muted-foreground hover:text-primary transition-colors">
                   Articles
                 </Link>
+                <Link href="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors">
+                  Privacy
+                </Link>
+                <Link href="/terms-of-service" className="text-muted-foreground hover:text-primary transition-colors">
+                  Terms
+                </Link>
+                <Link href="/support" className="text-muted-foreground hover:text-primary transition-colors">
+                  Support
+                </Link>
                 <Link href="/admin" className="text-muted-foreground hover:text-primary transition-colors">
                   Admin
                 </Link>
@@ -167,29 +176,31 @@ export default function Home() {
       {/* Hero Section with Enhanced UI */}
       <ParallaxHero
         backgroundImage="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&h=1560"
-        overlay="rgba(15, 23, 42, 0.8)"
+        overlay="rgba(15, 23, 42, 0.9)"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
+          <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
             {/* Left Side - Content */}
-            <div>
+            <div className="relative z-20">
               <ScrollAnimations>
                 <div className="mb-6 fade-in-up">
                   <Badge variant="secondary" className="inline-flex items-center bg-accent/20 text-accent px-4 py-2 rounded-full text-sm font-medium mb-4">
                     ✨ India's #1 Platform for Tech Freshers
                   </Badge>
                 </div>
-                <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 fade-in-up" style={{"--stagger": "1"} as any}>
+                <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 fade-in-up relative z-30" style={{"--stagger": "1"} as any}>
                   Launch Your <span className="text-accent">Tech Career</span> Today
                 </h1>
-                <p className="text-xl text-gray-300 mb-8 fade-in-up" style={{"--stagger": "2"} as any}>
+                <p className="text-xl text-gray-300 mb-8 fade-in-up relative z-30" style={{"--stagger": "2"} as any}>
                   Join 50,000+ freshers who landed tech jobs with our AI-powered platform, personalized learning paths, and supportive community.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 mb-8 fade-in-up" style={{"--stagger": "3"} as any}>
-                  <Button size="lg" className="text-lg font-semibold hover:scale-105 transition-all" data-testid="button-find-jobs">
-                    <Briefcase className="mr-2 h-5 w-5" />
-                    Find Jobs
-                  </Button>
+                <div className="flex flex-col sm:flex-row gap-4 mb-8 fade-in-up relative z-30" style={{"--stagger": "3"} as any}>
+                  <Link href="/jobs">
+                    <Button size="lg" className="text-lg font-semibold hover:scale-105 transition-all" data-testid="button-find-jobs">
+                      <Briefcase className="mr-2 h-5 w-5" />
+                      Find Jobs
+                    </Button>
+                  </Link>
                   <Button 
                     variant="outline" 
                     size="lg" 
@@ -202,7 +213,7 @@ export default function Home() {
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-2 gap-4 fade-in-up" style={{"--stagger": "4"} as any}>
+                <div className="grid grid-cols-2 gap-4 fade-in-up relative z-30" style={{"--stagger": "4"} as any}>
                   {stats.slice(0, 2).map((stat, index) => (
                     <div key={index} className="text-center p-4 bg-white/10 rounded-lg backdrop-blur-sm">
                       <div className="text-2xl font-bold text-accent" data-testid={`stat-value-${stat.label.toLowerCase().replace(' ', '-')}`}>
@@ -218,7 +229,7 @@ export default function Home() {
             </div>
 
             {/* Right Side - Analytics Dashboard */}
-            <div className="fade-in-up" style={{"--stagger": "5"} as any}>
+            <div className="fade-in-up relative z-20" style={{"--stagger": "5"} as any}>
               <Card className="bg-white/10 backdrop-blur-md border-white/20">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center">
