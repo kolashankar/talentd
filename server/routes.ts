@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { generateContent, analyzeResume, extractTextFromFile, parseResumeForPortfolio } from "./services/gemini";
 import { insertJobSchema, insertRoadmapSchema, insertArticleSchema, insertDsaProblemSchema, insertPortfolioSchema } from "@shared/schema";
 import { z } from "zod";
-import passport, { isAuthenticated, isAdmin } from "./auth";
+import passport, { isAuthenticated, isAdmin, requireAuth } from "./auth";
 import { upload as cloudinaryUpload, uploadToCloudinary, generateUploadSignature } from "./cloudinary";
 
 // Configure multer for file uploads
