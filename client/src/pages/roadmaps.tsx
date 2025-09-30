@@ -36,9 +36,9 @@ interface Roadmap {
 
 export default function Roadmaps() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [difficultyFilter, setDifficultyFilter] = useState("");
-  const [durationFilter, setDurationFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [difficultyFilter, setDifficultyFilter] = useState("all");
+  const [durationFilter, setDurationFilter] = useState("all");
   const [sortBy, setSortBy] = useState("popular");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -49,8 +49,8 @@ export default function Roadmaps() {
 
   // Extract unique values for filter options
   const filterOptions = useMemo(() => {
-    const categories = [...new Set(roadmaps.map(roadmap => roadmap.category).filter(Boolean))];
-    const skills = [...new Set(roadmaps.flatMap(roadmap => roadmap.skills || []))];
+    const categories = Array.from(new Set(roadmaps.map(roadmap => roadmap.category).filter(Boolean)));
+    const skills = Array.from(new Set(roadmaps.flatMap(roadmap => roadmap.skills || [])));
     const difficulties = ['beginner', 'intermediate', 'advanced'];
     const durations = ['1-2 weeks', '1 month', '2-3 months', '3+ months'];
     
@@ -65,8 +65,8 @@ export default function Roadmaps() {
         roadmap.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         roadmap.skills?.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      const matchesCategory = !categoryFilter || roadmap.category === categoryFilter;
-      const matchesDifficulty = !difficultyFilter || roadmap.difficulty === difficultyFilter;
+      const matchesCategory = !categoryFilter || categoryFilter === "all" || roadmap.category === categoryFilter;
+      const matchesDifficulty = !difficultyFilter || difficultyFilter === "all" || roadmap.difficulty === difficultyFilter;
       const matchesSkills = selectedSkills.length === 0 || 
         selectedSkills.some(skill => roadmap.skills?.includes(skill));
 
@@ -183,7 +183,7 @@ export default function Roadmaps() {
                         <SelectValue placeholder="Any category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any category</SelectItem>
+                        <SelectItem value="all">Any category</SelectItem>
                         {filterOptions.categories.map(category => (
                           <SelectItem key={category} value={category}>{category}</SelectItem>
                         ))}
@@ -199,7 +199,7 @@ export default function Roadmaps() {
                         <SelectValue placeholder="Any difficulty" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any difficulty</SelectItem>
+                        <SelectItem value="all">Any difficulty</SelectItem>
                         {filterOptions.difficulties.map(difficulty => (
                           <SelectItem key={difficulty} value={difficulty}>
                             {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
@@ -217,7 +217,7 @@ export default function Roadmaps() {
                         <SelectValue placeholder="Any duration" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any duration</SelectItem>
+                        <SelectItem value="all">Any duration</SelectItem>
                         {filterOptions.durations.map(duration => (
                           <SelectItem key={duration} value={duration}>{duration}</SelectItem>
                         ))}

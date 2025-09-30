@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import Home from "./pages/home";
 import Admin from "./pages/admin";
+import Register from "./pages/register";
 import PortfolioPage from "./pages/portfolio";
 import PortfolioView from "./pages/portfolio-view";
 import ResumeReviewPage from "./pages/resume-review";
@@ -25,6 +26,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/register" component={Register} />
       <Route path="/jobs" component={Jobs} />
       <Route path="/internships" component={Internships} />
       <Route path="/roadmaps" component={Roadmaps} />

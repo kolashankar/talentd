@@ -26,10 +26,10 @@ import {
 
 export default function Jobs() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
-  const [companyFilter, setCompanyFilter] = useState("");
-  const [experienceFilter, setExperienceFilter] = useState("");
-  const [jobTypeFilter, setJobTypeFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("all");
+  const [experienceFilter, setExperienceFilter] = useState("all");
+  const [jobTypeFilter, setJobTypeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [salaryRange, setSalaryRange] = useState([0, 1000000]);
@@ -48,11 +48,11 @@ export default function Jobs() {
 
   // Extract unique values for filter options
   const filterOptions = useMemo(() => {
-    const locations = [...new Set(jobs.map(job => job.location).filter(Boolean))];
-    const companies = [...new Set(jobs.map(job => job.company).filter(Boolean))];
-    const skills = [...new Set(jobs.flatMap(job => job.skills || []))];
-    const experienceLevels = [...new Set(jobs.map(job => job.experienceLevel).filter(Boolean))];
-    const jobTypes = [...new Set(jobs.map(job => job.jobType).filter(Boolean))];
+    const locations = Array.from(new Set(jobs.map(job => job.location).filter(Boolean)));
+    const companies = Array.from(new Set(jobs.map(job => job.company).filter(Boolean)));
+    const skills = Array.from(new Set(jobs.flatMap(job => job.skills || [])));
+    const experienceLevels = Array.from(new Set(jobs.map(job => job.experienceLevel).filter(Boolean)));
+    const jobTypes = Array.from(new Set(jobs.map(job => job.jobType).filter(Boolean)));
     
     return { locations, companies, skills, experienceLevels, jobTypes };
   }, [jobs]);
@@ -66,10 +66,10 @@ export default function Jobs() {
         job.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         job.skills?.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      const matchesLocation = !locationFilter || job.location === locationFilter;
-      const matchesCompany = !companyFilter || job.company === companyFilter;
-      const matchesExperience = !experienceFilter || job.experienceLevel === experienceFilter;
-      const matchesJobType = !jobTypeFilter || job.jobType === jobTypeFilter;
+      const matchesLocation = !locationFilter || locationFilter === "all" || job.location === locationFilter;
+      const matchesCompany = !companyFilter || companyFilter === "all" || job.company === companyFilter;
+      const matchesExperience = !experienceFilter || experienceFilter === "all" || job.experienceLevel === experienceFilter;
+      const matchesJobType = !jobTypeFilter || jobTypeFilter === "all" || job.jobType === jobTypeFilter;
       const matchesSkills = selectedSkills.length === 0 || 
         selectedSkills.some(skill => job.skills?.includes(skill));
 
@@ -171,7 +171,7 @@ export default function Jobs() {
                         <SelectValue placeholder="Any location" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any location</SelectItem>
+                        <SelectItem value="all">Any location</SelectItem>
                         {filterOptions.locations.map(location => (
                           <SelectItem key={location} value={location}>{location}</SelectItem>
                         ))}
@@ -187,7 +187,7 @@ export default function Jobs() {
                         <SelectValue placeholder="Any company" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any company</SelectItem>
+                        <SelectItem value="all">Any company</SelectItem>
                         {filterOptions.companies.map(company => (
                           <SelectItem key={company} value={company}>{company}</SelectItem>
                         ))}
@@ -203,7 +203,7 @@ export default function Jobs() {
                         <SelectValue placeholder="Any level" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any level</SelectItem>
+                        <SelectItem value="all">Any level</SelectItem>
                         {filterOptions.experienceLevels.map(level => (
                           <SelectItem key={level} value={level}>{level}</SelectItem>
                         ))}
@@ -219,7 +219,7 @@ export default function Jobs() {
                         <SelectValue placeholder="Any type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any type</SelectItem>
+                        <SelectItem value="all">Any type</SelectItem>
                         {filterOptions.jobTypes.map(type => (
                           <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}

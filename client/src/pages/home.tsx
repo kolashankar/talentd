@@ -21,6 +21,7 @@ import {
   Target,
   Star,
   ArrowRight,
+  ArrowLeft,
   MapPin,
   DollarSign,
   Briefcase,
@@ -34,64 +35,63 @@ export default function Home() {
 
   const { data: jobs = [], isLoading: jobsLoading } = useQuery<Job[]>({
     queryKey: ['/api/jobs'],
+    queryFn: () => fetch('/api/jobs').then(res => res.json()),
   });
 
   const { data: articles = [] } = useQuery({
     queryKey: ['/api/articles'],
+    queryFn: () => fetch('/api/articles').then(res => res.json()),
   });
 
   const { data: roadmaps = [] } = useQuery({
     queryKey: ['/api/roadmaps'],
+    queryFn: () => fetch('/api/roadmaps').then(res => res.json()),
   });
 
   const featuredJobs = jobs.slice(0, 6);
   const stats = [
-    { label: "Active Members", value: "50,000+", icon: Users },
-    { label: "Monthly Readers", value: "623,117", icon: TrendingUp },
-    { label: "LinkedIn Followers", value: "42,528", icon: Users },
-    { label: "Registered Users", value: "102,205", icon: Target },
+    { label: "Active Members", value: "46,229", icon: Users, description: "Freshers helping freshers" },
+    { label: "Monthly Readers", value: "623,117", icon: TrendingUp, description: "Tech career content" },
+    { label: "LinkedIn Followers", value: "42,528", icon: Users, description: "Professional network" },
+    { label: "Registered Users", value: "102,304", icon: Target, description: "Career focused freshers" },
   ];
 
   const services = [
     {
-      title: "Resume Review",
-      description: "Get expert feedback on your resume with our AI-powered ATS reviewer",
-      icon: FileText,
-      color: "text-accent",
-      bgColor: "bg-accent/20",
-      href: "/resume-review"
-    },
-    {
-      title: "Job Tracker",
-      description: "Track your application progress and never miss a follow-up",
-      icon: TrendingUp,
-      color: "text-secondary",
-      bgColor: "bg-secondary/20",
-      href: "#"
-    },
-    {
-      title: "Portfolio Builder",
-      description: "Create stunning portfolios with integrated resume showcase",
-      icon: Globe,
+      title: "Career Launch",
+      description: "Entry-level tech jobs",
+      icon: Briefcase,
       color: "text-primary",
       bgColor: "bg-primary/20",
-      href: "/portfolio"
+      href: "/jobs",
+      cta: "Explore Now"
     },
     {
-      title: "DSA Corner",
-      description: "Master algorithms and data structures with our comprehensive guides",
-      icon: Code,
-      color: "text-accent",
-      bgColor: "bg-accent/20",
-      href: "#"
+      title: "Learning Hub",
+      description: "Fresher-focused resources",
+      icon: GraduationCap,
+      color: "text-secondary",
+      bgColor: "bg-secondary/20",
+      href: "/articles",
+      cta: "Explore Now"
     },
     {
       title: "Community",
-      description: "Connect with 50,000+ tech freshers and get referrals",
+      description: "50,000+ tech freshers",
       icon: Users,
-      color: "text-secondary",
-      bgColor: "bg-secondary/20",
-      href: "#"
+      color: "text-accent",
+      bgColor: "bg-accent/20",
+      href: "/community",
+      cta: "Explore Now"
+    },
+    {
+      title: "Tech Roadmaps",
+      description: "Guided career paths",
+      icon: MapPin,
+      color: "text-primary",
+      bgColor: "bg-primary/20",
+      href: "/roadmaps",
+      cta: "Explore Now"
     }
   ];
 
@@ -100,21 +100,21 @@ export default function Home() {
       name: "Priya Sharma",
       role: "Software Engineer at Google",
       avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b8e5?w=64&h=64&fit=crop&crop=face",
-      content: "TalentFresh helped me land my first job at Google. The resume review feature was incredibly helpful in optimizing my application for ATS systems.",
+      content: "As a fresher with no industry experience, Talentd gave me the confidence and resources I needed to land my role at Google. The mock interviews were incredibly helpful!",
       rating: 5
     },
     {
       name: "Rahul Verma", 
       role: "Frontend Developer at Amazon",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face",
-      content: "The DSA Corner helped me crack Amazon's technical rounds. The community support was amazing throughout my job search journey.",
+      content: "The DSA practice on Talentd helped me crack Amazon's technical rounds. The detailed explanations made complex algorithms much easier to understand.",
       rating: 5
     },
     {
       name: "Ananya Patel",
       role: "Product Manager at Microsoft", 
       avatar: "https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?w=64&h=64&fit=crop&crop=face",
-      content: "Got a direct referral through the TalentFresh community. The portfolio builder helped showcase my projects professionally.",
+      content: "Talentd's community gave me a direct referral that fast-tracked my Microsoft application. The interview prep resources are gold for any fresher!",
       rating: 5
     }
   ];
@@ -137,7 +137,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
-              <div className="text-2xl font-bold text-primary">TalentFresh</div>
+              <div className="text-2xl font-bold text-primary">Talentd</div>
               <div className="hidden md:flex space-x-6">
                 <Link href="/jobs" className="text-muted-foreground hover:text-primary transition-colors">
                   Jobs
@@ -171,11 +171,16 @@ export default function Home() {
             <div className="flex items-center space-x-4">
               <div className="hidden md:flex items-center space-x-4">
                 <GoogleAuth />
-                <Button size="sm" data-testid="button-join-community">
-                  Join Community
-                </Button>
+                <Link href="/register">
+                  <Button 
+                    size="sm" 
+                    data-testid="button-register"
+                  >
+                    Register
+                  </Button>
+                </Link>
               </div>
-              
+
               {/* Mobile Menu */}
               <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <SheetTrigger asChild className="md:hidden">
@@ -186,15 +191,17 @@ export default function Home() {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                   <div className="flex flex-col space-y-6 pt-8">
-                    <div className="text-2xl font-bold text-primary">TalentFresh</div>
-                    
+                    <div className="text-2xl font-bold text-primary">Talentd</div>
+
                     <div className="flex flex-col space-y-4">
                       <GoogleAuth />
-                      <Button size="sm" className="w-full" data-testid="button-join-community-mobile">
-                        Join Community
-                      </Button>
+                      <Link href="/register">
+                        <Button size="sm" className="w-full" data-testid="button-register-mobile">
+                          Register
+                        </Button>
+                      </Link>
                     </div>
-                    
+
                     <div className="border-t pt-6">
                       <nav className="flex flex-col space-y-4">
                         <Link href="/jobs" className="text-lg text-muted-foreground hover:text-primary transition-colors">
@@ -235,10 +242,7 @@ export default function Home() {
       </nav>
 
       {/* Hero Section with Enhanced UI */}
-      <ParallaxHero
-        backgroundImage="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&h=1560"
-        overlay="rgba(15, 23, 42, 0.9)"
-      >
+      <section className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-blue-900">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-20">
           <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
             {/* Left Side - Content */}
@@ -249,11 +253,11 @@ export default function Home() {
                     ✨ India's #1 Platform for Tech Freshers
                   </Badge>
                 </div>
-                <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 fade-in-up relative z-30" style={{"--stagger": "1"} as any}>
-                  Launch Your <span className="text-accent">Tech Career</span> Today
+                <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6 fade-in-up relative z-30" style={{"--stagger": "1"} as any}>
+                  From Campus to <span className="text-accent">Career</span>
                 </h1>
-                <p className="text-xl text-gray-300 mb-8 fade-in-up relative z-30" style={{"--stagger": "2"} as any}>
-                  Join 50,000+ freshers who landed tech jobs with our AI-powered platform, personalized learning paths, and supportive community.
+                <p className="text-xl text-slate-600 dark:text-gray-300 mb-8 fade-in-up relative z-30" style={{"--stagger": "2"} as any}>
+                  Join 50,000+ freshers who landed tech jobs with our entry-level opportunities, proven learning paths, and supportive community.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 mb-8 fade-in-up relative z-30" style={{"--stagger": "3"} as any}>
                   <Link href="/jobs">
@@ -262,15 +266,17 @@ export default function Home() {
                       Find Jobs
                     </Button>
                   </Link>
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className="text-lg font-semibold bg-transparent border-white text-white hover:bg-white hover:text-primary hover:scale-105 transition-all"
-                    data-testid="button-join-community-hero"
-                  >
-                    <Users className="mr-2 h-5 w-5" />
-                    Join Community
-                  </Button>
+                  <Link href="/register">
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      className="text-lg font-semibold bg-transparent border-white text-white hover:bg-white hover:text-primary hover:scale-105 transition-all"
+                      data-testid="button-register-hero"
+                    >
+                      <Users className="mr-2 h-5 w-5" />
+                      Register
+                    </Button>
+                  </Link>
                 </div>
 
                 {/* Quick Stats */}
@@ -289,63 +295,135 @@ export default function Home() {
               </ScrollAnimations>
             </div>
 
-            {/* Right Side - Analytics Dashboard */}
+            {/* Right Side - Job Hunting Illustration */}
             <div className="fade-in-up relative z-20" style={{"--stagger": "5"} as any}>
-              <Card className="bg-white/10 backdrop-blur-md border-white/20">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <BarChart3 className="mr-2 h-5 w-5" />
-                    Live Analytics
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Real-time metrics */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-accent">1,247</div>
-                      <div className="text-xs text-gray-300">Jobs Posted Today</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-secondary">892</div>
-                      <div className="text-xs text-gray-300">Applications Sent</div>
-                    </div>
-                  </div>
+              <div className="relative">
+                {/* Job Hunting Avatar Illustration */}
+                <div className="w-full max-w-lg mx-auto">
+                  <svg viewBox="0 0 400 400" className="w-full h-auto">
+                    {/* Background Circle */}
+                    <circle cx="200" cy="200" r="180" fill="url(#gradient1)" opacity="0.1"/>
 
-                  {/* Success Rate Chart */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm text-gray-300">
-                      <span>Success Rate</span>
-                      <span>78%</span>
-                    </div>
-                    <div className="w-full bg-gray-600 rounded-full h-2">
-                      <div className="bg-accent h-2 rounded-full" style={{width: "78%"}}></div>
-                    </div>
-                  </div>
+                    {/* Person with laptop */}
+                    <g transform="translate(150, 150)">
+                      {/* Head */}
+                      <circle cx="50" cy="30" r="20" fill="#fbbf24" stroke="#f59e0b" strokeWidth="2"/>
 
-                  {/* Recent Activity */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-white">Recent Activity</h4>
-                    <div className="space-y-1 text-xs text-gray-300">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                        <span>Raj got hired at Google</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                        <span>New React roadmap published</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                        <span>50+ new internships added</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                      {/* Hair */}
+                      <path d="M30 25 Q50 15 70 25 Q65 20 60 15 Q50 10 40 15 Q35 20 30 25" fill="#374151"/>
+
+                      {/* Face features */}
+                      <circle cx="45" cy="28" r="1.5" fill="#374151"/>
+                      <circle cx="55" cy="28" r="1.5" fill="#374151"/>
+                      <path d="M47 35 Q50 37 53 35" stroke="#374151" strokeWidth="1" fill="none"/>
+
+                      {/* Body */}
+                      <rect x="35" y="50" width="30" height="40" rx="5" fill="#3b82f6"/>
+
+                      {/* Arms */}
+                      <rect x="25" y="55" width="10" height="25" rx="5" fill="#fbbf24"/>
+                      <rect x="65" y="55" width="10" height="25" rx="5" fill="#fbbf24"/>
+
+                      {/* Laptop */}
+                      <rect x="30" y="75" width="40" height="25" rx="2" fill="#374151"/>
+                      <rect x="32" y="77" width="36" height="18" rx="1" fill="#1f2937"/>
+                      <rect x="34" y="79" width="32" height="14" rx="1" fill="#60a5fa"/>
+
+                      {/* Screen content - code lines */}
+                      <rect x="36" y="81" width="8" height="1" fill="#ffffff"/>
+                      <rect x="36" y="83" width="12" height="1" fill="#ffffff"/>
+                      <rect x="36" y="85" width="6" height="1" fill="#ffffff"/>
+                      <rect x="36" y="87" width="10" height="1" fill="#ffffff"/>
+
+                      {/* Legs */}
+                      <rect x="40" y="90" width="8" height="30" rx="4" fill="#1f2937"/>
+                      <rect x="52" y="90" width="8" height="30" rx="4" fill="#1f2937"/>
+                    </g>
+
+                    {/* Floating job icons around the person */}
+                    <g opacity="0.8">
+                      {/* Job icon 1 */}
+                      <circle cx="100" cy="100" r="15" fill="#ef4444" opacity="0.9">
+                        <animate attributeName="cy" values="100;90;100" dur="3s" repeatCount="indefinite"/>
+                      </circle>
+                      <text x="100" y="105" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">JS</text>
+
+                      {/* Job icon 2 */}
+                      <circle cx="320" cy="120" r="15" fill="#10b981" opacity="0.9">
+                        <animate attributeName="cy" values="120;110;120" dur="2.5s" repeatCount="indefinite"/>
+                      </circle>
+                      <text x="320" y="125" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">REACT</text>
+
+                      {/* Job icon 3 */}
+                      <circle cx="80" cy="280" r="15" fill="#8b5cf6" opacity="0.9">
+                        <animate attributeName="cy" values="280;270;280" dur="3.5s" repeatCount="indefinite"/>
+                      </circle>
+                      <text x="80" y="285" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">API</text>
+
+                      {/* Job icon 4 */}
+                      <circle cx="300" cy="300" r="15" fill="#f59e0b" opacity="0.9">
+                        <animate attributeName="cy" values="300;290;300" dur="2.8s" repeatCount="indefinite"/>
+                      </circle>
+                      <text x="300" y="305" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">NODE</text>
+                    </g>
+
+                    {/* Floating resume/document icons */}
+                    <g opacity="0.6">
+                      <rect x="60" y="180" width="12" height="16" rx="2" fill="#3b82f6">
+                        <animate attributeName="x" values="60;70;60" dur="4s" repeatCount="indefinite"/>
+                      </rect>
+                      <rect x="62" y="182" width="8" height="1" fill="white"/>
+                      <rect x="62" y="184" width="6" height="1" fill="white"/>
+                      <rect x="62" y="186" width="8" height="1" fill="white"/>
+
+                      <rect x="330" y="200" width="12" height="16" rx="2" fill="#ef4444">
+                        <animate attributeName="x" values="330;320;330" dur="3.2s" repeatCount="indefinite"/>
+                      </rect>
+                      <rect x="332" y="202" width="8" height="1" fill="white"/>
+                      <rect x="332" y="204" width="6" height="1" fill="white"/>
+                      <rect x="332" y="206" width="8" height="1" fill="white"/>
+                    </g>
+
+                    {/* Success indicators */}
+                    <g opacity="0.7">
+                      <circle cx="130" cy="80" r="8" fill="#10b981">
+                        <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite"/>
+                      </circle>
+                      <text x="130" y="85" textAnchor="middle" fill="white" fontSize="12">✓</text>
+
+                      <circle cx="270" cy="90" r="8" fill="#10b981">
+                        <animate attributeName="r" values="8;12;8" dur="2.3s" repeatCount="indefinite"/>
+                      </circle>
+                      <text x="270" y="95" textAnchor="middle" fill="white" fontSize="12">✓</text>
+                    </g>
+
+                    {/* Gradient definitions */}
+                    <defs>
+                      <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style={{stopColor: "#3b82f6", stopOpacity: 1}}/>
+                        <stop offset="100%" style={{stopColor: "#1d4ed8", stopOpacity: 1}}/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+
+                {/* Live metrics overlay */}
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+                  <div className="text-sm font-semibold text-slate-800">Live Jobs</div>
+                  <div className="text-2xl font-bold text-primary">1,247</div>
+                  <div className="text-xs text-green-600">+23 today</div>
+                </div>
+
+                <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+                  <div className="text-sm font-semibold text-slate-800">Success Rate</div>
+                  <div className="text-2xl font-bold text-green-600">78%</div>
+                  <div className="text-xs text-slate-600">This month</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </ParallaxHero>
+      </section>
 
       {/* Featured Jobs - Stacked Cards */}
       <section id="jobs" className="py-20 bg-muted/30">
@@ -414,30 +492,62 @@ export default function Home() {
             </div>
           </ScrollAnimations>
 
-          <HorizontalScroll>
-            <div className="flex space-x-6 pb-4">
-              {services.map((service, index) => (
-                <Link key={index} href={service.href}>
-                  <Card className="w-80 horizontal-scroll-item hover:shadow-lg transition-all card-hover" data-testid={`service-card-${service.title.toLowerCase().replace(' ', '-')}`}>
-                    <CardContent className="p-6">
-                      <div className={`w-12 h-12 ${service.bgColor} ${service.color} rounded-lg flex items-center justify-center mb-4`}>
-                        <service.icon className="h-6 w-6" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2" data-testid={`service-title-${service.title.toLowerCase().replace(' ', '-')}`}>
-                        {service.title}
-                      </h3>
-                      <p className="text-muted-foreground mb-4" data-testid={`service-description-${service.title.toLowerCase().replace(' ', '-')}`}>
-                        {service.description}
-                      </p>
-                      <Button variant="ghost" className="text-primary hover:text-primary/80 font-medium p-0" data-testid={`button-learn-more-${service.title.toLowerCase().replace(' ', '-')}`}>
-                        Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+          <div className="relative">
+            {/* Mobile Arrow Controls */}
+            <div className="md:hidden flex justify-between items-center mb-4">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={() => {
+                  const container = document.getElementById('services-scroll');
+                  if (container) {
+                    container.scrollBy({ left: -300, behavior: 'smooth' });
+                  }
+                }}
+                className="z-10"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={() => {
+                  const container = document.getElementById('services-scroll');
+                  if (container) {
+                    container.scrollBy({ left: 300, behavior: 'smooth' });
+                  }
+                }}
+                className="z-10"
+              >
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
-          </HorizontalScroll>
+
+            <HorizontalScroll>
+              <div id="services-scroll" className="flex space-x-6 pb-4 md:justify-center">
+                {services.map((service, index) => (
+                  <Link key={index} href={service.href}>
+                    <Card className="w-80 horizontal-scroll-item hover:shadow-lg transition-all card-hover" data-testid={`service-card-${service.title.toLowerCase().replace(' ', '-')}`}>
+                      <CardContent className="p-6">
+                        <div className={`w-12 h-12 ${service.bgColor} ${service.color} rounded-lg flex items-center justify-center mb-4`}>
+                          <service.icon className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-xl font-semibold mb-2" data-testid={`service-title-${service.title.toLowerCase().replace(' ', '-')}`}>
+                          {service.title}
+                        </h3>
+                        <p className="text-muted-foreground mb-4" data-testid={`service-description-${service.title.toLowerCase().replace(' ', '-')}`}>
+                          {service.description}
+                        </p>
+                        <Button variant="ghost" className="text-primary hover:text-primary/80 font-medium p-0" data-testid={`button-learn-more-${service.title.toLowerCase().replace(' ', '-')}`}>
+                          Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </HorizontalScroll>
+          </div>
         </div>
       </section>
 
@@ -599,21 +709,38 @@ export default function Home() {
                 Our Members Work At
               </h2>
               <p className="text-xl text-muted-foreground fade-in-up" data-testid="text-companies-subtitle">
-                TalentFresh freshers have secured positions at these top tech companies
+                Talentd freshers have secured positions at these top tech companies
               </p>
             </div>
           </ScrollAnimations>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-8 items-center">
-            {companies.map((company, index) => (
-              <div key={index} className="flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity" data-testid={`company-${company.name.toLowerCase()}`}>
-                <img 
-                  src={company.logo} 
-                  alt={company.name}
-                  className="h-12 w-auto filter grayscale hover:grayscale-0 transition-all"
-                />
-              </div>
-            ))}
+          <div className="relative overflow-hidden">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-6 md:gap-8 items-center">
+              {companies.map((company, index) => (
+                <div 
+                  key={index} 
+                  className="group flex items-center justify-center p-4 rounded-lg bg-white/50 hover:bg-white hover:shadow-lg transition-all duration-300 transform hover:scale-105 cursor-pointer" 
+                  data-testid={`company-${company.name.toLowerCase()}`}
+                >
+                  <img 
+                    src={company.logo} 
+                    alt={company.name}
+                    className="h-8 md:h-12 w-auto filter grayscale group-hover:grayscale-0 transition-all duration-300 object-contain"
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      img.src = `https://via.placeholder.com/120x40/666666/ffffff?text=${company.name}`;
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Animated background elements */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div className="absolute -top-4 -left-4 w-16 h-16 bg-primary/5 rounded-full animate-pulse"></div>
+              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-accent/5 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
+            </div>
           </div>
         </div>
       </section>
@@ -627,15 +754,19 @@ export default function Home() {
                 Start Your Tech Journey Today
               </h2>
               <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto" data-testid="text-cta-subtitle">
-                Ready to Land Your First Tech Job? Join 50,000+ freshers who launched their tech careers with TalentFresh's resources, community, and opportunities.
+                Ready to Land Your First Tech Job? Join 50,000+ freshers who launched their tech careers with Talentd's resources, community, and opportunities.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" variant="secondary" className="text-lg font-semibold" data-testid="button-create-account">
-                  Create Free Account
-                </Button>
-                <Button size="lg" variant="outline" className="text-lg font-semibold bg-transparent border-white text-white hover:bg-white hover:text-primary" data-testid="button-browse-jobs">
-                  Browse Fresher Jobs
-                </Button>
+                <Link href="/register">
+                  <Button size="lg" variant="secondary" className="text-lg font-semibold" data-testid="button-create-account">
+                    Create Free Account
+                  </Button>
+                </Link>
+                <Link href="/jobs">
+                  <Button size="lg" variant="outline" className="text-lg font-semibold bg-transparent border-white text-white hover:bg-white hover:text-primary" data-testid="button-browse-jobs">
+                    Browse Fresher Jobs
+                  </Button>
+                </Link>
               </div>
             </div>
           </ScrollAnimations>
@@ -648,7 +779,7 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-8 mb-12">
             {/* Company Info */}
             <div>
-              <div className="text-2xl font-bold text-primary mb-4" data-testid="footer-logo">TalentFresh</div>
+              <div className="text-2xl font-bold text-primary mb-4" data-testid="footer-logo">Talentd</div>
               <p className="text-muted-foreground mb-4" data-testid="footer-description">
                 India's #1 platform for tech freshers. Join 50,000+ freshers who launched their tech careers with us.
               </p>
@@ -712,7 +843,7 @@ export default function Home() {
           <div className="border-t border-border pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-muted-foreground text-sm" data-testid="footer-copyright">
-                © 2024 TalentFresh. All rights reserved.
+                © 2024 Talentd. All rights reserved.
               </p>
               <div className="flex space-x-6 mt-4 md:mt-0">
                 <a href="#" className="text-muted-foreground text-sm hover:text-primary transition-colors" data-testid="footer-link-privacy">Privacy Policy</a>

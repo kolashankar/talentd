@@ -1,0 +1,96 @@
+`DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog Error Component Stack
+    at TitleWarning (@radix-ui_react-dialog.js?v=d02e34fc:315:23)
+    at @radix-ui_react-dialog.js?v=d02e34fc:235:13
+    at @radix-ui_react-dialog.js?v=d02e34fc:158:58
+    at Presence (chunk-QVRXHI5R.js?v=d02e34fc:24:11)
+    at @radix-ui_react-dialog.js?v=d02e34fc:149:64
+    at chunk-EVLBUYTV.js?v=d02e34fc:79:13
+    at chunk-EVLBUYTV.js?v=d02e34fc:56:13
+    at chunk-BOL2CCOG.js?v=d02e34fc:42:13
+    at chunk-Z2KXGB3I.js?v=d02e34fc:258:22
+    at Presence (chunk-QVRXHI5R.js?v=d02e34fc:24:11)
+    at Provider (chunk-OXZDJRWN.js?v=d02e34fc:38:15)
+    at DialogPortal (@radix-ui_react-dialog.js?v=d02e34fc:111:11)
+    at _c3 (sheet.tsx:59:6)
+    at Provider (chunk-OXZDJRWN.js?v=d02e34fc:38:15)
+    at Dialog (@radix-ui_react-dialog.js?v=d02e34fc:52:5)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at nav (<anonymous>)
+    at div (<anonymous>)
+    at Home (home.tsx:34:39)
+    at Route (wouter.js?v=d02e34fc:323:16)
+    at Switch (wouter.js?v=d02e34fc:379:17)
+    at Router (<anonymous>)
+    at Provider (chunk-OXZDJRWN.js?v=d02e34fc:38:15)
+    at TooltipProvider (@radix-ui_react-tooltip.js?v=d02e34fc:61:5)
+    at QueryClientProvider (@tanstack_react-query.js?v=d02e34fc:2805:3)
+    at App (<anonymous>)
+overrideMethod @ hook.js:608
+(anonymous) @ @radix-ui_react-dialog.js?v=d02e34fc:325
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=d02e34fc:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=d02e34fc:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=d02e34fc:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=d02e34fc:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=d02e34fc:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=d02e34fc:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=d02e34fc:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=d02e34fc:19416
+commitRoot @ chunk-RPCDYKBN.js?v=d02e34fc:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=d02e34fc:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=d02e34fc:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=d02e34fc:18627
+hook.js:608 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. Error Component Stack
+    at DescriptionWarning (@radix-ui_react-dialog.js?v=d02e34fc:331:29)
+    at @radix-ui_react-dialog.js?v=d02e34fc:235:13
+    at @radix-ui_react-dialog.js?v=d02e34fc:158:58
+    at Presence (chunk-QVRXHI5R.js?v=d02e34fc:24:11)
+    at @radix-ui_react-dialog.js?v=d02e34fc:149:64
+    at chunk-EVLBUYTV.js?v=d02e34fc:79:13
+    at chunk-EVLBUYTV.js?v=d02e34fc:56:13
+    at chunk-BOL2CCOG.js?v=d02e34fc:42:13
+    at chunk-Z2KXGB3I.js?v=d02e34fc:258:22
+    at Presence (chunk-QVRXHI5R.js?v=d02e34fc:24:11)
+    at Provider (chunk-OXZDJRWN.js?v=d02e34fc:38:15)
+    at DialogPortal (@radix-ui_react-dialog.js?v=d02e34fc:111:11)
+    at _c3 (sheet.tsx:59:6)
+    at Provider (chunk-OXZDJRWN.js?v=d02e34fc:38:15)
+    at Dialog (@radix-ui_react-dialog.js?v=d02e34fc:52:5)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at nav (<anonymous>)
+    at div (<anonymous>)
+    at Home (home.tsx:34:39)
+    at Route (wouter.js?v=d02e34fc:323:16)
+    at Switch (wouter.js?v=d02e34fc:379:17)
+    at Router (<anonymous>)
+    at Provider (chunk-OXZDJRWN.js?v=d02e34fc:38:15)
+    at TooltipProvider (@radix-ui_react-tooltip.js?v=d02e34fc:61:5)
+    at QueryClientProvider (@tanstack_react-query.js?v=d02e34fc:2805:3)
+    at App (<anonymous>)
+overrideMethod @ hook.js:608
+(anonymous) @ @radix-ui_react-dialog.js?v=d02e34fc:339
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=d02e34fc:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=d02e34fc:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=d02e34fc:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=d02e34fc:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=d02e34fc:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=d02e34fc:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=d02e34fc:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=d02e34fc:19416
+commitRoot @ chunk-RPCDYKBN.js?v=d02e34fc:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=d02e34fc:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=d02e34fc:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=d02e34fc:18627
+ffffff?text=TCS:1  Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+ffffff?text=Wipro:1  Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+ffffff?text=Amazon:1  Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+ffffff?text=Meta:1  Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+ffffff?text=IBM:1  Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+ffffff?text=Infosys:1  Failed to load resource: net::ERR_NAME_NOT_RESOLVED

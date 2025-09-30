@@ -248,16 +248,108 @@ export default function ArticleDetail() {
           <CardContent className="pt-6">
             <div className="flex justify-between items-center">
               <div className="flex gap-4">
-                <Button variant="outline" data-testid="like-button">
+                <Button 
+                  variant="outline" 
+                  onClick={async () => {
+                    try {
+                      // Check if user is authenticated
+                      const authResponse = await fetch('/api/auth/status');
+                      const authData = await authResponse.json();
+                      
+                      if (!authData.authenticated) {
+                        alert('Please sign in to like articles');
+                        return;
+                      }
+
+                      const response = await fetch(`/api/articles/${article.id}/like`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                      });
+
+                      if (response.ok) {
+                        const data = await response.json();
+                        // Update the like count in the UI
+                        article.likes = data.likes;
+                        // Force re-render by updating the state
+                        window.location.reload();
+                      }
+                    } catch (error) {
+                      console.error('Error liking article:', error);
+                      alert('Failed to like article');
+                    }
+                  }}
+                  data-testid="like-button"
+                >
                   <ThumbsUp className="mr-2 h-4 w-4" />
                   Like ({article.likes || 0})
                 </Button>
-                <Button variant="outline" data-testid="comment-button">
+                <Button 
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      // Check if user is authenticated
+                      const authResponse = await fetch('/api/auth/status');
+                      const authData = await authResponse.json();
+                      
+                      if (!authData.authenticated) {
+                        alert('Please sign in to comment on articles');
+                        return;
+                      }
+
+                      const comment = prompt('Add your comment:');
+                      if (!comment) return;
+
+                      const response = await fetch(`/api/articles/${article.id}/comment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ comment }),
+                      });
+
+                      if (response.ok) {
+                        const data = await response.json();
+                        article.comments = data.comments;
+                        alert('Comment added successfully!');
+                        window.location.reload();
+                      }
+                    } catch (error) {
+                      console.error('Error adding comment:', error);
+                      alert('Failed to add comment');
+                    }
+                  }}
+                  data-testid="comment-button"
+                >
                   <MessageCircle className="mr-2 h-4 w-4" />
-                  Comment
+                  Comment ({article.comments || 0})
                 </Button>
               </div>
-              <Button variant="outline" data-testid="share-button">
+              <Button 
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    if (navigator.share) {
+                      await navigator.share({
+                        title: article.title,
+                        text: article.excerpt,
+                        url: window.location.href,
+                      });
+                    } else {
+                      await navigator.clipboard.writeText(window.location.href);
+                      alert('Link copied to clipboard!');
+                    }
+                  } catch (error) {
+                    console.error('Error sharing:', error);
+                    // Fallback to manual copy
+                    const textArea = document.createElement('textarea');
+                    textArea.value = window.location.href;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('Link copied to clipboard!');
+                  }
+                }}
+                data-testid="share-button"
+              >
                 <Share2 className="mr-2 h-4 w-4" />
                 Share
               </Button>

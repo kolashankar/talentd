@@ -112,7 +112,8 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
   const generateAssetsMutation = useMutation({
     mutationFn: async ({ title, type }: { title: string; type: string }) => {
       const response = await apiRequest('POST', '/api/ai/generate-assets', { title, type });
-      return response.data;
+      const data = await response.json();
+      return data;
     },
     onSuccess: (data) => {
       setIsGeneratingAssets(false);
@@ -200,6 +201,29 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
   };
 
   const onSubmit = (data: any) => {
+    // Validate required fields before submission
+    const requiredFields = {
+      jobs: ['title', 'company', 'description', 'requirements'],
+      articles: ['title', 'excerpt', 'author', 'content'],
+      roadmaps: ['title', 'description', 'difficulty'],
+      'dsa-corner': ['title', 'difficulty', 'category', 'description', 'solution']
+    };
+
+    const currentType = type === "fresher-jobs" || type === "internships" ? "jobs" : type;
+    const required = requiredFields[currentType as keyof typeof requiredFields] || [];
+    
+    for (const field of required) {
+      if (!data[field] || data[field].toString().trim() === '') {
+        toast({
+          title: "Validation Error",
+          description: `${field.charAt(0).toUpperCase() + field.slice(1)} is required`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Ensure required fields are present
     const formData = {
       ...data,
       skills,
@@ -208,16 +232,24 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
       companies,
       steps,
       hints,
+      // Ensure category is set properly
+      category: type === "fresher-jobs" ? "fresher-job" : type === "internships" ? "internship" : data.category || "job",
       // Add placeholder URLs for images (in a real app, you'd upload to a file service)
-      featuredImage: uploadedImage ? `https://placeholder.com/600x400/${uploadedImage.name}` : undefined,
-      companyLogo: companyLogo ? `https://placeholder.com/200x200/${companyLogo.name}` : undefined,
-      image: uploadedImage ? `https://placeholder.com/600x400/${uploadedImage.name}` : undefined,
+      featuredImage: uploadedImage ? `https://placeholder.com/600x400/${uploadedImage.name}` : data.featuredImage,
+      companyLogo: companyLogo ? `https://placeholder.com/200x200/${companyLogo.name}` : data.companyLogo,
+      image: uploadedImage ? `https://placeholder.com/600x400/${uploadedImage.name}` : data.image,
       // Include AI-generated assets in the form data
       workflowImages,
       mindmapImages,
       generatedImages,
+      // Ensure boolean fields have proper defaults
+      isActive: data.isActive ?? true,
+      isPublished: data.isPublished ?? true,
+      // Ensure createdAt is set for new items
+      createdAt: isEditing ? data.createdAt : new Date().toISOString(),
     };
 
+    console.log('Submitting form data:', formData);
     saveMutation.mutate(formData);
   };
 
@@ -229,7 +261,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
   };
 
   const removeItem = (index: number, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
-    setter(prev => prev.filter((_, i) => i !== index));
+    setter(prev => prev.filter((_: any, i: number) => i !== index));
   };
 
   const addStep = () => {
@@ -279,7 +311,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
             </Button>
           </div>
           {form.formState.errors.title && (
-            <p className="text-sm text-destructive mt-1">{form.formState.errors.title.message}</p>
+            <p className="text-sm text-destructive mt-1">{form.formState.errors.title?.message}</p>
           )}
         </div>
         <div>
@@ -290,14 +322,14 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
             data-testid="input-company"
           />
           {form.formState.errors.company && (
-            <p className="text-sm text-destructive mt-1">{form.formState.errors.company.message}</p>
+            <p className="text-sm text-destructive mt-1">{form.formState.errors.company?.message}</p>
           )}
         </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
         <div>
-          <Label htmlFor="location">Location *</Label>
+          <Label htmlFor="location">Location</Label>
           <Input 
             {...form.register("location")} 
             placeholder="e.g., Bangalore"
@@ -319,10 +351,8 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
               <SelectValue placeholder="Select job type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="full-time">Full-time</SelectItem>
-              <SelectItem value="part-time">Part-time</SelectItem>
+              <SelectItem value="job">Job</SelectItem>
               <SelectItem value="internship">Internship</SelectItem>
-              <SelectItem value="contract">Contract</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -335,9 +365,22 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
             <SelectValue placeholder="Select experience level" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="fresher">Fresher (0-1 years)</SelectItem>
-            <SelectItem value="entry">Entry Level (1-2 years)</SelectItem>
-            <SelectItem value="junior">Junior (2-3 years)</SelectItem>
+            <SelectItem value="fresher">Fresher (0-2 years)</SelectItem>
+            <SelectItem value="experienced">Experienced (2+ years)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="category">Category *</Label>
+        <Select onValueChange={(value) => form.setValue("category", value)} defaultValue={form.getValues("category")}>
+          <SelectTrigger data-testid="select-category">
+            <SelectValue placeholder="Select category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="job">Job</SelectItem>
+            <SelectItem value="internship">Internship</SelectItem>
+            <SelectItem value="fresher-job">Fresher Job</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -540,7 +583,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
           </Button>
         </div>
         {form.formState.errors.title && (
-          <p className="text-sm text-destructive mt-1">{form.formState.errors.title.message}</p>
+          <p className="text-sm text-destructive mt-1">{form.formState.errors.title?.message as string}</p>
         )}
       </div>
 
@@ -721,7 +764,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
           </Button>
         </div>
         {form.formState.errors.title && (
-          <p className="text-sm text-destructive mt-1">{form.formState.errors.title.message}</p>
+          <p className="text-sm text-destructive mt-1">{form.formState.errors.title?.message as string}</p>
         )}
       </div>
 
@@ -942,7 +985,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
           </Button>
         </div>
         {form.formState.errors.title && (
-          <p className="text-sm text-destructive mt-1">{form.formState.errors.title.message}</p>
+          <p className="text-sm text-destructive mt-1">{form.formState.errors.title?.message as string}</p>
         )}
       </div>
 

@@ -258,9 +258,11 @@ export function PortfolioBuilder({
       const formData = new FormData();
       formData.append("resume", file);
 
-      const response = await fetch("/api/portfolio/parse-resume", {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${baseUrl}/api/portfolio/parse-resume`, {
         method: "POST",
         body: formData,
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error("Failed to parse resume");

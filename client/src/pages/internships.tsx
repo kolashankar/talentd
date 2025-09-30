@@ -23,10 +23,10 @@ import {
 
 export default function Internships() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
-  const [companyFilter, setCompanyFilter] = useState("");
-  const [durationFilter, setDurationFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("all");
+  const [durationFilter, setDurationFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -53,9 +53,9 @@ export default function Internships() {
 
   // Extract unique values for filter options
   const filterOptions = useMemo(() => {
-    const locations = [...new Set(internships.map(job => job.location).filter(Boolean))];
-    const companies = [...new Set(internships.map(job => job.company).filter(Boolean))];
-    const skills = [...new Set(internships.flatMap(job => job.skills || []))];
+    const locations = Array.from(new Set(internships.map(job => job.location).filter(Boolean)));
+    const companies = Array.from(new Set(internships.map(job => job.company).filter(Boolean)));
+    const skills = Array.from(new Set(internships.flatMap(job => job.skills || [])));
     const durations = ["1-3 months", "3-6 months", "6+ months"];
     const types = ["Paid", "Unpaid", "Stipend"];
     
@@ -71,8 +71,8 @@ export default function Internships() {
         job.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         job.skills?.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      const matchesLocation = !locationFilter || job.location === locationFilter;
-      const matchesCompany = !companyFilter || job.company === companyFilter;
+      const matchesLocation = !locationFilter || locationFilter === "all" || job.location === locationFilter;
+      const matchesCompany = !companyFilter || companyFilter === "all" || job.company === companyFilter;
       const matchesSkills = selectedSkills.length === 0 || 
         selectedSkills.some(skill => job.skills?.includes(skill));
 
@@ -177,7 +177,7 @@ export default function Internships() {
                         <SelectValue placeholder="Any location" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any location</SelectItem>
+                        <SelectItem value="all">Any location</SelectItem>
                         {filterOptions.locations.map(location => (
                           <SelectItem key={location} value={location}>{location}</SelectItem>
                         ))}
@@ -193,7 +193,7 @@ export default function Internships() {
                         <SelectValue placeholder="Any company" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any company</SelectItem>
+                        <SelectItem value="all">Any company</SelectItem>
                         {filterOptions.companies.map(company => (
                           <SelectItem key={company} value={company}>{company}</SelectItem>
                         ))}
@@ -209,7 +209,7 @@ export default function Internships() {
                         <SelectValue placeholder="Any duration" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any duration</SelectItem>
+                        <SelectItem value="all">Any duration</SelectItem>
                         {filterOptions.durations.map(duration => (
                           <SelectItem key={duration} value={duration}>{duration}</SelectItem>
                         ))}
@@ -225,7 +225,7 @@ export default function Internships() {
                         <SelectValue placeholder="Any type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any type</SelectItem>
+                        <SelectItem value="all">Any type</SelectItem>
                         {filterOptions.types.map(type => (
                           <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}

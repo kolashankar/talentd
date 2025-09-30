@@ -7,6 +7,7 @@ import { insertJobSchema, insertRoadmapSchema, insertArticleSchema, insertDsaPro
 import { z } from "zod";
 import passport, { isAuthenticated, isAdmin, requireAuth } from "./auth";
 import { upload as cloudinaryUpload, uploadToCloudinary, generateUploadSignature } from "./cloudinary";
+import { eq, desc, and, or, like } from "drizzle-orm";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -50,10 +51,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
 
     app.get('/api/auth/google/callback',
-      passport.authenticate('google', { failureRedirect: '/login' }),
+      passport.authenticate('google', { failureRedirect: '/?error=login_failed' }),
       (req, res) => {
         // Successful authentication
-        res.redirect('/');
+        res.redirect('/?auth=success');
       }
     );
   } else {
@@ -295,6 +296,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Articles Like/Comment/Share routes
+  app.post("/api/articles/:id/like", requireAuth, async (req, res) => {
+    try {
+      const articleId = req.params.id;
+      const userId = (req.user as any)?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      await storage.addLikeToArticle(articleId, userId);
+      res.status(200).json({ message: "Liked successfully" });
+    } catch (error) {
+      console.error('Error liking article:', error);
+      res.status(500).json({ message: "Failed to like article" });
+    }
+  });
+
+  app.delete("/api/articles/:id/like", requireAuth, async (req, res) => {
+    try {
+      const articleId = req.params.id;
+      const userId = (req.user as any)?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      await storage.removeLikeFromArticle(articleId, userId);
+      res.status(200).json({ message: "Unliked successfully" });
+    } catch (error) {
+      console.error('Error unliking article:', error);
+      res.status(500).json({ message: "Failed to unlike article" });
+    }
+  });
+
+  app.post("/api/articles/:id/comment", requireAuth, async (req, res) => {
+    try {
+      const articleId = req.params.id;
+      const userId = (req.user as any)?.id;
+      const { comment } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      if (!comment) {
+        return res.status(400).json({ message: "Comment is required" });
+      }
+
+      const newComment = await storage.addCommentToArticle(articleId, userId, comment);
+      res.status(201).json(newComment);
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      res.status(500).json({ message: "Failed to add comment" });
+    }
+  });
+
+  app.get("/api/articles/:id/comments", async (req, res) => {
+    try {
+      const articleId = req.params.id;
+      const comments = await storage.getCommentsForArticle(articleId);
+      res.json(comments);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.post("/api/articles/:id/share", async (req, res) => {
+    try {
+      const articleId = req.params.id;
+      await storage.incrementShareCountForArticle(articleId);
+      res.status(200).json({ message: "Shared successfully" });
+    } catch (error) {
+      console.error('Error sharing article:', error);
+      res.status(500).json({ message: "Failed to share article" });
+    }
+  });
+
+  // Roadmaps Download/Share routes
+  app.post("/api/roadmaps/:id/download", async (req, res) => {
+    try {
+      const roadmapId = req.params.id;
+      // In a real scenario, you'd fetch roadmap data and generate a downloadable file (e.g., PDF, JSON)
+      await storage.incrementDownloadCountForRoadmap(roadmapId);
+      res.status(200).json({ message: "Roadmap download initiated" });
+    } catch (error) {
+      console.error('Error initiating roadmap download:', error);
+      res.status(500).json({ message: "Failed to initiate roadmap download" });
+    }
+  });
+
+  app.post("/api/roadmaps/:id/share", async (req, res) => {
+    try {
+      const roadmapId = req.params.id;
+      await storage.incrementShareCountForRoadmap(roadmapId);
+      res.status(200).json({ message: "Roadmap shared successfully" });
+    } catch (error) {
+      console.error('Error sharing roadmap:', error);
+      res.status(500).json({ message: "Failed to share roadmap" });
+    }
+  });
+
+
   // DSA Problems routes
   app.get("/api/dsa-problems", async (req, res) => {
     try {
@@ -440,7 +544,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/generate-content", async (req, res) => {
     try {
       const { type, prompt, details } = req.body;
-      
+
       if (!type || !prompt) {
         return res.status(400).json({ message: "Type and prompt are required" });
       }
@@ -461,17 +565,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const base64Data = req.file.buffer.toString('base64');
-      
+
       // Extract text from the uploaded file
       const resumeText = await extractTextFromFile(base64Data, req.file.mimetype);
-      
+
       if (!resumeText || resumeText.trim().length === 0) {
         return res.status(400).json({ message: "Could not extract text from the uploaded file" });
       }
 
       // Parse resume for portfolio data
       const portfolioData = await parseResumeForPortfolio(resumeText);
-      
+
       res.json(portfolioData);
     } catch (error) {
       console.error('Resume parsing error:', error);
@@ -488,17 +592,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const jobDescription = req.body.jobDescription || '';
       const base64Data = req.file.buffer.toString('base64');
-      
+
       // Extract text from the uploaded file
       const resumeText = await extractTextFromFile(base64Data, req.file.mimetype);
-      
+
       if (!resumeText || resumeText.trim().length === 0) {
         return res.status(400).json({ message: "Could not extract text from the uploaded file" });
       }
 
       // Analyze the resume
       const analysis = await analyzeResume({ resumeText, jobDescription });
-      
+
       // Store the analysis
       const resumeAnalysis = await storage.createResumeAnalysis({
         userId: (req.user as any)?.id || null,
@@ -557,7 +661,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/portfolio/generate-complete", async (req, res) => {
     try {
       const { portfolioData, theme = 'modern', includeAnimations = true } = req.body;
-      
+
       if (!portfolioData) {
         return res.status(400).json({ message: "Portfolio data is required" });
       }
@@ -606,11 +710,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     <script src="script.js"></script>
 </body>
 </html>`;
-      
+
       // Set headers for HTML file download (simplified)
       res.setHeader('Content-Type', 'text/html');
       res.setHeader('Content-Disposition', 'attachment; filename="portfolio.html"');
-      
+
       res.send(sampleHtml);
     } catch (error) {
       console.error('Download error:', error);
@@ -622,7 +726,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/suggest-improvements", async (req, res) => {
     try {
       const { portfolioData, targetRole } = req.body;
-      
+
       const prompt = `Suggest improvements for this portfolio targeting ${targetRole}: ${JSON.stringify(portfolioData)}`;
       const suggestions = await generateContent(prompt);
 
@@ -639,7 +743,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const prompt = req.body.prompt || '';
       let portfolioData = {};
       let details = {};
-      
+
       // Parse portfolio data from form if provided
       if (req.body.portfolioData) {
         try {
@@ -648,7 +752,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('Failed to parse portfolioData:', e);
         }
       }
-      
+
       // Parse details from form if provided
       if (req.body.details) {
         try {
@@ -657,7 +761,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('Failed to parse details:', e);
         }
       }
-      
+
       if (req.file) {
         const base64Data = req.file.buffer.toString('base64');
         const resumeText = await extractTextFromFile(base64Data, req.file.mimetype);
@@ -774,7 +878,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/portfolio/download", async (req, res) => {
     try {
       const { portfolioCode } = req.body;
-      
+
       if (!portfolioCode) {
         return res.status(400).json({ message: "Portfolio code is required" });
       }
@@ -847,11 +951,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/generate-template", isAuthenticated, async (req, res) => {
     try {
       const { content, type, templateType, prompt } = req.body;
-      
+
       if (!content || !content.title) {
         return res.status(400).json({ message: "Content with title is required" });
       }
-      
+
       const template = await generateContent({
         type: 'advertising-template',
         prompt: `Create a ${templateType || 'social-media'} template for ${type}: ${content.title}. ${prompt || ''}`,
@@ -875,11 +979,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/download-template", isAuthenticated, async (req, res) => {
     try {
       const { template } = req.body;
-      
+
       if (!template) {
         return res.status(400).json({ message: "Template data is required" });
       }
-      
+
       // Create template files content
       const templateFiles = {
         'template.html': template.htmlCode || '<html><body><h1>Generated Template</h1></body></html>',
@@ -888,7 +992,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'README.md': `# ${template.templateName || 'Generated Template'}\n\nThis template was generated using AI.\n\n## Files\n- template.html: Main template file\n- styles.css: CSS styles\n- script.js: JavaScript functionality`,
         'brand-guidelines.txt': template.brandGuidelines || 'Brand guidelines for the template'
       };
-      
+
       // For simplicity, send the main HTML file
       res.setHeader('Content-Type', 'text/html');
       res.setHeader('Content-Disposition', 'attachment; filename="template.html"');

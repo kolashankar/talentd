@@ -468,11 +468,113 @@ export default function RoadmapDetail() {
                 )}
                 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={async () => {
+                      try {
+                        // Create comprehensive roadmap content
+                        const content = `${roadmap.title}\n${'='.repeat(roadmap.title.length)}\n\n${roadmap.description}\n\nDifficulty: ${roadmap.difficulty}\nEstimated Time: ${roadmap.estimatedTime}\n\nTechnologies:\n${roadmap.technologies?.map(tech => `- ${tech}`).join('\n') || 'None specified'}\n\nLearning Steps:\n${roadmap.steps.map((step, i) => `\n${i + 1}. ${step.title}\n   ${step.description}${step.resources ? `\n   Resources: ${step.resources.join(', ')}` : ''}`).join('\n')}\n\n---\nGenerated from TalentFresh Roadmaps\n${window.location.href}`;
+                        
+                        // Create different file formats
+                        const textBlob = new Blob([content], { type: 'text/plain' });
+                        
+                        // Enhanced HTML version
+                        const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>${roadmap.title} - TalentFresh Roadmap</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #2563eb; border-bottom: 2px solid #e5e7eb; }
+        h2 { color: #1f2937; margin-top: 30px; }
+        .step { background: #f9fafb; padding: 15px; margin: 10px 0; border-left: 4px solid #2563eb; }
+        .badge { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+        .difficulty-${roadmap.difficulty} { background: ${roadmap.difficulty === 'beginner' ? '#dcfce7' : roadmap.difficulty === 'intermediate' ? '#fef3c7' : '#fecaca'}; }
+    </style>
+</head>
+<body>
+    <h1>${roadmap.title}</h1>
+    <p><span class="badge difficulty-${roadmap.difficulty}">${roadmap.difficulty}</span> • ${roadmap.estimatedTime}</p>
+    <p>${roadmap.description}</p>
+    
+    <h2>Technologies</h2>
+    <p>${roadmap.technologies?.map(tech => `<span class="badge">${tech}</span>`).join(' ') || 'None specified'}</p>
+    
+    <h2>Learning Path</h2>
+    ${roadmap.steps.map((step, i) => `
+        <div class="step">
+            <h3>Step ${i + 1}: ${step.title}</h3>
+            <p>${step.description}</p>
+            ${step.resources ? `<p><strong>Resources:</strong> ${step.resources.join(', ')}</p>` : ''}
+        </div>
+    `).join('')}
+    
+    <footer>
+        <p>Generated from <a href="${window.location.href}">TalentFresh Roadmaps</a></p>
+    </footer>
+</body>
+</html>`;
+
+                        const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+                        
+                        // Let user choose format
+                        const format = confirm('Download as HTML (OK) or Text (Cancel)?');
+                        const blob = format ? htmlBlob : textBlob;
+                        const extension = format ? 'html' : 'txt';
+                        
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${roadmap.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_roadmap.${extension}`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        
+                        // Track download
+                        fetch(`/api/roadmaps/${roadmap.id}/download`, { method: 'POST' }).catch(() => {});
+                      } catch (error) {
+                        console.error('Download failed:', error);
+                        alert('Download failed. Please try again.');
+                      }
+                    }}
+                  >
                     <Download className="mr-2 h-4 w-4" />
                     Download
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={async () => {
+                      try {
+                        if (navigator.share) {
+                          await navigator.share({
+                            title: roadmap.title,
+                            text: `Check out this amazing ${roadmap.difficulty} level roadmap: ${roadmap.description}`,
+                            url: window.location.href,
+                          });
+                        } else {
+                          await navigator.clipboard.writeText(window.location.href);
+                          alert('Link copied to clipboard!');
+                        }
+                        
+                        // Track share
+                        fetch(`/api/roadmaps/${roadmap.id}/share`, { method: 'POST' }).catch(() => {});
+                      } catch (error) {
+                        console.error('Share failed:', error);
+                        // Fallback
+                        const textArea = document.createElement('textarea');
+                        textArea.value = window.location.href;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        alert('Link copied to clipboard!');
+                      }
+                    }}
+                  >
                     <Share2 className="mr-2 h-4 w-4" />
                     Share
                   </Button>

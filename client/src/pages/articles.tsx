@@ -42,8 +42,8 @@ interface Article {
 export default function Articles() {
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [authorFilter, setAuthorFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [authorFilter, setAuthorFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -54,9 +54,9 @@ export default function Articles() {
 
   // Extract unique values for filter options
   const filterOptions = useMemo(() => {
-    const categories = [...new Set(articles.map(article => article.category).filter(Boolean))];
-    const tags = [...new Set(articles.flatMap(article => article.tags || []))];
-    const authors = [...new Set(articles.map(article => article.author).filter(Boolean))];
+    const categories = Array.from(new Set(articles.map(article => article.category).filter(Boolean)));
+    const tags = Array.from(new Set(articles.flatMap(article => article.tags || [])));
+    const authors = Array.from(new Set(articles.map(article => article.author).filter(Boolean)));
 
     return { categories, tags, authors };
   }, [articles]);
@@ -70,8 +70,8 @@ export default function Articles() {
         article.content?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         article.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      const matchesCategory = !categoryFilter || article.category === categoryFilter;
-      const matchesAuthor = !authorFilter || article.author === authorFilter;
+      const matchesCategory = !categoryFilter || categoryFilter === "all" || article.category === categoryFilter;
+      const matchesAuthor = !authorFilter || authorFilter === "all" || article.author === authorFilter;
       const matchesTags = selectedTags.length === 0 || 
         selectedTags.some(tag => article.tags?.includes(tag));
 
@@ -186,7 +186,7 @@ export default function Articles() {
                         <SelectValue placeholder="Any category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any category</SelectItem>
+                        <SelectItem value="all">Any category</SelectItem>
                         {filterOptions.categories.map(category => (
                           <SelectItem key={category} value={category}>{category}</SelectItem>
                         ))}
@@ -202,7 +202,7 @@ export default function Articles() {
                         <SelectValue placeholder="Any author" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any author</SelectItem>
+                        <SelectItem value="all">Any author</SelectItem>
                         {filterOptions.authors.map(author => (
                           <SelectItem key={author} value={author}>{author}</SelectItem>
                         ))}

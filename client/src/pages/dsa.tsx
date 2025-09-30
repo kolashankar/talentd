@@ -37,9 +37,9 @@ interface DsaProblem {
 
 export default function DSACorner() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [difficultyFilter, setDifficultyFilter] = useState("");
-  const [companyFilter, setCompanyFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [difficultyFilter, setDifficultyFilter] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("all");
   const [sortBy, setSortBy] = useState("difficulty");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -50,9 +50,9 @@ export default function DSACorner() {
 
   // Extract unique values for filter options
   const filterOptions = useMemo(() => {
-    const categories = [...new Set(problems.map(problem => problem.category).filter(Boolean))];
-    const tags = [...new Set(problems.flatMap(problem => problem.tags || []))];
-    const companies = [...new Set(problems.flatMap(problem => problem.companies || []))];
+    const categories = Array.from(new Set(problems.map(problem => problem.category).filter(Boolean)));
+    const tags = Array.from(new Set(problems.flatMap(problem => problem.tags || [])));
+    const companies = Array.from(new Set(problems.flatMap(problem => problem.companies || [])));
     const difficulties = ['easy', 'medium', 'hard'];
 
     return { categories, tags, companies, difficulties };
@@ -66,9 +66,9 @@ export default function DSACorner() {
         problem.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         problem.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      const matchesCategory = !categoryFilter || problem.category === categoryFilter;
-      const matchesDifficulty = !difficultyFilter || problem.difficulty === difficultyFilter;
-      const matchesCompany = !companyFilter || problem.companies?.includes(companyFilter);
+      const matchesCategory = !categoryFilter || categoryFilter === "all" || problem.category === categoryFilter;
+      const matchesDifficulty = !difficultyFilter || difficultyFilter === "all" || problem.difficulty === difficultyFilter;
+      const matchesCompany = !companyFilter || companyFilter === "all" || problem.companies?.includes(companyFilter);
       const matchesTags = selectedTags.length === 0 || 
         selectedTags.some(tag => problem.tags?.includes(tag));
 
@@ -188,7 +188,7 @@ export default function DSACorner() {
                         <SelectValue placeholder="Any category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any category</SelectItem>
+                        <SelectItem value="all">Any category</SelectItem>
                         {filterOptions.categories.map(category => (
                           <SelectItem key={category} value={category}>{category}</SelectItem>
                         ))}
@@ -204,7 +204,7 @@ export default function DSACorner() {
                         <SelectValue placeholder="Any difficulty" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any difficulty</SelectItem>
+                        <SelectItem value="all">Any difficulty</SelectItem>
                         {filterOptions.difficulties.map(difficulty => (
                           <SelectItem key={difficulty} value={difficulty}>
                             {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
@@ -222,7 +222,7 @@ export default function DSACorner() {
                         <SelectValue placeholder="Any company" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any company</SelectItem>
+                        <SelectItem value="all">Any company</SelectItem>
                         {filterOptions.companies.map(company => (
                           <SelectItem key={company} value={company}>{company}</SelectItem>
                         ))}
