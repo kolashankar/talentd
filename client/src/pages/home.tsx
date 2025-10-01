@@ -48,7 +48,7 @@ export default function Home() {
     queryFn: () => fetch('/api/roadmaps').then(res => res.json()),
   });
 
-  const featuredJobs = jobs.slice(0, 6);
+  const featuredJobs = Array.isArray(jobs) ? jobs.slice(0, 6) : [];
   const stats = [
     { label: "Active Members", value: "46,229", icon: Users, description: "Freshers helping freshers" },
     { label: "Monthly Readers", value: "623,117", icon: TrendingUp, description: "Tech career content" },

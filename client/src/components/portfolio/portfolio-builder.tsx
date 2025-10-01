@@ -17,6 +17,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/ui/file-upload";
+import { TemplateSelector, PortfolioTemplate } from "./template-selector";
+import { generateTemplateCode } from "./template-generator";
 import { insertPortfolioSchema, Portfolio } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -47,6 +49,7 @@ import {
   Sparkles,
   Share,
   Copy,
+  Layout,
 } from "lucide-react";
 import { z } from "zod";
 
@@ -81,6 +84,9 @@ export function PortfolioBuilder({
   const [websiteCode, setWebsiteCode] = useState({ html: "", css: "", js: "" });
   const [editPrompt, setEditPrompt] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<PortfolioTemplate | null>(null);
+  const [templateCode, setTemplateCode] = useState({ html: "", css: "", js: "" });
 
   const { toast } = useToast();
   const isEditingPortfolio = Boolean(portfolio?.id);
@@ -258,8 +264,7 @@ export function PortfolioBuilder({
       const formData = new FormData();
       formData.append("resume", file);
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${baseUrl}/api/portfolio/parse-resume`, {
+      const response = await fetch('/api/portfolio/parse-resume', {
         method: "POST",
         body: formData,
         credentials: 'include',
@@ -357,6 +362,45 @@ export function PortfolioBuilder({
     }
 
     editWebsiteMutation.mutate(editPrompt);
+  };
+
+  const handleTemplateSelect = async (template: PortfolioTemplate) => {
+    setSelectedTemplate(template);
+    setShowTemplateSelector(false);
+    
+    // Generate template with current portfolio data
+    const currentPortfolioData = {
+      name: form.watch("name"),
+      title: form.watch("title"),
+      bio: form.watch("bio"),
+      email: form.watch("email"),
+      phone: form.watch("phone"),
+      website: form.watch("website"),
+      linkedin: form.watch("linkedin"),
+      github: form.watch("github"),
+      skills: skills,
+      projects: projects,
+      experience: experience,
+      education: education,
+      profileImage: profileImage ? URL.createObjectURL(profileImage) : form.watch("profileImage"),
+    };
+
+    // Generate template code
+    try {
+      const code = await generateTemplateCode(template.id, currentPortfolioData);
+      setTemplateCode(code);
+      setWebsiteCode(code);
+      toast({
+        title: "Template Applied!",
+        description: `${template.name} template has been applied to your portfolio`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate template. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const onSubmit = (data: any) => {
@@ -469,6 +513,7 @@ export function PortfolioBuilder({
     { id: "projects", label: "Projects", icon: Briefcase },
     { id: "experience", label: "Experience", icon: Briefcase },
     { id: "education", label: "Education", icon: GraduationCap },
+    { id: "templates", label: "Templates", icon: Layout },
     { id: "ai-assistant", label: "AI Assistant", icon: Bot },
     { id: "settings", label: "Settings", icon: Globe },
   ];
@@ -918,6 +963,89 @@ export function PortfolioBuilder({
 
           <div className="lg:col-span-3">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Templates Tab */}
+              {activeTab === "templates" && (
+                <Card data-testid="templates-section">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Layout className="h-5 w-5" />
+                      <span>Portfolio Templates</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="text-center py-8">
+                      <div className="text-6xl mb-4">🎨</div>
+                      <h3 className="text-2xl font-semibold mb-4">Choose Your Perfect Template</h3>
+                      <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+                        Select from our collection of stunning portfolio templates. 
+                        Each template features modern design, 3D animations, and responsive layouts.
+                      </p>
+                      
+                      {selectedTemplate ? (
+                        <div className="bg-muted/30 border border-border rounded-lg p-6 mb-6">
+                          <div className="flex items-center justify-center space-x-4 mb-4">
+                            <selectedTemplate.icon className="h-8 w-8 text-primary" />
+                            <div>
+                              <h4 className="text-lg font-semibold">{selectedTemplate.name}</h4>
+                              <p className="text-sm text-muted-foreground">{selectedTemplate.description}</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 justify-center mb-4">
+                            {selectedTemplate.features.map((feature, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {feature}
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="flex gap-2 justify-center">
+                            <Button 
+                              variant="outline" 
+                              onClick={() => setShowTemplateSelector(true)}
+                            >
+                              <Layout className="mr-2 h-4 w-4" />
+                              Change Template
+                            </Button>
+                            {templateCode.html && (
+                              <Button onClick={() => setPreviewMode(true)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                Preview Template
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <Button 
+                          size="lg" 
+                          onClick={() => setShowTemplateSelector(true)}
+                          className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                        >
+                          <Layout className="mr-2 h-5 w-5" />
+                          Browse Templates
+                        </Button>
+                      )}
+
+                      {/* Template Features Preview */}
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+                        {[
+                          { title: "3D Animations", desc: "Stunning 3D effects and animations", icon: "🎭" },
+                          { title: "Responsive Design", desc: "Perfect on all devices", icon: "📱" },
+                          { title: "Modern UI", desc: "Contemporary design patterns", icon: "✨" },
+                          { title: "Fast Loading", desc: "Optimized performance", icon: "⚡" },
+                          { title: "SEO Friendly", desc: "Search engine optimized", icon: "🔍" },
+                          { title: "Easy Sharing", desc: "Share with live links", icon: "🔗" },
+                        ].map((feature, index) => (
+                          <div key={index} className="text-center p-4 bg-muted/20 rounded-lg">
+                            <div className="text-2xl mb-2">{feature.icon}</div>
+                            <h4 className="font-medium mb-1">{feature.title}</h4>
+                            <p className="text-xs text-muted-foreground">{feature.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* AI Assistant Tab */}
               {activeTab === "ai-assistant" && (
                 <Card data-testid="ai-assistant-section">
@@ -1761,6 +1889,15 @@ export function PortfolioBuilder({
           </div>
         </div>
       </div>
+
+      {/* Template Selector Modal */}
+      {showTemplateSelector && (
+        <TemplateSelector
+          selectedTemplate={selectedTemplate?.id || null}
+          onTemplateSelect={handleTemplateSelect}
+          onClose={() => setShowTemplateSelector(false)}
+        />
+      )}
     </div>
   );
 }

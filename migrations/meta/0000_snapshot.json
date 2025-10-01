@@ -1,5 +1,5 @@
 {
-  "id": "02e1527b-82c5-4ce3-a5d0-7fd37e966989",
+  "id": "a69fb247-6975-4c8e-a3ad-dab8ebc617b4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -445,15 +445,41 @@
           "primaryKey": false,
           "notNull": true
         },
-        "extracted_text": {
-          "name": "extracted_text",
-          "type": "text",
+        "ats_score": {
+          "name": "ats_score",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "analysis_result": {
-          "name": "analysis_result",
+        "keyword_matches": {
+          "name": "keyword_matches",
           "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'[]'::json"
+        },
+        "suggestions": {
+          "name": "suggestions",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'[]'::json"
+        },
+        "format_score": {
+          "name": "format_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "readability_score": {
+          "name": "readability_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "analysis": {
+          "name": "analysis",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },

@@ -70,8 +70,12 @@ CREATE TABLE "resume_analyses" (
 	"user_id" integer,
 	"file_name" text NOT NULL,
 	"file_url" text NOT NULL,
-	"extracted_text" text,
-	"analysis_result" json,
+	"ats_score" integer,
+	"keyword_matches" json DEFAULT '[]'::json,
+	"suggestions" json DEFAULT '[]'::json,
+	"format_score" integer,
+	"readability_score" integer,
+	"analysis" text,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

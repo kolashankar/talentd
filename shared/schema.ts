@@ -113,14 +113,12 @@ export const resumeAnalyses = pgTable('resume_analyses', {
   userId: integer('user_id').references(() => users.id),
   fileName: text('file_name').notNull(),
   fileUrl: text('file_url').notNull(),
-  extractedText: text('extracted_text'),
-  analysisResult: json('analysis_result').$type<{
-    atsScore: number;
-    keywordMatches: string[];
-    suggestions: string[];
-    strengths: string[];
-    weaknesses: string[];
-  }>(),
+  atsScore: integer('ats_score'),
+  keywordMatches: json('keyword_matches').$type<string[]>().default([]),
+  suggestions: json('suggestions').$type<string[]>().default([]),
+  formatScore: integer('format_score'),
+  readabilityScore: integer('readability_score'),
+  analysis: text('analysis'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -223,17 +221,15 @@ export const insertPortfolioSchema = z.object({
 });
 
 export const insertResumeAnalysisSchema = z.object({
-  userId: z.number(),
+  userId: z.number().nullable(),
   fileName: z.string().min(1),
-  fileUrl: z.string().url(),
-  extractedText: z.string().optional(),
-  analysisResult: z.object({
-    atsScore: z.number(),
-    keywordMatches: z.array(z.string()),
-    suggestions: z.array(z.string()),
-    strengths: z.array(z.string()),
-    weaknesses: z.array(z.string()),
-  }).optional(),
+  fileUrl: z.string().min(1),
+  atsScore: z.number().optional(),
+  keywordMatches: z.array(z.string()).default([]),
+  suggestions: z.array(z.string()).default([]),
+  formatScore: z.number().optional(),
+  readabilityScore: z.number().optional(),
+  analysis: z.string().optional(),
 });
 
 // Type exports

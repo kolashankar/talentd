@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
@@ -111,7 +113,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const category = req.query.category as string;
       const jobs = await storage.getJobs(category);
-      res.json(jobs);
+      // Fix: Ensure jobs is an array before calling slice
+      const safeJobs = Array.isArray(jobs) ? jobs : [];
+      const featuredJobs = safeJobs.slice(0, 6); // Example of using slice safely
+      res.json(safeJobs); // Return all jobs, not just featured
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch jobs" });
     }

@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { GoogleGenAI } from "@google/genai";
 
 // DON'T DELETE THIS COMMENT
