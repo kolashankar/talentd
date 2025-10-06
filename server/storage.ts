@@ -237,6 +237,44 @@ export class PostgresStorage implements IStorage {
     const result = await db.delete(schema.resumeAnalyses).where(eq(schema.resumeAnalyses.id, id));
     return result.rowCount > 0;
   }
+
+  // Article interaction methods
+  async addLikeToArticle(articleId: string, userId: string): Promise<void> {
+    // Implementation for adding likes
+    console.log('Adding like to article:', articleId, 'by user:', userId);
+  }
+
+  async removeLikeFromArticle(articleId: string, userId: string): Promise<void> {
+    // Implementation for removing likes
+    console.log('Removing like from article:', articleId, 'by user:', userId);
+  }
+
+  async addCommentToArticle(articleId: string, userId: string, comment: string): Promise<any> {
+    // Implementation for adding comments
+    console.log('Adding comment to article:', articleId, 'by user:', userId, 'comment:', comment);
+    return { id: Date.now().toString(), comment, userId, createdAt: new Date() };
+  }
+
+  async getCommentsForArticle(articleId: string): Promise<any[]> {
+    // Implementation for getting comments
+    console.log('Getting comments for article:', articleId);
+    return [];
+  }
+
+  async incrementShareCountForArticle(articleId: string): Promise<void> {
+    // Implementation for incrementing share count
+    console.log('Incrementing share count for article:', articleId);
+  }
+
+  async incrementDownloadCountForRoadmap(roadmapId: string): Promise<void> {
+    // Implementation for incrementing download count
+    console.log('Incrementing download count for roadmap:', roadmapId);
+  }
+
+  async incrementShareCountForRoadmap(roadmapId: string): Promise<void> {
+    // Implementation for incrementing share count
+    console.log('Incrementing share count for roadmap:', roadmapId);
+  }
 }
 
 export const storage = new PostgresStorage();

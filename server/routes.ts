@@ -187,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/roadmaps/:id", async (req, res) => {
     try {
-      const roadmap = await storage.getRoadmap(req.params.id);
+      const roadmap = await storage.getRoadmap(parseInt(req.params.id));
       if (!roadmap) {
         return res.status(404).json({ message: "Roadmap not found" });
       }
@@ -199,10 +199,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/roadmaps", async (req, res) => {
     try {
+      console.log('Creating roadmap with data:', req.body);
       const roadmapData = insertRoadmapSchema.parse(req.body);
       const roadmap = await storage.createRoadmap(roadmapData);
       res.status(201).json(roadmap);
     } catch (error) {
+      console.error('Error creating roadmap:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid roadmap data", errors: error.errors });
       }
@@ -212,13 +214,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/roadmaps/:id", async (req, res) => {
     try {
+      console.log('Updating roadmap with data:', req.body);
       const roadmapData = insertRoadmapSchema.partial().parse(req.body);
-      const roadmap = await storage.updateRoadmap(req.params.id, roadmapData);
+      const roadmap = await storage.updateRoadmap(parseInt(req.params.id), roadmapData);
       if (!roadmap) {
         return res.status(404).json({ message: "Roadmap not found" });
       }
       res.json(roadmap);
     } catch (error) {
+      console.error('Error updating roadmap:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid roadmap data", errors: error.errors });
       }
@@ -228,7 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/roadmaps/:id", async (req, res) => {
     try {
-      const deleted = await storage.deleteRoadmap(req.params.id);
+      const deleted = await storage.deleteRoadmap(parseInt(req.params.id));
       if (!deleted) {
         return res.status(404).json({ message: "Roadmap not found" });
       }
@@ -250,22 +254,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/articles/:id", async (req, res) => {
     try {
-      const article = await storage.getArticle(req.params.id);
+      const article = await storage.getArticle(parseInt(req.params.id));
       if (!article) {
         return res.status(404).json({ message: "Article not found" });
       }
       res.json(article);
     } catch (error) {
+      console.error('Error fetching article:', error);
       res.status(500).json({ message: "Failed to fetch article" });
     }
   });
 
   app.post("/api/articles", async (req, res) => {
     try {
+      console.log('Creating article with data:', req.body);
       const articleData = insertArticleSchema.parse(req.body);
       const article = await storage.createArticle(articleData);
       res.status(201).json(article);
     } catch (error) {
+      console.error('Error creating article:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid article data", errors: error.errors });
       }
@@ -275,13 +282,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/articles/:id", async (req, res) => {
     try {
+      console.log('Updating article with data:', req.body);
       const articleData = insertArticleSchema.partial().parse(req.body);
-      const article = await storage.updateArticle(req.params.id, articleData);
+      const article = await storage.updateArticle(parseInt(req.params.id), articleData);
       if (!article) {
         return res.status(404).json({ message: "Article not found" });
       }
       res.json(article);
     } catch (error) {
+      console.error('Error updating article:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid article data", errors: error.errors });
       }
@@ -291,7 +300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/articles/:id", async (req, res) => {
     try {
-      const deleted = await storage.deleteArticle(req.params.id);
+      const deleted = await storage.deleteArticle(parseInt(req.params.id));
       if (!deleted) {
         return res.status(404).json({ message: "Article not found" });
       }
@@ -416,22 +425,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/dsa-problems/:id", async (req, res) => {
     try {
-      const problem = await storage.getDsaProblem(req.params.id);
+      const problem = await storage.getDsaProblem(parseInt(req.params.id));
       if (!problem) {
         return res.status(404).json({ message: "DSA problem not found" });
       }
       res.json(problem);
     } catch (error) {
+      console.error('Error fetching DSA problem:', error);
       res.status(500).json({ message: "Failed to fetch DSA problem" });
     }
   });
 
   app.post("/api/dsa-problems", async (req, res) => {
     try {
+      console.log('Creating DSA problem with data:', req.body);
       const problemData = insertDsaProblemSchema.parse(req.body);
       const problem = await storage.createDsaProblem(problemData);
       res.status(201).json(problem);
     } catch (error) {
+      console.error('Error creating DSA problem:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid DSA problem data", errors: error.errors });
       }
@@ -441,13 +453,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/dsa-problems/:id", async (req, res) => {
     try {
+      console.log('Updating DSA problem with data:', req.body);
       const problemData = insertDsaProblemSchema.partial().parse(req.body);
-      const problem = await storage.updateDsaProblem(req.params.id, problemData);
+      const problem = await storage.updateDsaProblem(parseInt(req.params.id), problemData);
       if (!problem) {
         return res.status(404).json({ message: "DSA problem not found" });
       }
       res.json(problem);
     } catch (error) {
+      console.error('Error updating DSA problem:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid DSA problem data", errors: error.errors });
       }
@@ -457,7 +471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/dsa-problems/:id", async (req, res) => {
     try {
-      const deleted = await storage.deleteDsaProblem(req.params.id);
+      const deleted = await storage.deleteDsaProblem(parseInt(req.params.id));
       if (!deleted) {
         return res.status(404).json({ message: "DSA problem not found" });
       }
@@ -608,16 +622,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Analyze the resume
       const analysis = await analyzeResume({ resumeText, jobDescription });
 
+      // Convert string scores to integers for database storage
+      const convertScoreToInteger = (score: string | number): number => {
+        if (typeof score === 'number') return score;
+        
+        const scoreMap: { [key: string]: number } = {
+          'excellent': 95,
+          'very good': 85,
+          'good': 75,
+          'fair': 65,
+          'poor': 45,
+          'bad': 25
+        };
+        
+        const lowerScore = score.toLowerCase();
+        return scoreMap[lowerScore] || 50; // Default to 50 if not found
+      };
+
       // Store the analysis
       const resumeAnalysis = await storage.createResumeAnalysis({
         userId: (req.user as any)?.id || null,
-        filename: req.file.originalname,
+        fileName: req.file.originalname,
         fileUrl: `resume-${Date.now()}-${req.file.originalname}`,
         atsScore: analysis.atsScore,
         keywordMatches: analysis.keywordMatches,
         suggestions: analysis.suggestions,
-        formatScore: analysis.formatScore,
-        readabilityScore: analysis.readabilityScore,
+        formatScore: convertScoreToInteger(analysis.formatScore),
+        readabilityScore: convertScoreToInteger(analysis.readabilityScore),
         analysis: analysis.analysis,
       });
 
@@ -904,21 +935,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Portfolio download error:', error);
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to prepare download" });
-    }
-  });
-
-  // Portfolio Download
-  app.post("/api/portfolio/download", async (req, res) => {
-    try {
-      const { portfolioCode } = req.body;
-      // Create ZIP file with 5-level folder structure
-      // Implementation would create a proper folder structure
-      res.setHeader('Content-Type', 'application/zip');
-      res.setHeader('Content-Disposition', 'attachment; filename="portfolio-website.zip"');
-      // Send ZIP file
-      res.send(Buffer.from('Portfolio ZIP content'));
-    } catch (error) {
-      res.status(500).json({ message: "Failed to create download" });
     }
   });
 

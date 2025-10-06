@@ -40,8 +40,9 @@ export function ATSAnalyzer({ analysis }: ATSAnalyzerProps) {
     return "bg-red-500";
   };
 
-  const getScoreBadge = (score: string) => {
-    const lowerScore = score.toLowerCase();
+  const getScoreBadge = (score: string | number) => {
+    const scoreString = String(score);
+    const lowerScore = scoreString.toLowerCase();
     const variants = {
       excellent: {
         variant: "default" as const,
@@ -72,7 +73,7 @@ export function ATSAnalyzer({ analysis }: ATSAnalyzerProps) {
 
     return (
       <Badge variant={config.variant} className={config.className}>
-        {score}
+        {scoreString}
       </Badge>
     );
   };

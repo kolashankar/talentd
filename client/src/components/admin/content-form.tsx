@@ -143,38 +143,48 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log('Save mutation started with data:', data);
+      
       const endpoint = getApiEndpoint();
       const method = isEditing ? 'PUT' : 'POST';
       const url = isEditing ? `${endpoint}/${item.id}` : endpoint;
 
-      // Ensure AI-generated assets are included in the data sent for saving
-      const payload = {
-        ...data,
-        skills,
-        tags,
-        technologies,
-        companies,
-        steps,
-        hints,
-        workflowImages,
-        mindmapImages,
-        generatedImages,
-        // Add placeholder URLs for images (in a real app, you'd upload to a file service)
-        featuredImage: uploadedImage ? `https://placeholder.com/600x400/${uploadedImage.name}` : data.featuredImage,
-        companyLogo: companyLogo ? `https://placeholder.com/200x200/${companyLogo.name}` : data.companyLogo,
-        image: uploadedImage ? `https://placeholder.com/600x400/${uploadedImage.name}` : data.image,
-      };
+      console.log('API call details:', { method, url, endpoint });
 
-      return await apiRequest(method, url, payload);
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { message: errorText || 'Unknown error' };
+        }
+        console.error('API Error:', errorData);
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Save successful:', result);
+      return result;
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: `${type.slice(0, -1)} ${isEditing ? 'updated' : 'created'} successfully`,
+        description: `${type.replace('-', ' ').slice(0, -1)} ${isEditing ? 'updated' : 'created'} successfully`,
       });
       onSave();
     },
     onError: (error: Error) => {
+      console.error('Save mutation error:', error);
       toast({
         title: "Error",
         description: error.message,
@@ -201,16 +211,19 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
   };
 
   const onSubmit = (data: any) => {
+    console.log('Form submission started with data:', data);
+    
     // Validate required fields before submission
     const requiredFields = {
-      jobs: ['title', 'company', 'description', 'requirements'],
-      articles: ['title', 'excerpt', 'author', 'content'],
-      roadmaps: ['title', 'description', 'difficulty'],
-      'dsa-corner': ['title', 'difficulty', 'category', 'description', 'solution']
+      jobs: ['title', 'company'],
+      'fresher-jobs': ['title', 'company'],
+      internships: ['title', 'company'],
+      articles: ['title', 'content', 'author'],
+      roadmaps: ['title', 'description'],
+      'dsa-corner': ['title', 'difficulty', 'category']
     };
 
-    const currentType = type === "fresher-jobs" || type === "internships" ? "jobs" : type;
-    const required = requiredFields[currentType as keyof typeof requiredFields] || [];
+    const required = requiredFields[type as keyof typeof requiredFields] || [];
     
     for (const field of required) {
       if (!data[field] || data[field].toString().trim() === '') {
@@ -223,31 +236,81 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
       }
     }
 
-    // Ensure required fields are present
-    const formData = {
+    // Prepare form data with all necessary fields
+    let formData: any = {
       ...data,
-      skills,
-      tags,
-      technologies,
-      companies,
-      steps,
-      hints,
-      // Ensure category is set properly
-      category: type === "fresher-jobs" ? "fresher-job" : type === "internships" ? "internship" : data.category || "job",
-      // Add placeholder URLs for images (in a real app, you'd upload to a file service)
-      featuredImage: uploadedImage ? `https://placeholder.com/600x400/${uploadedImage.name}` : data.featuredImage,
-      companyLogo: companyLogo ? `https://placeholder.com/200x200/${companyLogo.name}` : data.companyLogo,
-      image: uploadedImage ? `https://placeholder.com/600x400/${uploadedImage.name}` : data.image,
-      // Include AI-generated assets in the form data
-      workflowImages,
-      mindmapImages,
-      generatedImages,
-      // Ensure boolean fields have proper defaults
-      isActive: data.isActive ?? true,
-      isPublished: data.isPublished ?? true,
-      // Ensure createdAt is set for new items
-      createdAt: isEditing ? data.createdAt : new Date().toISOString(),
+      skills: skills || [],
+      tags: tags || [],
+      technologies: technologies || [],
+      companies: companies || [],
+      steps: steps || [],
+      hints: hints || [],
+      // Include AI-generated assets
+      workflowImages: workflowImages || [],
+      mindmapImages: mindmapImages || [],
+      generatedImages: generatedImages || [],
     };
+
+    // Type-specific data preparation
+    if (type === "jobs" || type === "fresher-jobs" || type === "internships") {
+      formData = {
+        title: data.title,
+        company: data.company,
+        location: data.location || '',
+        salaryRange: data.salaryRange || '',
+        jobType: type === "internships" ? "internship" : data.jobType || "job",
+        experienceLevel: type === "fresher-jobs" ? "fresher" : data.experienceLevel || "experienced",
+        description: data.description || "Job description will be added soon",
+        requirements: data.requirements || "Requirements will be added soon",
+        responsibilities: data.responsibilities || '',
+        benefits: data.benefits || '',
+        companyWebsite: data.companyWebsite || '',
+        applicationUrl: data.applicationUrl || '',
+        sourceUrl: data.sourceUrl || '',
+        companyLogo: companyLogo ? `https://via.placeholder.com/200x200?text=${encodeURIComponent(companyLogo.name)}` : data.companyLogo || '',
+        skills: skills,
+        category: type === "fresher-jobs" ? "fresher-job" : type === "internships" ? "internship" : data.category || "job",
+        isActive: data.isActive ?? true,
+      };
+    } else if (type === "articles") {
+      formData = {
+        title: data.title,
+        content: data.content || "Article content will be added soon",
+        excerpt: data.excerpt || '',
+        author: data.author,
+        category: data.category || '',
+        tags: tags,
+        isPublished: data.isPublished ?? true,
+        readTime: data.readTime || 5,
+        featuredImage: uploadedImage ? `https://via.placeholder.com/600x400?text=${encodeURIComponent(uploadedImage.name)}` : data.featuredImage || '',
+      };
+    } else if (type === "roadmaps") {
+      formData = {
+        title: data.title,
+        description: data.description,
+        content: data.content || "Roadmap content will be added soon",
+        difficulty: data.difficulty,
+        estimatedTime: data.estimatedTime || '',
+        technologies: technologies,
+        steps: steps,
+        isPublished: data.isPublished ?? true,
+        image: uploadedImage ? `https://via.placeholder.com/600x400?text=${encodeURIComponent(uploadedImage.name)}` : data.image || '',
+      };
+    } else if (type === "dsa-corner") {
+      formData = {
+        title: data.title,
+        description: data.description || "Problem description will be added soon",
+        difficulty: data.difficulty,
+        category: data.category,
+        solution: data.solution || "Solution will be added soon",
+        hints: hints,
+        timeComplexity: data.timeComplexity || '',
+        spaceComplexity: data.spaceComplexity || '',
+        tags: tags,
+        companies: companies,
+        isPublished: data.isPublished ?? true,
+      };
+    }
 
     console.log('Submitting form data:', formData);
     saveMutation.mutate(formData);

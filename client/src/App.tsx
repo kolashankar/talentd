@@ -42,6 +42,7 @@ function Router() {
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/support" component={Support} />
+      <Route path="/tax-calculator" component={() => import("./pages/tax-calculator").then(m => m.default)} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { MapPin, DollarSign, Clock, ArrowRight, Eye, ExternalLink } from "lucide-react";
+import { MapPin, DollarSign, Clock, ArrowRight, Eye, ExternalLink, Building2 } from "lucide-react";
 
 interface JobCardProps {
   job: Job;
@@ -45,7 +45,7 @@ export function JobCard({ job, className, style, 'data-testid': testId, onViewDe
       'contract': 'bg-orange-100 text-orange-800',
       'internship': 'bg-accent/20 text-accent'
     };
-    
+
     return (
       <Badge 
         variant="secondary" 
@@ -68,34 +68,22 @@ export function JobCard({ job, className, style, 'data-testid': testId, onViewDe
       <CardContent className="p-4 h-full flex flex-col">
         <div className="flex items-start justify-between mb-3">
           {/* Company Logo */}
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center mb-4">
             {job.companyLogo ? (
               <img 
                 src={job.companyLogo} 
-                alt={`${job.company} logo`}
-                className="w-10 h-10 rounded-lg object-contain flex-shrink-0"
-                data-testid={`${testId}-logo`}
+                alt={job.company} 
+                className="w-8 h-8 object-contain"
                 onError={(e) => {
-                  // Fallback to clearbit logo service
-                  const img = e.target as HTMLImageElement;
-                  img.src = `https://logo.clearbit.com/${job.company.toLowerCase().replace(/\s+/g, '')}.com`;
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
                 }}
               />
-            ) : (
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-semibold text-muted-foreground">
-                  {job.company.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="text-sm text-muted-foreground truncate" data-testid={`${testId}-company`}>
-                {job.company}
-              </p>
-              {getCategoryBadge(job.category)}
-            </div>
+            ) : null}
+            <Building2 className={`h-6 w-6 text-muted-foreground ${job.companyLogo ? 'hidden' : ''}`} />
           </div>
-          
+
           {/* Experience Badge */}
           <div className="ml-2 flex-shrink-0">
             {getExperienceBadge(job.experienceLevel)}
@@ -113,14 +101,14 @@ export function JobCard({ job, className, style, 'data-testid': testId, onViewDe
             <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
             <span className="truncate" data-testid={`${testId}-location`}>{job.location}</span>
           </div>
-          
+
           {job.salaryRange && (
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <DollarSign className="h-3.5 w-3.5 flex-shrink-0" />
               <span className="truncate" data-testid={`${testId}-salary`}>{job.salaryRange}</span>
             </div>
           )}
-          
+
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
             <Clock className="h-3.5 w-3.5 flex-shrink-0" />
             <span className="truncate" data-testid={`${testId}-type`}>{job.jobType}</span>
@@ -162,7 +150,7 @@ export function JobCard({ job, className, style, 'data-testid': testId, onViewDe
               )}
             </div>
           </div>
-          
+
           <div className="flex space-x-2">
             <Button 
               variant="outline" 
