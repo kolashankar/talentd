@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { db } from "./database";
 import * as schema from "@shared/schema";
 import { type User, type InsertUser, type Job, type InsertJob, type Roadmap, type InsertRoadmap, type Article, type InsertArticle, type DsaProblem, type InsertDsaProblem, type Portfolio, type InsertPortfolio, type ResumeAnalysis, type InsertResumeAnalysis } from "@shared/schema";
@@ -37,6 +37,8 @@ export interface IStorage {
   createDsaProblem(problem: InsertDsaProblem): Promise<DsaProblem>;
   updateDsaProblem(id: number, problem: Partial<InsertDsaProblem>): Promise<DsaProblem | undefined>;
   deleteDsaProblem(id: number): Promise<boolean>;
+  markProblemAsSolved(userId: number, problemId: number): Promise<boolean>;
+  isProblemSolved(userId: number, problemId: number): Promise<boolean>;
 
   // Portfolio operations
   getPortfolios(): Promise<Portfolio[]>;
@@ -78,13 +80,20 @@ export class PostgresStorage implements IStorage {
 
   // Job operations
   async getJobs(category?: string): Promise<Job[]> {
-    let query = db.select().from(schema.jobs).where(eq(schema.jobs.isActive, true));
-
     if (category) {
-      query = query.where(eq(schema.jobs.category, category));
+      return db.select()
+        .from(schema.jobs)
+        .where(and(
+          eq(schema.jobs.isActive, true),
+          eq(schema.jobs.category, category)
+        ))
+        .orderBy(desc(schema.jobs.createdAt));
     }
 
-    return query.orderBy(desc(schema.jobs.createdAt));
+    return db.select()
+      .from(schema.jobs)
+      .where(eq(schema.jobs.isActive, true))
+      .orderBy(desc(schema.jobs.createdAt));
   }
 
   async getJob(id: number): Promise<Job | undefined> {
@@ -104,7 +113,7 @@ export class PostgresStorage implements IStorage {
 
   async deleteJob(id: number): Promise<boolean> {
     const result = await db.delete(schema.jobs).where(eq(schema.jobs.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Roadmap operations
@@ -129,7 +138,7 @@ export class PostgresStorage implements IStorage {
 
   async deleteRoadmap(id: number): Promise<boolean> {
     const result = await db.delete(schema.roadmaps).where(eq(schema.roadmaps.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Article operations
@@ -154,7 +163,7 @@ export class PostgresStorage implements IStorage {
 
   async deleteArticle(id: number): Promise<boolean> {
     const result = await db.delete(schema.articles).where(eq(schema.articles.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // DSA Problem operations
@@ -179,7 +188,46 @@ export class PostgresStorage implements IStorage {
 
   async deleteDsaProblem(id: number): Promise<boolean> {
     const result = await db.delete(schema.dsaProblems).where(eq(schema.dsaProblems.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async markProblemAsSolved(userId: number, problemId: number): Promise<boolean> {
+    try {
+      // Check if already solved
+      const existing = await db.select()
+        .from(schema.solvedProblems)
+        .where(and(
+          eq(schema.solvedProblems.userId, userId),
+          eq(schema.solvedProblems.problemId, problemId)
+        ))
+        .limit(1);
+
+      if (existing.length > 0) {
+        return true; // Already marked as solved
+      }
+
+      // Mark as solved
+      await db.insert(schema.solvedProblems).values({
+        userId,
+        problemId
+      });
+      return true;
+    } catch (error) {
+      console.error('Error marking problem as solved:', error);
+      return false;
+    }
+  }
+
+  async isProblemSolved(userId: number, problemId: number): Promise<boolean> {
+    const result = await db.select()
+      .from(schema.solvedProblems)
+      .where(and(
+        eq(schema.solvedProblems.userId, userId),
+        eq(schema.solvedProblems.problemId, problemId)
+      ))
+      .limit(1);
+    
+    return result.length > 0;
   }
 
   // Portfolio operations
@@ -209,18 +257,21 @@ export class PostgresStorage implements IStorage {
 
   async deletePortfolio(id: number): Promise<boolean> {
     const result = await db.delete(schema.portfolios).where(eq(schema.portfolios.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Resume Analysis operations
   async getResumeAnalyses(userId?: number): Promise<ResumeAnalysis[]> {
-    let query = db.select().from(schema.resumeAnalyses);
-
     if (userId) {
-      query = query.where(eq(schema.resumeAnalyses.userId, userId));
+      return db.select()
+        .from(schema.resumeAnalyses)
+        .where(eq(schema.resumeAnalyses.userId, userId))
+        .orderBy(desc(schema.resumeAnalyses.createdAt));
     }
 
-    return query.orderBy(desc(schema.resumeAnalyses.createdAt));
+    return db.select()
+      .from(schema.resumeAnalyses)
+      .orderBy(desc(schema.resumeAnalyses.createdAt));
   }
 
   async getResumeAnalysis(id: number): Promise<ResumeAnalysis | undefined> {
@@ -235,7 +286,7 @@ export class PostgresStorage implements IStorage {
 
   async deleteResumeAnalysis(id: number): Promise<boolean> {
     const result = await db.delete(schema.resumeAnalyses).where(eq(schema.resumeAnalyses.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Article interaction methods

@@ -27,6 +27,7 @@ export const jobs = pgTable('jobs', {
   applicationUrl: text('application_url'),
   isActive: boolean('is_active').default(true),
   category: varchar('category', { length: 50 }).notNull(),
+  expiresAt: timestamp('expires_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -40,6 +41,7 @@ export const articles = pgTable('articles', {
   tags: json('tags').$type<string[]>().default([]),
   isPublished: boolean('is_published').default(true),
   readTime: integer('read_time'),
+  expiresAt: timestamp('expires_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -82,6 +84,7 @@ export const portfolios = pgTable('portfolios', {
   phone: text('phone'),
   location: text('location'),
   website: text('website'),
+  templateId: varchar('template_id', { length: 50 }),
   skills: json('skills').$type<string[]>().default([]),
   projects: json('projects').$type<Array<{
     title: string;
@@ -122,6 +125,13 @@ export const resumeAnalyses = pgTable('resume_analyses', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const solvedProblems = pgTable('solved_problems', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  problemId: integer('problem_id').references(() => dsaProblems.id).notNull(),
+  solvedAt: timestamp('solved_at').defaultNow().notNull(),
+});
+
 // Zod Schemas (keep existing ones and add types)
 export const insertUserSchema = z.object({
   username: z.string().min(1).max(100),
@@ -144,6 +154,7 @@ export const insertJobSchema = z.object({
   applicationUrl: z.string().url().optional(),
   isActive: z.boolean().default(true),
   category: z.string().min(1),
+  expiresAt: z.string().optional(),
 });
 
 export const insertArticleSchema = z.object({
@@ -155,6 +166,7 @@ export const insertArticleSchema = z.object({
   tags: z.array(z.string()).default([]),
   isPublished: z.boolean().default(true),
   readTime: z.number().optional(),
+  expiresAt: z.string().optional(),
 });
 
 export const insertRoadmapSchema = z.object({
@@ -195,6 +207,7 @@ export const insertPortfolioSchema = z.object({
   phone: z.string().optional(),
   location: z.string().optional(),
   website: z.string().url().optional(),
+  templateId: z.string().max(50).optional(),
   skills: z.array(z.string()).default([]),
   projects: z.array(z.object({
     title: z.string(),
@@ -247,3 +260,5 @@ export type Portfolio = typeof portfolios.$inferSelect;
 export type InsertPortfolio = typeof portfolios.$inferInsert;
 export type ResumeAnalysis = typeof resumeAnalyses.$inferSelect;
 export type InsertResumeAnalysis = typeof resumeAnalyses.$inferInsert;
+export type SolvedProblem = typeof solvedProblems.$inferSelect;
+export type InsertSolvedProblem = typeof solvedProblems.$inferInsert;

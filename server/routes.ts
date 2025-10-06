@@ -136,7 +136,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/jobs", async (req, res) => {
     try {
-      const jobData = insertJobSchema.parse(req.body);
+      const parsed = insertJobSchema.parse(req.body);
+      const jobData = {
+        ...parsed,
+        expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : null
+      };
       const job = await storage.createJob(jobData);
       res.status(201).json(job);
     } catch (error) {
@@ -149,7 +153,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/jobs/:id", async (req, res) => {
     try {
-      const jobData = insertJobSchema.partial().parse(req.body);
+      const parsed = insertJobSchema.partial().parse(req.body);
+      const jobData = {
+        ...parsed,
+        expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : undefined
+      };
       const job = await storage.updateJob(parseInt(req.params.id), jobData);
       if (!job) {
         return res.status(404).json({ message: "Job not found" });
@@ -268,7 +276,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/articles", async (req, res) => {
     try {
       console.log('Creating article with data:', req.body);
-      const articleData = insertArticleSchema.parse(req.body);
+      const parsed = insertArticleSchema.parse(req.body);
+      const articleData = {
+        ...parsed,
+        expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : null
+      };
       const article = await storage.createArticle(articleData);
       res.status(201).json(article);
     } catch (error) {
@@ -283,7 +295,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/articles/:id", async (req, res) => {
     try {
       console.log('Updating article with data:', req.body);
-      const articleData = insertArticleSchema.partial().parse(req.body);
+      const parsed = insertArticleSchema.partial().parse(req.body);
+      const articleData = {
+        ...parsed,
+        expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : undefined
+      };
       const article = await storage.updateArticle(parseInt(req.params.id), articleData);
       if (!article) {
         return res.status(404).json({ message: "Article not found" });
@@ -478,6 +494,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete DSA problem" });
+    }
+  });
+
+  // DSA Problem mark as solved
+  app.post("/api/dsa-problems/:id/solve", isAuthenticated, async (req, res) => {
+    try {
+      const problemId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const solved = await storage.markProblemAsSolved(userId, problemId);
+      res.json({ success: true, solved });
+    } catch (error) {
+      console.error('Error marking problem as solved:', error);
+      res.status(500).json({ message: "Failed to mark problem as solved" });
+    }
+  });
+
+  // Check if problem is solved by user
+  app.get("/api/dsa-problems/:id/solved", isAuthenticated, async (req, res) => {
+    try {
+      const problemId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+
+      if (!userId) {
+        return res.status(401).json({ solved: false });
+      }
+
+      const isSolved = await storage.isProblemSolved(userId, problemId);
+      res.json({ solved: isSolved });
+    } catch (error) {
+      console.error('Error checking if problem is solved:', error);
+      res.status(500).json({ solved: false });
+    }
+  });
+
+  // Share DSA problem
+  app.post("/api/dsa-problems/:id/share", async (req, res) => {
+    try {
+      res.status(200).json({ message: "Problem shared successfully" });
+    } catch (error) {
+      console.error('Error sharing problem:', error);
+      res.status(500).json({ message: "Failed to share problem" });
     }
   });
 
@@ -935,36 +997,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Portfolio download error:', error);
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to prepare download" });
-    }
-  });
-
-  // Google Auth routes
-  app.post("/api/auth/google", async (req, res) => {
-    try {
-      const { credential } = req.body;
-      // Verify Google JWT token and create user session
-      // Implementation would verify the token and create session
-      res.json({ success: true, user: { name: "User", email: "user@example.com" } });
-    } catch (error) {
-      res.status(401).json({ message: "Authentication failed" });
-    }
-  });
-
-  app.get("/api/auth/status", async (req, res) => {
-    try {
-      // Check session status
-      res.json({ authenticated: false });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to check auth status" });
-    }
-  });
-
-  app.post("/api/auth/logout", async (req, res) => {
-    try {
-      // Clear session
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to logout" });
     }
   });
 

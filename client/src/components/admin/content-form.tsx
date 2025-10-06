@@ -29,6 +29,12 @@ interface ContentFormProps {
   onCancel: () => void;
 }
 
+interface RoadmapStep {
+  title: string;
+  description: string;
+  resources?: string[];
+}
+
 export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) {
   const [skills, setSkills] = useState<string[]>(item?.skills || []);
   const [tags, setTags] = useState<string[]>(item?.tags || []);
@@ -271,6 +277,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         skills: skills,
         category: type === "fresher-jobs" ? "fresher-job" : type === "internships" ? "internship" : data.category || "job",
         isActive: data.isActive ?? true,
+        expiresAt: data.expiresAt || undefined,
       };
     } else if (type === "articles") {
       formData = {
@@ -283,6 +290,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         isPublished: data.isPublished ?? true,
         readTime: data.readTime || 5,
         featuredImage: uploadedImage ? `https://via.placeholder.com/600x400?text=${encodeURIComponent(uploadedImage.name)}` : data.featuredImage || '',
+        expiresAt: data.expiresAt || undefined,
       };
     } else if (type === "roadmaps") {
       formData = {
@@ -324,7 +332,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
   };
 
   const removeItem = (index: number, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
-    setter(prev => prev.filter((_: any, i: number) => i !== index));
+    setter(prev => prev.filter((_item: string, i: number) => i !== index));
   };
 
   const addStep = () => {
@@ -338,7 +346,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
   };
 
   const removeStep = (index: number) => {
-    setSteps(steps.filter((_, i) => i !== index));
+    setSteps(steps.filter((_step: RoadmapStep, i: number) => i !== index));
   };
 
   const renderJobFields = () => (
@@ -374,7 +382,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
             </Button>
           </div>
           {form.formState.errors.title && (
-            <p className="text-sm text-destructive mt-1">{form.formState.errors.title?.message}</p>
+            <p className="text-sm text-destructive mt-1">{form.formState.errors.title?.message as string}</p>
           )}
         </div>
         <div>
@@ -385,7 +393,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
             data-testid="input-company"
           />
           {form.formState.errors.company && (
-            <p className="text-sm text-destructive mt-1">{form.formState.errors.company?.message}</p>
+            <p className="text-sm text-destructive mt-1">{form.formState.errors.company?.message as string}</p>
           )}
         </div>
       </div>
@@ -575,6 +583,19 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         <Label>Active Job Posting</Label>
       </div>
 
+      <div>
+        <Label htmlFor="expiresAt">Expiration Date (Optional)</Label>
+        <Input 
+          {...form.register("expiresAt")} 
+          type="datetime-local"
+          placeholder="Select expiration date"
+          data-testid="input-expires-at"
+        />
+        <p className="text-sm text-muted-foreground mt-1">
+          This job will be automatically deleted after the expiration date
+        </p>
+      </div>
+
       {/* Display AI-generated images */}
       {(workflowImages.length > 0 || mindmapImages.length > 0 || generatedImages.length > 0) && (
         <div className="space-y-4">
@@ -756,6 +777,19 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         </div>
       </div>
 
+      <div>
+        <Label htmlFor="expiresAt">Expiration Date (Optional)</Label>
+        <Input 
+          {...form.register("expiresAt")} 
+          type="datetime-local"
+          placeholder="Select expiration date"
+          data-testid="input-expires-at"
+        />
+        <p className="text-sm text-muted-foreground mt-1">
+          This article will be automatically deleted after the expiration date
+        </p>
+      </div>
+
       {/* Display AI-generated images */}
       {(workflowImages.length > 0 || mindmapImages.length > 0 || generatedImages.length > 0) && (
         <div className="space-y-4">
@@ -925,7 +959,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
       <div>
         <Label>Learning Steps</Label>
         <div className="space-y-4">
-          {steps.map((step, index) => (
+          {steps.map((step: RoadmapStep, index: number) => (
             <Card key={index} className="p-4" data-testid={`step-${index}`}>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">

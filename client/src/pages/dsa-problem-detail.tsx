@@ -1,12 +1,14 @@
 
 import { useParams, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   ArrowLeft, 
   Code, 
@@ -43,10 +45,80 @@ export default function DsaProblemDetail() {
   const [showSolution, setShowSolution] = useState(false);
   const [showHints, setShowHints] = useState(false);
   const [currentHint, setCurrentHint] = useState(0);
+  const { toast } = useToast();
 
   const { data: problem, isLoading, error } = useQuery<DsaProblem>({
     queryKey: [`/api/dsa-problems/${id}`],
   });
+
+  const { data: authStatus } = useQuery<{ authenticated: boolean }>({
+    queryKey: ['/api/auth/status'],
+  });
+
+  const { data: solvedStatus } = useQuery<{ solved: boolean }>({
+    queryKey: [`/api/dsa-problems/${id}/solved`],
+    enabled: !!authStatus?.authenticated,
+  });
+
+  const markAsSolvedMutation = useMutation({
+    mutationFn: async () => {
+      if (!authStatus?.authenticated) {
+        throw new Error('Please log in to mark problems as solved');
+      }
+      return apiRequest('POST', `/api/dsa-problems/${id}/solve`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/dsa-problems/${id}/solved`] });
+      toast({
+        title: "Success!",
+        description: "Problem marked as solved",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to mark problem as solved",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const shareProblemMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/dsa-problems/${id}/share`);
+    },
+    onSuccess: () => {
+      const shareUrl = `${window.location.origin}/dsa/${id}`;
+      navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link Copied!",
+        description: "Problem link has been copied to clipboard",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to share problem",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleMarkAsSolved = () => {
+    if (!authStatus?.authenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to mark problems as solved",
+        variant: "destructive",
+      });
+      return;
+    }
+    markAsSolvedMutation.mutate();
+  };
+
+  const handleShare = () => {
+    shareProblemMutation.mutate();
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -142,9 +214,17 @@ export default function DsaProblemDetail() {
                   </Badge>
                 </div>
 
-                <h1 className="text-2xl font-bold mb-4" data-testid="problem-title">
-                  {problem.title}
-                </h1>
+                <div className="flex items-center gap-2 mb-4">
+                  <h1 className="text-2xl font-bold" data-testid="problem-title">
+                    {problem.title}
+                  </h1>
+                  {solvedStatus?.solved && (
+                    <Badge variant="default" className="bg-green-600" data-testid="solved-badge">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Solved
+                    </Badge>
+                  )}
+                </div>
 
                 {/* Companies */}
                 {problem.companies && problem.companies.length > 0 && (
@@ -361,11 +441,23 @@ export default function DsaProblemDetail() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1" data-testid="mark-solved">
+                  <Button 
+                    variant={solvedStatus?.solved ? "default" : "outline"}
+                    className="flex-1" 
+                    data-testid="button-mark-solved"
+                    onClick={handleMarkAsSolved}
+                    disabled={markAsSolvedMutation.isPending || solvedStatus?.solved}
+                  >
                     <CheckCircle className="mr-2 h-4 w-4" />
-                    Mark as Solved
+                    {solvedStatus?.solved ? 'Solved' : 'Mark as Solved'}
                   </Button>
-                  <Button variant="outline" className="flex-1" data-testid="share-problem">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1" 
+                    data-testid="button-share"
+                    onClick={handleShare}
+                    disabled={shareProblemMutation.isPending}
+                  >
                     <Share2 className="mr-2 h-4 w-4" />
                     Share
                   </Button>
