@@ -1,0 +1,27 @@
+
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-01-27T00:00:00.000Z",
+  "templates": [
+    {
+      "id": "modern-minimal",
+      "name": "Modern Minimal",
+      "version": "1.0.0",
+      "description": "A clean and minimal portfolio design with smooth animations",
+      "category": "minimal",
+      "thumbnail": "/templates/modern-minimal/thumbnail.png",
+      "manifestPath": "/templates/modern-minimal/manifest.json",
+      "entryPath": "/templates/modern-minimal/index.tsx",
+      "features": [
+        "Smooth Animations",
+        "Responsive Design",
+        "Contact Form",
+        "Dark Mode Support"
+      ],
+      "isPremium": false,
+      "isActive": true,
+      "uploadedAt": "2025-01-27T00:00:00.000Z",
+      "updatedAt": "2025-01-27T00:00:00.000Z"
+    }
+  ]
+}

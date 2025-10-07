@@ -1,0 +1,23 @@
+
+{
+  "id": "modern-minimal",
+  "name": "Modern Minimal",
+  "version": "1.0.0",
+  "description": "A clean and minimal portfolio design with smooth animations",
+  "author": "Portfolio Builder",
+  "category": "minimal",
+  "thumbnail": "/templates/modern-minimal/thumbnail.png",
+  "entryFile": "index.tsx",
+  "features": [
+    "Smooth Animations",
+    "Responsive Design",
+    "Contact Form",
+    "Dark Mode Support"
+  ],
+  "isPremium": false,
+  "config": {
+    "supportsEmailJS": true,
+    "supportsThemes": true,
+    "supportsAnimations": true
+  }
+}

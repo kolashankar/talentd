@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { GoogleAuth } from "@/components/auth/google-auth";
 import { Menu, X, Briefcase, Users, MapPin, Code, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function Header() {
   const [location] = useLocation();
@@ -47,6 +48,17 @@ export function Header() {
                 </Link>
               );
             })}
+            <Link href="/scholarships">
+              <Button
+                variant={isActive("/scholarships") ? "default" : "ghost"}
+                size="sm"
+                className="gap-2"
+                data-testid="link-scholarships"
+              >
+                <MapPin className="h-4 w-4" />
+                Scholarships
+              </Button>
+            </Link>
           </nav>
         </div>
 
@@ -85,6 +97,17 @@ export function Header() {
                       </Link>
                     );
                   })}
+                  <Link href="/scholarships">
+                    <Button
+                      variant={isActive("/scholarships") ? "default" : "ghost"}
+                      className="w-full justify-start gap-3"
+                      onClick={() => setIsMenuOpen(false)}
+                      data-testid="link-mobile-scholarships"
+                    >
+                      <MapPin className="h-4 w-4" />
+                      Scholarships
+                    </Button>
+                  </Link>
                 </nav>
               </div>
             </SheetContent>

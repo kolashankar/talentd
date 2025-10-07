@@ -1,10 +1,10 @@
 
 import { Router } from "express";
-import { authenticateUser } from "../auth";
+import { isAuthenticated } from "../auth.js";
 
 const router = Router();
 
-router.post("/api/portfolio/generate-template", authenticateUser, async (req, res) => {
+router.post("/api/portfolio/generate-template", isAuthenticated, async (req, res) => {
   try {
     const { templateId, portfolioData } = req.body;
 
@@ -48,7 +48,7 @@ router.post("/api/portfolio/generate-template", authenticateUser, async (req, re
   }
 });
 
-router.post("/api/portfolio/share-template", authenticateUser, async (req, res) => {
+router.post("/api/portfolio/share-template", isAuthenticated, async (req, res) => {
   try {
     const { templateCode, portfolioData } = req.body;
 

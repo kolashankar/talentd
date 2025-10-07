@@ -1,6 +1,5 @@
-
 import { z } from "zod";
-import { pgTable, text, timestamp, boolean, integer, json, varchar, serial } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer, json, varchar, serial, real, jsonb } from "drizzle-orm/pg-core";
 
 // Database Tables
 export const users = pgTable('users', {
@@ -51,10 +50,54 @@ export const roadmaps = pgTable('roadmaps', {
   description: text('description').notNull(),
   content: text('content').notNull(),
   difficulty: varchar('difficulty', { length: 50 }).notNull(),
+  educationLevel: varchar('education_level', { length: 50 }).notNull().default('btech'),
   estimatedTime: text('estimated_time'),
   technologies: json('technologies').$type<string[]>().default([]),
   steps: json('steps').$type<Array<{title: string, description: string, resources: string[]}>>().default([]),
+  flowchartData: json('flowchart_data').$type<{
+    nodes: Array<{
+      id: string;
+      type: string;
+      position: { x: number; y: number };
+      data: {
+        label: string;
+        description?: string;
+        redirectUrl?: string;
+        color?: string;
+      };
+    }>;
+    edges: Array<{
+      id: string;
+      source: string;
+      target: string;
+      type?: string;
+      animated?: boolean;
+    }>;
+  }>(),
   isPublished: boolean('is_published').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  rating: real('rating').default(0),
+  ratingCount: integer('rating_count').default(0),
+});
+
+export const scholarships = pgTable('scholarships', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  provider: text('provider').notNull(),
+  amount: text('amount').notNull(),
+  educationLevel: varchar('education_level', { length: 50 }).notNull(),
+  eligibility: text('eligibility').notNull(),
+  deadline: timestamp('deadline'),
+  applicationUrl: text('application_url'),
+  category: varchar('category', { length: 100 }),
+  tags: json('tags').$type<string[]>().default([]),
+  benefits: text('benefits'),
+  requirements: text('requirements'),
+  howToApply: text('how_to_apply'),
+  isActive: boolean('is_active').default(true),
+  featured: boolean('featured').default(false),
+  expiresAt: timestamp('expires_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -132,6 +175,48 @@ export const solvedProblems = pgTable('solved_problems', {
   solvedAt: timestamp('solved_at').defaultNow().notNull(),
 });
 
+export const templates = pgTable('templates', {
+  id: serial('id').primaryKey(),
+  templateId: varchar('template_id', { length: 100 }).notNull().unique(),
+  name: text('name').notNull(),
+  description: text('description'),
+  version: varchar('version', { length: 20 }).notNull().default('1.0.0'),
+  category: varchar('category', { length: 50 }).notNull(),
+  thumbnailUrl: text('thumbnail_url'),
+  manifestPath: text('manifest_path').notNull(),
+  entryFile: text('entry_file').notNull(),
+  features: json('features').$type<string[]>().default([]),
+  isPremium: boolean('is_premium').default(false),
+  isActive: boolean('is_active').default(true),
+  uploadedBy: integer('uploaded_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const portfolioShares = pgTable('portfolio_shares', {
+  id: serial('id').primaryKey(),
+  shareId: varchar('share_id', { length: 100 }).notNull().unique(),
+  portfolioId: integer('portfolio_id').references(() => portfolios.id).notNull(),
+  userId: integer('user_id').references(() => users.id),
+  templateId: varchar('template_id', { length: 100 }),
+  portfolioData: json('portfolio_data').$type<any>(),
+  viewCount: integer('view_count').default(0),
+  isActive: boolean('is_active').default(true),
+  expiresAt: timestamp('expires_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const roadmapReviews = pgTable('roadmap_reviews', {
+  id: serial('id').primaryKey(),
+  roadmapId: integer('roadmap_id').references(() => roadmaps.id).notNull(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  rating: integer('rating').notNull(),
+  review: text('review'),
+  isHelpful: boolean('is_helpful').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Zod Schemas (keep existing ones and add types)
 export const insertUserSchema = z.object({
   username: z.string().min(1).max(100),
@@ -174,6 +259,7 @@ export const insertRoadmapSchema = z.object({
   description: z.string().min(1),
   content: z.string().min(1),
   difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
+  educationLevel: z.enum(['upto-10th', '12th', 'btech', 'degree', 'postgrad', 'professional']).default('btech'),
   estimatedTime: z.string().optional(),
   technologies: z.array(z.string()).default([]),
   steps: z.array(z.object({
@@ -181,7 +267,49 @@ export const insertRoadmapSchema = z.object({
     description: z.string(),
     resources: z.array(z.string()).default([])
   })).default([]),
+  flowchartData: z.object({
+    nodes: z.array(z.object({
+      id: z.string(),
+      type: z.string(),
+      position: z.object({ x: z.number(), y: z.number() }),
+      data: z.object({
+        label: z.string(),
+        description: z.string().optional(),
+        redirectUrl: z.string().optional(),
+        color: z.string().optional(),
+      })
+    })),
+    edges: z.array(z.object({
+      id: z.string(),
+      source: z.string(),
+      target: z.string(),
+      type: z.string().optional(),
+      animated: z.boolean().optional(),
+    }))
+  }).optional().nullable(),
+  image: z.string().optional(),
   isPublished: z.boolean().default(true),
+  rating: z.number().optional(),
+  ratingCount: z.number().optional(),
+});
+
+export const insertScholarshipSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  provider: z.string().min(1),
+  amount: z.string().min(1),
+  educationLevel: z.enum(['upto-10th', '12th', 'btech', 'degree', 'postgrad']),
+  eligibility: z.string().min(1),
+  deadline: z.string().optional(),
+  applicationUrl: z.string().url().optional(),
+  category: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+  benefits: z.string().optional(),
+  requirements: z.string().optional(),
+  howToApply: z.string().optional(),
+  isActive: z.boolean().default(true),
+  featured: z.boolean().default(false),
+  expiresAt: z.string().optional(),
 });
 
 export const insertDsaProblemSchema = z.object({
@@ -245,6 +373,40 @@ export const insertResumeAnalysisSchema = z.object({
   analysis: z.string().optional(),
 });
 
+export const insertTemplateSchema = z.object({
+  templateId: z.string().max(100),
+  name: z.string().min(1),
+  description: z.string().optional(),
+  version: z.string().max(20).default('1.0.0'),
+  category: z.string().max(50),
+  thumbnailUrl: z.string().optional(),
+  manifestPath: z.string(),
+  entryFile: z.string(),
+  features: z.array(z.string()).default([]),
+  isPremium: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+  uploadedBy: z.number().optional(),
+});
+
+export const insertPortfolioShareSchema = z.object({
+  shareId: z.string().max(100),
+  portfolioId: z.number(),
+  userId: z.number().optional(),
+  templateId: z.string().max(100).optional(),
+  portfolioData: z.any().optional(),
+  viewCount: z.number().default(0),
+  isActive: z.boolean().default(true),
+  expiresAt: z.string().optional(),
+});
+
+export const insertRoadmapReviewSchema = z.object({
+  roadmapId: z.number(),
+  userId: z.number(),
+  rating: z.number().min(1).max(5),
+  review: z.string().optional(),
+  isHelpful: z.boolean().default(false),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -262,3 +424,11 @@ export type ResumeAnalysis = typeof resumeAnalyses.$inferSelect;
 export type InsertResumeAnalysis = typeof resumeAnalyses.$inferInsert;
 export type SolvedProblem = typeof solvedProblems.$inferSelect;
 export type InsertSolvedProblem = typeof solvedProblems.$inferInsert;
+export type Template = typeof templates.$inferSelect;
+export type InsertTemplate = typeof templates.$inferInsert;
+export type PortfolioShare = typeof portfolioShares.$inferSelect;
+export type InsertPortfolioShare = typeof portfolioShares.$inferInsert;
+export type Scholarship = typeof scholarships.$inferSelect;
+export type InsertScholarship = typeof scholarships.$inferInsert;
+export type RoadmapReview = typeof roadmapReviews.$inferSelect;
+export type InsertRoadmapReview = typeof roadmapReviews.$inferInsert;

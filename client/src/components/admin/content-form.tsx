@@ -11,11 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/ui/file-upload";
+import { FlowchartEditor } from "@/components/admin/flowchart-editor";
+import { Node, Edge } from 'reactflow';
 import { 
   insertJobSchema, 
   insertArticleSchema, 
   insertRoadmapSchema, 
-  insertDsaProblemSchema 
+  insertDsaProblemSchema,
+  insertScholarshipSchema 
 } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -48,6 +51,8 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
   const [companyInput, setCompanyInput] = useState("");
   const [hintInput, setHintInput] = useState("");
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [flowchartNodes, setFlowchartNodes] = useState<Node[]>(item?.flowchartData?.nodes || []);
+  const [flowchartEdges, setFlowchartEdges] = useState<Edge[]>(item?.flowchartData?.edges || []);
   const [companyLogo, setCompanyLogo] = useState<File | null>(null);
   const [workflowImages, setWorkflowImages] = useState<string[]>([]);
   const [mindmapImages, setMindmapImages] = useState<string[]>([]);
@@ -70,6 +75,8 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         return insertRoadmapSchema;
       case "dsa-corner":
         return insertDsaProblemSchema;
+      case "scholarships":
+        return insertScholarshipSchema;
       default:
         return insertJobSchema;
     }
@@ -83,36 +90,41 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
     },
   });
 
+  // Use a temporary state for form values to handle AI-generated content updates correctly
+  const [formData, setFormData] = useState(form.getValues());
+
   useEffect(() => {
-    if (item) {
-      setSkills(item.skills || []);
-      setTags(item.tags || []);
-      setTechnologies(item.technologies || []);
-      setCompanies(item.companies || []);
-      setSteps(item.steps || []);
-      setHints(item.hints || []);
-
-      // Handle AI-generated visual content
-      setWorkflowImages(item.workflowImages || []);
-      setMindmapImages(item.mindmapImages || []);
-      setGeneratedImages(item.generatedImages || []);
-
-      // Update form values with AI-generated content
+    if (item && Object.keys(item).length > 0) {
+      // Update all form fields with AI-generated content
       Object.keys(item).forEach(key => {
-        if (item[key] !== undefined && item[key] !== null) {
+        if (form.getValues()[key] !== undefined || key in form.getValues()) {
           form.setValue(key as any, item[key]);
         }
       });
 
-      // Auto-fill AI generated content with visual feedback
-      if (item.isAIGenerated) {
-        toast({
-          title: "AI Content Loaded",
-          description: "Content has been auto-filled with AI-generated data including images and visuals.",
-        });
+      // Update arrays
+      if (item.skills) setSkills(item.skills);
+      if (item.tags) setTags(item.tags);
+      if (item.technologies) setTechnologies(item.technologies);
+      if (item.companies) setCompanies(item.companies);
+      if (item.steps) setSteps(item.steps);
+      if (item.hints) setHints(item.hints);
+      
+      // Update flowchart data for roadmaps
+      if (item.flowchartData) {
+        setFlowchartNodes(item.flowchartData.nodes || []);
+        setFlowchartEdges(item.flowchartData.edges || []);
       }
+
+      // Update image states
+      if (item.workflowImages) setWorkflowImages(item.workflowImages);
+      if (item.mindmapImages) setMindmapImages(item.mindmapImages);
+      if (item.generatedImages) setGeneratedImages(item.generatedImages);
+
+      setFormData(item);
     }
-  }, [item, form]);
+  }, [item]);
+
 
   // Mutation for AI asset generation
   const generateAssetsMutation = useMutation({
@@ -150,12 +162,23 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log('Save mutation started with data:', data);
-      
+
       const endpoint = getApiEndpoint();
       const method = isEditing ? 'PUT' : 'POST';
       const url = isEditing ? `${endpoint}/${item.id}` : endpoint;
 
       console.log('API call details:', { method, url, endpoint });
+
+      // Prepare data for submission, including flowchart data for roadmaps
+      const submitData = {
+        ...data,
+        ...(type === 'roadmaps' && flowchartNodes.length > 0 ? {
+          flowchartData: {
+            nodes: flowchartNodes,
+            edges: flowchartEdges,
+          }
+        } : {})
+      };
 
       const response = await fetch(url, {
         method,
@@ -163,7 +186,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(data),
+        body: JSON.stringify(submitData),
       });
 
       if (!response.ok) {
@@ -218,7 +241,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
 
   const onSubmit = (data: any) => {
     console.log('Form submission started with data:', data);
-    
+
     // Validate required fields before submission
     const requiredFields = {
       jobs: ['title', 'company'],
@@ -230,7 +253,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
     };
 
     const required = requiredFields[type as keyof typeof requiredFields] || [];
-    
+
     for (const field of required) {
       if (!data[field] || data[field].toString().trim() === '') {
         toast({
@@ -301,6 +324,10 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         estimatedTime: data.estimatedTime || '',
         technologies: technologies,
         steps: steps,
+        flowchartData: flowchartNodes.length > 0 ? {
+          nodes: flowchartNodes,
+          edges: flowchartEdges,
+        } : null,
         isPublished: data.isPublished ?? true,
         image: uploadedImage ? `https://via.placeholder.com/600x400?text=${encodeURIComponent(uploadedImage.name)}` : data.image || '',
       };
@@ -875,7 +902,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-3 gap-6">
         <div>
           <Label htmlFor="difficulty">Difficulty *</Label>
           <Select onValueChange={(value) => form.setValue("difficulty", value)} defaultValue={form.getValues("difficulty")}>
@@ -886,6 +913,22 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
               <SelectItem value="beginner">Beginner</SelectItem>
               <SelectItem value="intermediate">Intermediate</SelectItem>
               <SelectItem value="advanced">Advanced</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="educationLevel">Education Level *</Label>
+          <Select onValueChange={(value) => form.setValue("educationLevel", value)} defaultValue={form.getValues("educationLevel") || "btech"}>
+            <SelectTrigger data-testid="select-education-level">
+              <SelectValue placeholder="Select education level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="upto-10th">Upto 10th Class</SelectItem>
+              <SelectItem value="12th">12th Pass/Pursuing</SelectItem>
+              <SelectItem value="btech">B.Tech/Engineering</SelectItem>
+              <SelectItem value="degree">Degree/Graduation</SelectItem>
+              <SelectItem value="postgrad">Post Graduation</SelectItem>
+              <SelectItem value="professional">Professional</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -952,6 +995,30 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         {uploadedImage && (
           <p className="text-sm text-muted-foreground mt-2">
             Selected: {uploadedImage.name}
+          </p>
+        )}
+      </div>
+
+      {/* Flowchart Editor for Roadmaps */}
+      <div className="space-y-4">
+        <Label>Interactive Flowchart</Label>
+        <FlowchartEditor
+          initialNodes={flowchartNodes}
+          initialEdges={flowchartEdges}
+          roadmapData={{
+            title: form.watch('title') || '',
+            description: form.watch('description') || '',
+            technologies: technologies,
+            difficulty: form.watch('difficulty') || 'intermediate'
+          }}
+          onSave={(nodes, edges) => {
+            setFlowchartNodes(nodes);
+            setFlowchartEdges(edges);
+          }}
+        />
+        {flowchartNodes.length > 0 && (
+          <p className="text-sm text-muted-foreground">
+            Flowchart configured with {flowchartNodes.length} nodes and {flowchartEdges.length} connections
           </p>
         )}
       </div>
@@ -1292,6 +1359,190 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
     </>
   );
 
+  const renderScholarshipFields = () => (
+    <>
+      <div>
+        <Label htmlFor="title">Scholarship Title *</Label>
+        <Input 
+          {...form.register("title")} 
+          placeholder="e.g., National Merit Scholarship"
+          data-testid="input-title"
+        />
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <Label htmlFor="provider">Provider *</Label>
+          <Input 
+            {...form.register("provider")} 
+            placeholder="e.g., Government of India"
+            data-testid="input-provider"
+          />
+        </div>
+        <div>
+          <Label htmlFor="amount">Amount *</Label>
+          <Input 
+            {...form.register("amount")} 
+            placeholder="e.g., ₹50,000 per year"
+            data-testid="input-amount"
+          />
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <Label htmlFor="educationLevel">Education Level *</Label>
+          <Select onValueChange={(value) => form.setValue("educationLevel", value)} defaultValue={form.getValues("educationLevel")}>
+            <SelectTrigger data-testid="select-education-level">
+              <SelectValue placeholder="Select education level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="upto-10th">Upto 10th Class</SelectItem>
+              <SelectItem value="12th">12th Pass/Pursuing</SelectItem>
+              <SelectItem value="btech">B.Tech/Engineering</SelectItem>
+              <SelectItem value="degree">Degree/Graduation</SelectItem>
+              <SelectItem value="postgrad">Post Graduation</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="category">Category</Label>
+          <Select onValueChange={(value) => form.setValue("category", value)} defaultValue={form.getValues("category")}>
+            <SelectTrigger data-testid="select-category">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="merit">Merit Based</SelectItem>
+              <SelectItem value="need">Need Based</SelectItem>
+              <SelectItem value="minority">Minority</SelectItem>
+              <SelectItem value="sports">Sports</SelectItem>
+              <SelectItem value="government">Government</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="description">Description *</Label>
+        <Textarea 
+          {...form.register("description")} 
+          rows={4}
+          placeholder="Brief description of the scholarship"
+          data-testid="textarea-description"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="eligibility">Eligibility Criteria *</Label>
+        <Textarea 
+          {...form.register("eligibility")} 
+          rows={5}
+          placeholder="List eligibility requirements..."
+          data-testid="textarea-eligibility"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="requirements">Requirements</Label>
+        <Textarea 
+          {...form.register("requirements")} 
+          rows={4}
+          placeholder="Documents and requirements needed..."
+          data-testid="textarea-requirements"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="benefits">Benefits</Label>
+        <Textarea 
+          {...form.register("benefits")} 
+          rows={3}
+          placeholder="Additional benefits provided..."
+          data-testid="textarea-benefits"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="howToApply">How to Apply</Label>
+        <Textarea 
+          {...form.register("howToApply")} 
+          rows={4}
+          placeholder="Step-by-step application process..."
+          data-testid="textarea-how-to-apply"
+        />
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <Label htmlFor="deadline">Application Deadline</Label>
+          <Input 
+            {...form.register("deadline")} 
+            type="datetime-local"
+            data-testid="input-deadline"
+          />
+        </div>
+        <div>
+          <Label htmlFor="applicationUrl">Application URL</Label>
+          <Input 
+            {...form.register("applicationUrl")} 
+            placeholder="https://scholarship-portal.com/apply"
+            data-testid="input-application-url"
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label>Tags</Label>
+        <div className="flex gap-2 mb-2">
+          <Input 
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            placeholder="Add a tag"
+            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem(tagInput, setTags, setTagInput))}
+            data-testid="input-tag"
+          />
+          <Button 
+            type="button" 
+            onClick={() => addItem(tagInput, setTags, setTagInput)}
+            data-testid="button-add-tag"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag, index) => (
+            <Badge key={index} variant="secondary" className="flex items-center gap-1" data-testid={`tag-badge-${index}`}>
+              {tag}
+              <X 
+                className="h-3 w-3 cursor-pointer" 
+                onClick={() => removeItem(index, setTags)}
+              />
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
+          <Switch 
+            checked={form.watch("isActive")}
+            onCheckedChange={(checked) => form.setValue("isActive", checked)}
+            data-testid="switch-active"
+          />
+          <Label>Active</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Switch 
+            checked={form.watch("featured")}
+            onCheckedChange={(checked) => form.setValue("featured", checked)}
+            data-testid="switch-featured"
+          />
+          <Label>Featured</Label>
+        </div>
+      </div>
+    </>
+  );
+
   const renderFields = () => {
     switch (type) {
       case "jobs":
@@ -1304,6 +1555,8 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         return renderRoadmapFields();
       case "dsa-corner":
         return renderDsaFields();
+      case "scholarships":
+        return renderScholarshipFields();
       default:
         return renderJobFields();
     }

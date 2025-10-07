@@ -39,6 +39,7 @@ export default function Roadmaps() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [durationFilter, setDurationFilter] = useState("all");
+  const [educationLevelFilter, setEducationLevelFilter] = useState("all");
   const [sortBy, setSortBy] = useState("popular");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -67,10 +68,11 @@ export default function Roadmaps() {
 
       const matchesCategory = !categoryFilter || categoryFilter === "all" || roadmap.category === categoryFilter;
       const matchesDifficulty = !difficultyFilter || difficultyFilter === "all" || roadmap.difficulty === difficultyFilter;
+      const matchesEducationLevel = !educationLevelFilter || educationLevelFilter === "all" || (roadmap as any).educationLevel === educationLevelFilter;
       const matchesSkills = selectedSkills.length === 0 || 
         selectedSkills.some(skill => roadmap.skills?.includes(skill));
 
-      return matchesSearch && matchesCategory && matchesDifficulty && matchesSkills;
+      return matchesSearch && matchesCategory && matchesDifficulty && matchesEducationLevel && matchesSkills;
     });
 
     // Sort roadmaps
@@ -205,6 +207,25 @@ export default function Roadmaps() {
                             {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Education Level Filter */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Education Level</label>
+                    <Select value={educationLevelFilter} onValueChange={setEducationLevelFilter}>
+                      <SelectTrigger data-testid="education-level-filter">
+                        <SelectValue placeholder="Any level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Any level</SelectItem>
+                        <SelectItem value="upto-10th">Upto 10th Class</SelectItem>
+                        <SelectItem value="12th">12th Pass/Pursuing</SelectItem>
+                        <SelectItem value="btech">B.Tech/Engineering</SelectItem>
+                        <SelectItem value="degree">Degree/Graduation</SelectItem>
+                        <SelectItem value="postgrad">Post Graduation</SelectItem>
+                        <SelectItem value="professional">Professional</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

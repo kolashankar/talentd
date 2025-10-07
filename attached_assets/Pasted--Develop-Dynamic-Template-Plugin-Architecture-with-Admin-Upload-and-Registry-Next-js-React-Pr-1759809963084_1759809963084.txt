@@ -1,0 +1,96 @@
+🧩 Develop Dynamic Template Plugin Architecture with Admin Upload and Registry (Next.js + React)
+
+Prompt Content:
+
+Create a complete dynamic portfolio template system using Next.js + React with a Template Plugin Architecture and Dynamic Registry approach.
+
+🎯 Core Goal
+
+The system should allow admin users to upload React-based portfolio templates as .zip files (each containing its own manifest, pages, assets, and entry file).
+
+Each uploaded template should be extracted and automatically registered in a dynamic registry.
+
+The user frontend should dynamically load and render any registered template at runtime, without hardcoding imports.
+
+Templates should be lazy-loaded using Next.js dynamic imports or via remote CDN-based modules.
+
+⚙️ Functional Requirements
+🧩 Template Plugin Architecture
+
+Each template uploaded by admin should have this structure:
+Each template acts as a plugin and can be loaded dynamically.
+
+📁 Template Registry System
+
+Maintain a global file public/templates/registry.json that stores all available templates:
+The backend should automatically update this registry whenever a new template is uploaded or removed.
+
+📤 Admin Upload System
+
+Create an Admin Dashboard page:
+
+Allows uploading .zip files (for new templates).
+
+Backend extracts them into /public/templates/<template-id>/.
+
+Validates that each template contains a valid manifest.json.
+
+Updates registry.json accordingly.
+
+Optionally uploads to S3 or Supabase Storage if using a CDN-based template load system.
+📄 Resume Parsing Integration
+
+When the user uploads a resume, parse it using the Gemini API (already implemented) into structured data categories:
+
+Personal details
+
+Skills
+
+Projects
+
+Education
+
+Experience
+
+This parsed data should be automatically passed as props to the selected template’s components.
+
+📩 Contact Page (EmailJS Integration)
+
+Each template should include a functional contact form powered by EmailJS API for sending messages directly to the portfolio owner’s email.
+
+🔗 Live Preview & Code View
+
+Every generated portfolio site should have:
+
+A live shared link (unique per generated portfolio)
+
+A “Code View” icon (top-right corner) to view the 7-level nested folder structure
+
+A Download as ZIP option for the entire portfolio’s code
+
+🧱 Common Libraries / Hooks
+
+Shared logic (resume parsing, data schema, hooks, animations, icons) should live in a packages/shared/ folder.
+
+Templates should be light and import shared logic from there instead of duplicating code.
+
+💡 Technical Stack
+
+Frontend: Next.js, React, TailwindCSS, Framer Motion, EmailJS
+
+Backend: Node.js / Express (for file upload, extraction, and registry management)
+
+Storage: Local /public/templates/ or CDN (S3 / Supabase)
+
+Dynamic Imports: next/dynamic() with lazy loading
+
+Optional Advanced Add-on: Support CDN imports via import('https://cdn.mysite.com/templates/template-01/index.js')
+Use TypeScript throughout
+
+Maintain modular, extensible architecture
+
+Implement error handling and validation
+
+Ensure templates are sandboxed (no code conflicts)
+
+Add loading animations while fetching templates dynamically

@@ -11,7 +11,7 @@ import { GoogleGenAI } from "@google/genai";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export interface ContentGenerationRequest {
-  type: 'job' | 'internship' | 'article' | 'roadmap' | 'dsa-problem' | 'portfolio-website' | 'advertising-template';
+  type: 'job' | 'internship' | 'article' | 'roadmap' | 'dsa-problem' | 'portfolio-website' | 'advertising-template' | 'scholarship';
   prompt: string;
   details?: {
     company?: string;
@@ -139,15 +139,20 @@ export async function generateContent(request: ContentGenerationRequest): Promis
         break;
 
       case 'roadmap':
-        systemPrompt = `You are an expert learning path creator with deep knowledge of current industry requirements and technologies popular in India. Generate comprehensive, practical learning roadmaps aligned with current job market demands. Include relevant visual roadmap images. Respond with JSON in this exact format: {
+        systemPrompt = `You are an expert learning path creator with deep knowledge of current industry requirements and technologies popular in India. Generate comprehensive, practical learning roadmaps aligned with current job market demands. Include relevant visual roadmap images and flowchart structure. Respond with JSON in this exact format: {
           "title": "string",
-          "description": "string",
-          "content": "string (markdown format)",
-          "difficulty": "string",
+          "description": "string (detailed description)",
+          "content": "string (markdown format with comprehensive content)",
+          "difficulty": "string (beginner, intermediate, or advanced)",
           "estimatedTime": "string",
+          "educationLevel": "string (upto-10th, 12th, btech, degree, postgrad, or professional)",
           "technologies": ["string"],
           "steps": [{"title": "string", "description": "string", "resources": ["string"]}],
-          "image": "string (use learning/tech roadmap images from Unsplash like https://images.unsplash.com/photo-[id]?w=600&h=400&fit=crop)"
+          "image": "string (use learning/tech roadmap images from Unsplash like https://images.unsplash.com/photo-[id]?w=600&h=400&fit=crop)",
+          "flowchartData": {
+            "nodes": [{"id": "string", "type": "string", "position": {"x": number, "y": number}, "data": {"label": "string", "description": "string", "redirectUrl": "string", "color": "string"}}],
+            "edges": [{"id": "string", "source": "string", "target": "string", "type": "smoothstep", "animated": true}]
+          }
         }`;
         
         let roadmapPrompt = `Generate a comprehensive, industry-aligned learning roadmap for: ${request.prompt}.`;
@@ -160,7 +165,17 @@ export async function generateContent(request: ContentGenerationRequest): Promis
           roadmapPrompt += ` Difficulty: ${request.details.difficulty}.`;
         }
         
-        roadmapPrompt += ` Include real-world projects, relevant resources, career-focused learning path suitable for Indian job market, and appropriate roadmap visualization images.`;
+        roadmapPrompt += ` Include real-world projects, relevant resources, career-focused learning path suitable for Indian job market, and appropriate roadmap visualization images. IMPORTANT: Generate a complete interactive workflow with at least 8-10 nodes showing the learning progression. Each node should have:
+- Unique id (e.g., "node-1", "node-2")
+- Position with x and y coordinates (spread nodes vertically and horizontally for clarity)
+- Label (short title, max 5 words)
+- Description (brief 1-2 sentence summary)
+- Content (detailed explanation, 3-5 paragraphs about what to learn in this step)
+- Resources array (list of 3-5 helpful links or resource names)
+- RedirectUrl (optional external learning resource link)
+- Color (hex code based on node type: fundamentals=#3b82f6, frameworks=#8b5cf6, practice=#10b981, advanced=#f59e0b)
+
+Create edges connecting the nodes to show the complete learning flow from start to finish. Make it like an n8n workflow where users can click each node to see detailed content.`;
         userPrompt = roadmapPrompt;
         break;
 
@@ -317,6 +332,43 @@ export async function generateContent(request: ContentGenerationRequest): Promis
         
         templatePrompt += ` Make it modern, professional, and conversion-focused.`;
         userPrompt = templatePrompt;
+        break;
+
+      case 'scholarship':
+        systemPrompt = `You are an expert educational consultant with knowledge of scholarship programs in India and globally. Generate comprehensive, realistic scholarship information based on current opportunities. Respond with JSON in this exact format: {
+          "title": "string",
+          "description": "string (detailed description, minimum 100 characters)",
+          "provider": "string",
+          "amount": "string",
+          "educationLevel": "string (upto-10th, 12th, btech, degree, or postgrad)",
+          "eligibility": "string (detailed eligibility criteria, minimum 100 characters)",
+          "deadline": "string (ISO date format YYYY-MM-DD)",
+          "applicationUrl": "string",
+          "category": "string (merit, need, minority, sports, or government)",
+          "tags": ["string"],
+          "benefits": "string (detailed benefits)",
+          "requirements": "string (detailed requirements)",
+          "howToApply": "string (step by step application process)",
+          "isActive": true,
+          "featured": boolean
+        }`;
+        
+        let scholarshipPrompt = `Generate a comprehensive scholarship program: ${request.prompt}.`;
+        
+        if (request.details?.fetchFromWeb) {
+          scholarshipPrompt += ` Base this on real scholarship programs available in India from organizations like UGC, AICTE, state governments, and private foundations. Ensure all details are authentic and current for 2024-2025.`;
+        }
+        
+        if (request.details?.educationLevel) {
+          scholarshipPrompt += ` Focus on scholarships for ${request.details.educationLevel} students.`;
+        }
+        
+        if (request.details?.category) {
+          scholarshipPrompt += ` Category: ${request.details.category}.`;
+        }
+        
+        scholarshipPrompt += ` Include realistic amounts in INR (e.g., ₹5,000 to ₹2,00,000), genuine application processes, appropriate deadlines (within next 3-6 months), and clear eligibility criteria. Make it helpful for Indian students with proper government/institutional URLs where applicable.`;
+        userPrompt = scholarshipPrompt;
         break;
 
       default:
@@ -592,5 +644,89 @@ Extract:
   } catch (error) {
     console.error('Resume parsing error:', error);
     throw new Error(`Failed to parse resume: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+export async function generateFlowchartFromRoadmap(roadmapData: {
+  title: string;
+  description: string;
+  technologies: string[];
+  difficulty: string;
+}): Promise<any> {
+  try {
+    const systemPrompt = `You are an expert at creating interactive n8n-style learning workflows. Generate a comprehensive workflow structure with clickable nodes containing detailed content. Create a logical learning path with proper sequencing. Respond with JSON in this exact format: {
+      "nodes": [{
+        "id": "string (unique identifier like 'node-1')",
+        "type": "string (default, input, or output)",
+        "position": {"x": number, "y": number},
+        "data": {
+          "label": "string (node title, max 5 words)",
+          "description": "string (brief 1-2 sentence summary)",
+          "content": "string (detailed 3-5 paragraph explanation of this learning step)",
+          "resources": ["string (array of helpful resource links or names)"],
+          "redirectUrl": "string (optional external link)",
+          "color": "string (hex color like #3b82f6)"
+        }
+      }],
+      "edges": [{
+        "id": "string (unique like 'edge-1')",
+        "source": "string (source node id)",
+        "target": "string (target node id)",
+        "type": "string (smoothstep or step)",
+        "animated": boolean
+      }]
+    }`;
+
+    const userPrompt = `Generate an interactive n8n-style learning workflow for this roadmap:
+
+Title: ${roadmapData.title}
+Description: ${roadmapData.description}
+Technologies: ${roadmapData.technologies.join(', ')}
+Difficulty: ${roadmapData.difficulty}
+
+Create a comprehensive n8n-style workflow with MULTIPLE BRANCHES and paths:
+1. Start node (id: 'node-start', type: 'input', position: {x: 400, y: 0}) - Entry point
+2. Create 12-15 learning nodes with BRANCHING PATHS:
+   - Main learning path (sequential nodes)
+   - Alternative/advanced branches for different learning styles
+   - Parallel practice/project branches
+   - Optional deep-dive branches
+3. Each node MUST have:
+   - Unique id: 'node-1', 'node-2', etc.
+   - Type: 'default', 'input', or 'output'
+   - Exact position: {x: number (0-1200), y: number (0-1500)}
+   - data.label: Short title (max 5 words)
+   - data.description: 1-2 sentence summary
+   - data.content: 4-6 paragraphs of detailed learning content
+   - data.resources: Array of 4-6 resource links/names
+   - data.redirectUrl: Valid external learning URL (documentation, tutorials, courses)
+   - data.color: Hex color (#3b82f6 for basics, #8b5cf6 for frameworks, #10b981 for practice, #f59e0b for advanced, #ef4444 for milestones)
+4. End node (id: 'node-end', type: 'output', position: {x: 400, y: 1400}) - Completion
+5. Create edges with MULTIPLE BRANCHES:
+   - Main sequential flow (node-start -> node-1 -> node-2 -> ... -> node-end)
+   - Branch connections (node-3 -> node-7 for advanced path)
+   - Parallel paths (node-4 -> node-8 AND node-4 -> node-9)
+   - Edge format: {id: 'edge-1', source: 'node-1', target: 'node-2', type: 'smoothstep', animated: true}
+6. Position nodes to create visual branches:
+   - Main path: x: 400, y: incremental
+   - Left branch: x: 100-200, y: aligned
+   - Right branch: x: 700-800, y: aligned
+7. Include real external URLs for redirectUrl (like https://reactjs.org/docs, https://developer.mozilla.org, https://www.udemy.com/course/...)
+8. Make it look like a real n8n workflow with connected nodes and multiple execution paths`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+      },
+      contents: userPrompt,
+    });
+
+    const flowchartData = JSON.parse(response.text || '{}');
+    return flowchartData;
+  } catch (error) {
+    console.error('Flowchart generation error:', error);
+    throw new Error(`Failed to generate flowchart: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

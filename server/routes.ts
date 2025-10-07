@@ -5,11 +5,15 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
 import { generateContent, analyzeResume, extractTextFromFile, parseResumeForPortfolio } from "./services/gemini";
-import { insertJobSchema, insertRoadmapSchema, insertArticleSchema, insertDsaProblemSchema, insertPortfolioSchema } from "@shared/schema";
+import { insertJobSchema, insertRoadmapSchema, insertArticleSchema, insertDsaProblemSchema, insertPortfolioSchema, insertScholarshipSchema } from "@shared/schema";
 import { z } from "zod";
 import passport, { isAuthenticated, isAdmin, requireAuth } from "./auth";
 import { upload as cloudinaryUpload, uploadToCloudinary, generateUploadSignature } from "./cloudinary";
 import { eq, desc, and, or, like } from "drizzle-orm";
+import adminTemplatesRouter from "./routes/admin-templates.js";
+import portfolioTemplatesRouter from "./routes/portfolio-templates.js";
+import portfolioGeneratorRouter from "./routes/portfolio-generator.js";
+import flowchartRoutes from './routes/flowchart.js';
 
 // Configure multer for file uploads
 const upload = multer({
@@ -61,8 +65,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
   } else {
     app.get('/api/auth/google', (req, res) => {
-      res.status(500).json({ 
-        error: 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.' 
+      res.status(500).json({
+        error: 'Google OAuth not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.'
       });
     });
 
@@ -209,7 +213,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Creating roadmap with data:', req.body);
       const roadmapData = insertRoadmapSchema.parse(req.body);
-      const roadmap = await storage.createRoadmap(roadmapData);
+
+      // Ensure flowchartData is properly formatted
+      const formattedData = {
+        ...roadmapData,
+        flowchartData: roadmapData.flowchartData || null
+      };
+
+      const roadmap = await storage.createRoadmap(formattedData);
       res.status(201).json(roadmap);
     } catch (error) {
       console.error('Error creating roadmap:', error);
@@ -224,7 +235,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Updating roadmap with data:', req.body);
       const roadmapData = insertRoadmapSchema.partial().parse(req.body);
-      const roadmap = await storage.updateRoadmap(parseInt(req.params.id), roadmapData);
+
+      // Ensure flowchartData is properly formatted
+      const formattedData = {
+        ...roadmapData,
+        flowchartData: roadmapData.flowchartData !== undefined ? roadmapData.flowchartData : undefined
+      };
+
+      const roadmap = await storage.updateRoadmap(parseInt(req.params.id), formattedData);
       if (!roadmap) {
         return res.status(404).json({ message: "Roadmap not found" });
       }
@@ -428,6 +446,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Roadmap flowchart generation
+  app.post('/api/roadmaps/generate-flowchart', async (req, res) => {
+    try {
+      const flowchartData = await generateFlowchartFromRoadmap(req.body);
+      res.json(flowchartData);
+    } catch (error) {
+      console.error('Flowchart generation error:', error);
+      res.status(500).json({ error: 'Failed to generate flowchart' });
+    }
+  });
+
+  // Rate and review roadmap
+  app.post('/api/roadmaps/:id/review', requireAuth, async (req, res) => {
+    try {
+      const roadmapId = parseInt(req.params.id);
+      const userId = (req.user as any)?.id;
+      const { rating, review } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+      }
+
+      const roadmap = await storage.getRoadmap(roadmapId);
+      if (!roadmap) {
+        return res.status(404).json({ error: 'Roadmap not found' });
+      }
+
+      const reviewData = await storage.createRoadmapReview({
+        roadmapId,
+        userId,
+        rating,
+        review: review || null,
+      });
+
+      // Update roadmap average rating
+      const allReviews = await storage.getRoadmapReviews(roadmapId);
+      const avgRating = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+
+      await storage.updateRoadmap(roadmapId, {
+        rating: Math.round(avgRating * 10) / 10,
+        ratingCount: allReviews.length,
+      });
+
+      res.json(reviewData);
+    } catch (error) {
+      console.error('Review error:', error);
+      res.status(500).json({ error: 'Failed to submit review' });
+    }
+  });
+
+  app.get('/api/roadmaps/:id/reviews', async (req, res) => {
+    try {
+      const roadmapId = parseInt(req.params.id);
+      const reviews = await storage.getRoadmapReviews(roadmapId);
+      res.json(reviews);
+    } catch (error) {
+      console.error('Get reviews error:', error);
+      res.status(500).json({ error: 'Failed to fetch reviews' });
+    }
+  });
+
+  app.delete('/api/roadmaps/:id/reviews/:reviewId', requireAuth, async (req, res) => {
+    try {
+      const reviewId = parseInt(req.params.reviewId);
+      const userId = (req.user as any)?.id;
+
+      const deleted = await storage.deleteRoadmapReview(reviewId, userId);
+      if (!deleted) {
+        return res.status(404).json({ error: 'Review not found or unauthorized' });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      console.error('Delete review error:', error);
+      res.status(500).json({ error: 'Failed to delete review' });
+    }
+  });
+
+
+  // AI Asset Generation route
+  app.post("/api/ai/generate-assets", async (req, res) => {
+    try {
+      const { title, type } = req.body;
+
+      if (!title || !type) {
+        return res.status(400).json({ message: "Title and type are required" });
+      }
+
+      // Generate placeholder assets based on type
+      const assets: any = {
+        workflowImages: [],
+        mindmapImages: [],
+        generatedImages: [],
+      };
+
+      // Generate workflow images
+      if (type === 'jobs' || type === 'internships' || type === 'roadmaps') {
+        assets.workflowImages = [
+          `https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop`,
+          `https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=300&fit=crop`,
+        ];
+      }
+
+      // Generate mindmap images for technical content
+      if (type === 'roadmaps' || type === 'dsa-corner') {
+        assets.mindmapImages = [
+          `https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop`,
+        ];
+      }
+
+      // Generate general images based on title
+      assets.generatedImages = [
+        `https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&h=400&fit=crop`,
+        `https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&h=400&fit=crop`,
+      ];
+
+      // Add featured image based on type
+      if (type === 'articles') {
+        assets.featuredImage = `https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=400&fit=crop`;
+      } else if (type === 'roadmaps') {
+        assets.image = `https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&h=400&fit=crop`;
+      }
+
+      res.json(assets);
+    } catch (error) {
+      console.error('Asset generation error:', error);
+      res.status(500).json({ message: "Failed to generate assets" });
+    }
+  });
 
   // DSA Problems routes
   app.get("/api/dsa-problems", async (req, res) => {
@@ -497,12 +648,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Scholarships routes
+  app.get("/api/scholarships", async (req, res) => {
+    try {
+      const educationLevel = req.query.educationLevel as string;
+      const scholarships = await storage.getScholarships(educationLevel);
+      res.json(scholarships);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch scholarships" });
+    }
+  });
+
+  app.get("/api/scholarships/:id", async (req, res) => {
+    try {
+      const scholarship = await storage.getScholarship(parseInt(req.params.id));
+      if (!scholarship) {
+        return res.status(404).json({ message: "Scholarship not found" });
+      }
+      res.json(scholarship);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch scholarship" });
+    }
+  });
+
+  app.post("/api/scholarships", async (req, res) => {
+    try {
+      console.log('Creating scholarship with data:', req.body);
+      const scholarshipData = insertScholarshipSchema.parse(req.body);
+      const scholarship = await storage.createScholarship(scholarshipData);
+      res.status(201).json(scholarship);
+    } catch (error) {
+      console.error('Error creating scholarship:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid scholarship data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create scholarship" });
+    }
+  });
+
+  app.put("/api/scholarships/:id", async (req, res) => {
+    try {
+      console.log('Updating scholarship with data:', req.body);
+      const scholarshipData = insertScholarshipSchema.partial().parse(req.body);
+      const scholarship = await storage.updateScholarship(parseInt(req.params.id), scholarshipData);
+      if (!scholarship) {
+        return res.status(404).json({ message: "Scholarship not found" });
+      }
+      res.json(scholarship);
+    } catch (error) {
+      console.error('Error updating scholarship:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid scholarship data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update scholarship" });
+    }
+  });
+
+  app.delete("/api/scholarships/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteScholarship(parseInt(req.params.id));
+      if (!deleted) {
+        return res.status(404).json({ message: "Scholarship not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete scholarship" });
+    }
+  });
+
   // DSA Problem mark as solved
   app.post("/api/dsa-problems/:id/solve", isAuthenticated, async (req, res) => {
     try {
       const problemId = parseInt(req.params.id);
       const userId = (req.user as any).id;
-      
+
       if (!userId) {
         return res.status(401).json({ message: "User not authenticated" });
       }
@@ -687,7 +906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convert string scores to integers for database storage
       const convertScoreToInteger = (score: string | number): number => {
         if (typeof score === 'number') return score;
-        
+
         const scoreMap: { [key: string]: number } = {
           'excellent': 95,
           'very good': 85,
@@ -696,7 +915,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'poor': 45,
           'bad': 25
         };
-        
+
         const lowerScore = score.toLowerCase();
         return scoreMap[lowerScore] || 50; // Default to 50 if not found
       };
@@ -785,8 +1004,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Portfolio generation error:', error);
-      res.status(500).json({ 
-        message: error instanceof Error ? error.message : "Failed to generate complete portfolio website" 
+      res.status(500).json({
+        message: error instanceof Error ? error.message : "Failed to generate complete portfolio website"
       });
     }
   });
@@ -870,8 +1089,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Ensure we have some portfolio data
       if (!portfolioData.name && !portfolioData.title) {
-        return res.status(400).json({ 
-          message: "Portfolio data is required. Please fill in basic information (name, title) or upload a resume." 
+        return res.status(400).json({
+          message: "Portfolio data is required. Please fill in basic information (name, title) or upload a resume."
         });
       }
 
@@ -879,7 +1098,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const completePortfolio = await generateContent({
         type: 'portfolio-website',
         prompt: `Create a stunning, professional portfolio website with modern UI/UX design, animations, and visual assets. ${prompt}`,
-        details: { 
+        details: {
           portfolioData,
           generateImages: true,
           generateAnimations: true,
@@ -1055,6 +1274,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create template download" });
     }
   });
+
+  // Register template management routers
+  app.use(adminTemplatesRouter);
+  app.use(portfolioGeneratorRouter);
+  app.use(portfolioTemplatesRouter);
+  app.use(flowchartRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

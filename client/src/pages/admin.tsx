@@ -6,7 +6,7 @@ import { ContentForm } from "@/components/admin/content-form";
 import { AiGenerator } from "@/components/admin/ai-generator";
 import { AdminAgent } from "@/components/admin/admin-agent";
 import { useQuery } from "@tanstack/react-query";
-import { Job, Article, Roadmap, DsaProblem } from "@shared/schema";
+import { Job, Article, Roadmap, DsaProblem, Scholarship } from "@shared/schema";
 import {
   Briefcase,
   GraduationCap,
@@ -19,6 +19,7 @@ import {
   Trash2,
   Bot,
   TrendingUp,
+  Folder,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -29,7 +30,6 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const { toast } = useToast();
 
   const handleAdminLogin = () => {
-    // Simple admin code check - in production, use proper authentication
     if (
       adminCode === "admin123" ||
       adminCode === "ADMIN2024" ||
@@ -84,7 +84,6 @@ function AdminDashboard() {
   const [showAiGenerator, setShowAiGenerator] = useState(false);
   const { toast } = useToast();
 
-  // All queries run unconditionally in this component
   const { data: jobs = [], isLoading: jobsLoading } = useQuery<Job[]>({
     queryKey: ["/api/jobs"],
   });
@@ -99,6 +98,14 @@ function AdminDashboard() {
 
   const { data: dsaProblems = [] } = useQuery<DsaProblem[]>({
     queryKey: ["/api/dsa-problems"],
+  });
+
+  const { data: scholarships = [] } = useQuery<Scholarship[]>({
+    queryKey: ["/api/scholarships"],
+  });
+
+  const { data: portfolios = [] } = useQuery({
+    queryKey: ["/api/portfolios"],
   });
 
   const sidebarItems = [
@@ -128,23 +135,36 @@ function AdminDashboard() {
       icon: Code,
       count: dsaProblems.length,
     },
+    {
+      id: "scholarships",
+      label: "Scholarships",
+      icon: GraduationCap,
+      count: scholarships.length,
+    },
+    {
+      id: "portfolios",
+      label: "Portfolios",
+      icon: Folder,
+      count: portfolios.length,
+    },
   ];
 
-  const stats = [
+  // Fixed: Convert stats object to array for mapping
+  const statsArray = [
     {
-      label: "Total Jobs",
+      label: "Jobs",
       value: jobs.length,
       icon: Briefcase,
       color: "text-blue-600",
     },
     {
-      label: "Active Articles",
+      label: "Articles",
       value: articles.length,
       icon: FileText,
       color: "text-green-600",
     },
     {
-      label: "Learning Paths",
+      label: "Roadmaps",
       value: roadmaps.length,
       icon: Route,
       color: "text-purple-600",
@@ -154,6 +174,18 @@ function AdminDashboard() {
       value: dsaProblems.length,
       icon: Code,
       color: "text-orange-600",
+    },
+    {
+      label: "Scholarships",
+      value: scholarships.length,
+      icon: GraduationCap,
+      color: "text-indigo-600",
+    },
+    {
+      label: "Portfolios",
+      value: portfolios.length,
+      icon: Folder,
+      color: "text-pink-600",
     },
   ];
 
@@ -172,7 +204,6 @@ function AdminDashboard() {
         description: "Item deleted successfully",
       });
 
-      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: [`/api/${type}`] });
     } catch (error) {
       toast({
@@ -208,6 +239,14 @@ function AdminDashboard() {
       case "dsa-corner":
         data = dsaProblems;
         type = "dsa-problems";
+        break;
+      case "scholarships":
+        data = scholarships;
+        type = "scholarships";
+        break;
+      case "portfolios":
+        data = portfolios;
+        type = "portfolios";
         break;
       default:
         return null;
@@ -384,8 +423,8 @@ function AdminDashboard() {
 
       {/* Stats */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+          {statsArray.map((stat, index) => (
             <Card
               key={index}
               data-testid={`stat-card-${stat.label.toLowerCase().replace(" ", "-")}`}
@@ -463,7 +502,6 @@ function AdminDashboard() {
                 <Card>
                   <AiGenerator
                     onContentGenerated={(content) => {
-                      // Map AI content type to admin tab type
                       let targetTab = activeTab;
                       if (
                         content.difficulty &&
@@ -476,9 +514,10 @@ function AdminDashboard() {
                         targetTab = "articles";
                       } else if (content.company && content.location) {
                         targetTab = "jobs";
+                      } else if (content.eligibility && content.deadline) {
+                        targetTab = "scholarships";
                       }
 
-                      // Switch to the appropriate tab if needed
                       if (targetTab !== activeTab) {
                         setActiveTab(targetTab);
                       }
@@ -489,13 +528,11 @@ function AdminDashboard() {
                   />
                 </Card>
 
-                {/* Admin Agent Panel - Moved from sidebar */}
                 {selectedItem && (
                   <AdminAgent
                     selectedContent={selectedItem}
                     contentType={activeTab}
                     onTemplateGenerated={(template) => {
-                      // Handle generated template
                       console.log("Template generated:", template);
                       toast({
                         title: "Template Generated",

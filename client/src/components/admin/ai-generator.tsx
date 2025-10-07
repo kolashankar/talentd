@@ -63,13 +63,59 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
         title: "Content Generated",
         description: "AI has successfully generated your content",
       });
-      // Add required fields based on content type
-      const enrichedContent = {
+      
+      // Enrich content with required fields and ensure all data is properly structured
+      let enrichedContent: any = {
         ...result,
         isActive: true,
         isPublished: true,
-        category: contentType === 'job' ? 'job' : result.category,
       };
+
+      // Content type specific enrichment
+      if (contentType === 'job' || contentType === 'internship') {
+        enrichedContent = {
+          ...enrichedContent,
+          category: contentType === 'job' ? 'job' : 'internship',
+          jobType: contentType === 'internship' ? 'internship' : result.jobType || 'job',
+          experienceLevel: contentType === 'internship' ? 'fresher' : result.experienceLevel || 'experienced',
+          skills: result.skills || [],
+          companyLogo: result.companyLogo || '',
+          workflowImages: result.workflowImages || [],
+          mindmapImages: result.mindmapImages || [],
+          generatedImages: result.generatedImages || [],
+        };
+      } else if (contentType === 'article') {
+        enrichedContent = {
+          ...enrichedContent,
+          tags: result.tags || [],
+          readTime: result.readTime || 5,
+          featuredImage: result.featuredImage || '',
+        };
+      } else if (contentType === 'roadmap') {
+        enrichedContent = {
+          ...enrichedContent,
+          technologies: result.technologies || [],
+          steps: result.steps || [],
+          flowchartData: result.flowchartData || null,
+          image: result.image || '',
+          educationLevel: result.educationLevel || 'btech',
+        };
+      } else if (contentType === 'dsa-problem') {
+        enrichedContent = {
+          ...enrichedContent,
+          hints: result.hints || [],
+          tags: result.tags || [],
+          companies: result.companies || [],
+        };
+      } else if (contentType === 'scholarship') {
+        enrichedContent = {
+          ...enrichedContent,
+          tags: result.tags || [],
+          isActive: result.isActive ?? true,
+          featured: result.featured ?? false,
+        };
+      }
+      
       onContentGenerated?.(enrichedContent);
     },
     onError: (error: Error) => {
@@ -110,6 +156,8 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
         return "e.g., Complete Frontend Developer learning path";
       case "dsa-problem":
         return "e.g., Array problem about finding duplicates";
+      case "scholarship":
+        return "e.g., Merit scholarship for engineering students";
       default:
         return "Describe what you want to generate...";
     }
@@ -231,6 +279,7 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
               <SelectItem value="article">Article</SelectItem>
               <SelectItem value="roadmap">Roadmap</SelectItem>
               <SelectItem value="dsa-problem">DSA Problem</SelectItem>
+              <SelectItem value="scholarship">Scholarship</SelectItem>
             </SelectContent>
           </Select>
         </div>

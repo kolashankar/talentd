@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Portfolio } from "@shared/schema";
 import { PortfolioBuilder } from "@/components/portfolio/portfolio-builder";
+import { TemplateSelector } from "@/components/portfolio/template-selector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,7 @@ import {
   Linkedin,
   Mail,
   Phone,
+  Loader2,
 } from "lucide-react";
 
 export default function PortfolioPage() {
@@ -466,6 +468,56 @@ export default function PortfolioPage() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Template Selection */}
+      <section className="py-20 bg-primary-foreground">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <ScrollAnimations>
+            <div className="text-center mb-16">
+              <h2
+                className="text-4xl font-bold mb-4 fade-in-up"
+                data-testid="heading-select-template"
+              >
+                Select Your Template
+              </h2>
+              <p
+                className="text-xl text-muted-foreground fade-in-up"
+                data-testid="text-select-template-subtitle"
+              >
+                Choose a pre-designed template or start from scratch
+              </p>
+            </div>
+          </ScrollAnimations>
+
+          {templatesLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="animate-spin h-8 w-8 text-primary" />
+            </div>
+          ) : (
+            <TemplateSelector
+              templates={templatesData || []}
+              selectedTemplate={selectedTemplate}
+              onSelectTemplate={setSelectedTemplate}
+            />
+          )}
+
+          <div className="text-center mt-16">
+            <Button
+              size="lg"
+              onClick={() => {
+                // Logic to proceed to builder with selected template
+                // For now, just log it
+                console.log("Selected template:", selectedTemplate);
+                // setStep('customize'); // Example: move to next step
+              }}
+              data-testid="button-next-step"
+            >
+              Next Step
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </section>
 

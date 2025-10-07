@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,10 @@ import {
   Wand2
 } from "lucide-react";
 
+import { useQuery } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
+import { TemplatePreview } from './template-preview';
+
 export interface PortfolioTemplate {
   id: string;
   name: string;
@@ -36,7 +39,7 @@ export interface PortfolioTemplate {
   thumbnailUrl: string;
 }
 
-const templates: PortfolioTemplate[] = [
+const templatesData: PortfolioTemplate[] = [
   {
     id: "modern-glass",
     name: "Glass Morphism",
@@ -203,6 +206,13 @@ export function TemplateSelector({ selectedTemplate, onTemplateSelect, onClose }
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [previewTemplate, setPreviewTemplate] = useState<PortfolioTemplate | null>(null);
 
+  const { data: templatesData, isLoading } = useQuery({
+    queryKey: ['/api/templates'],
+    retry: false,
+  });
+
+  const templates = templatesData?.templates || [];
+
   const categories = [
     { id: "all", name: "All Templates", count: templates.length },
     { id: "modern", name: "Modern", count: templates.filter(t => t.category === "modern").length },
@@ -212,8 +222,8 @@ export function TemplateSelector({ selectedTemplate, onTemplateSelect, onClose }
     { id: "minimal", name: "Minimal", count: templates.filter(t => t.category === "minimal").length },
   ];
 
-  const filteredTemplates = activeCategory === "all" 
-    ? templates 
+  const filteredTemplates = activeCategory === "all"
+    ? templates
     : templates.filter(template => template.category === activeCategory);
 
   const handlePreview = (template: PortfolioTemplate) => {
@@ -224,6 +234,30 @@ export function TemplateSelector({ selectedTemplate, onTemplateSelect, onClose }
     onTemplateSelect(template);
     onClose();
   };
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2 text-muted-foreground">Loading templates...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!templates || templates.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No templates available yet.</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Contact admin to upload templates.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 overflow-auto">
@@ -260,8 +294,8 @@ export function TemplateSelector({ selectedTemplate, onTemplateSelect, onClose }
         {/* Templates Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredTemplates.map((template) => (
-            <Card 
-              key={template.id} 
+            <Card
+              key={template.id}
               className={`group cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${
                 selectedTemplate === template.id ? 'ring-2 ring-primary' : ''
               }`}
@@ -274,13 +308,13 @@ export function TemplateSelector({ selectedTemplate, onTemplateSelect, onClose }
                     alt={template.name}
                     className="w-full h-48 object-cover transition-transform group-hover:scale-110"
                   />
-                  
+
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                     <div className="absolute bottom-4 left-4 right-4">
                       <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="secondary"
                           onClick={() => handlePreview(template)}
                           className="flex-1"
@@ -288,7 +322,7 @@ export function TemplateSelector({ selectedTemplate, onTemplateSelect, onClose }
                           <Eye className="mr-2 h-4 w-4" />
                           Preview
                         </Button>
-                        <Button 
+                        <Button
                           size="sm"
                           onClick={() => handleSelect(template)}
                           className="flex-1"
@@ -331,7 +365,7 @@ export function TemplateSelector({ selectedTemplate, onTemplateSelect, onClose }
                       {template.category}
                     </Badge>
                   </div>
-                  
+
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                     {template.description}
                   </p>
@@ -352,17 +386,17 @@ export function TemplateSelector({ selectedTemplate, onTemplateSelect, onClose }
 
                   {/* Action Buttons */}
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="flex-1"
                       onClick={() => handlePreview(template)}
                     >
                       <Eye className="mr-2 h-4 w-4" />
                       Preview
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       className="flex-1"
                       onClick={() => handleSelect(template)}
                     >
