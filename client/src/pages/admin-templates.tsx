@@ -36,7 +36,7 @@ export default function AdminTemplatesPage() {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
-  const { data: templatesData, isLoading } = useQuery({
+  const { data: templatesData, isLoading } = useQuery<{ database: Template[]; registry: any }>({
     queryKey: ['/api/admin/templates'],
     retry: false,
   });
@@ -77,9 +77,12 @@ export default function AdminTemplatesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (templateId: string) => {
-      return apiRequest(`/api/admin/templates/${templateId}`, {
+      const response = await fetch(`/api/admin/templates/${templateId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
+      if (!response.ok) throw new Error('Failed to delete template');
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -99,9 +102,12 @@ export default function AdminTemplatesPage() {
 
   const toggleMutation = useMutation({
     mutationFn: async (templateId: string) => {
-      return apiRequest(`/api/admin/templates/${templateId}/toggle`, {
+      const response = await fetch(`/api/admin/templates/${templateId}/toggle`, {
         method: 'PATCH',
+        credentials: 'include',
       });
+      if (!response.ok) throw new Error('Failed to toggle template');
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -205,11 +211,19 @@ export default function AdminTemplatesPage() {
                 <h3 className="font-semibold mb-2">Template Structure Example:</h3>
                 <pre className="bg-muted p-3 rounded-lg text-sm overflow-x-auto">
 {`template-name.zip
-├── manifest.json
-├── index.tsx
-├── thumbnail.png
-└── components/
-    └── CustomComponent.tsx (optional)`}
+├── manifest.json          # Template metadata
+├── index.tsx             # Main template component
+├── thumbnail.png         # Preview image
+├── components/           # Reusable components
+│   ├── Hero.tsx
+│   ├── Projects.tsx
+│   └── Contact.tsx
+├── assets/              # Images, fonts, etc.
+│   └── images/
+├── styles/              # CSS/styling files
+│   └── custom.css
+└── data/               # Data structures
+    └── portfolio-data.ts`}
                 </pre>
               </div>
 
@@ -329,14 +343,36 @@ export default function MyTemplate({ data, theme }: TemplateProps) {
                       <Button
                         size="sm"
                         variant="outline"
+                        onClick={() => window.open(`/templates/${template.templateId}/index.tsx`, '_blank')}
+                        title="Preview Template"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => toggleMutation.mutate(template.templateId)}
                         data-testid={`button-toggle-${template.templateId}`}
+                        title={template.isActive ? "Deactivate" : "Activate"}
                       >
                         {template.isActive ? (
                           <EyeOff className="h-4 w-4" />
                         ) : (
                           <Eye className="h-4 w-4" />
                         )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          const link = document.createElement('a');
+                          link.href = `/templates/${template.templateId}.zip`;
+                          link.download = `${template.templateId}.zip`;
+                          link.click();
+                        }}
+                        title="Download Template"
+                      >
+                        <Download className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"

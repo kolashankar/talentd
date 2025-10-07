@@ -19,6 +19,7 @@ import {
   Trophy,
   Brain
 } from "lucide-react";
+import { FAQSection, dsaFAQs } from "@/components/faq-section";
 
 interface DsaProblem {
   id: string;
@@ -455,6 +456,11 @@ export default function DSACorner() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="container mx-auto px-4 py-12">
+        <FAQSection faqs={dsaFAQs} />
       </div>
     </div>
   );

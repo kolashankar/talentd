@@ -19,6 +19,7 @@ import {
   ArrowRight,
   Target
 } from "lucide-react";
+import { FAQSection, roadmapsFAQs } from "@/components/faq-section";
 
 interface Roadmap {
   id: string;
@@ -457,6 +458,11 @@ export default function Roadmaps() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="container mx-auto px-4 py-12">
+        <FAQSection faqs={roadmapsFAQs} />
       </div>
     </div>
   );

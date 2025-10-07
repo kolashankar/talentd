@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,187 +14,26 @@ import {
   Layers,
   Box,
   Monitor,
-  Smartphone,
-  Star,
-  Crown,
   Gem,
   Rocket,
-  Wand2
+  Wand2,
+  Loader2,
+  X
 } from "lucide-react";
-
 import { useQuery } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
 import { TemplatePreview } from './template-preview';
 
 export interface PortfolioTemplate {
   id: string;
+  templateId: string;
   name: string;
   description: string;
-  preview: string;
-  category: "modern" | "creative" | "minimal" | "3d" | "animated";
+  category: string;
   features: string[];
-  icon: React.ComponentType<any>;
-  isPremium?: boolean;
-  previewUrl?: string;
-  thumbnailUrl: string;
+  thumbnailUrl?: string;
+  isPremium: boolean;
+  isActive: boolean;
 }
-
-const templatesData: PortfolioTemplate[] = [
-  {
-    id: "modern-glass",
-    name: "Glass Morphism",
-    description: "Modern glassmorphism design with blur effects and 3D elements",
-    preview: "A sleek portfolio with glass-like transparent cards and smooth animations",
-    category: "modern",
-    features: ["3D Animations", "Glass Effects", "Smooth Scrolling", "Dark/Light Mode"],
-    icon: Gem,
-    thumbnailUrl: "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=400&h=300&fit=crop",
-    isPremium: true
-  },
-  {
-    id: "cyber-neon",
-    name: "Cyber Neon",
-    description: "Futuristic cyberpunk theme with neon animations and 3D effects",
-    preview: "High-tech portfolio with glowing elements and matrix-style animations",
-    category: "3d",
-    features: ["Neon Effects", "3D Rotations", "Particle Animations", "Cyber Theme"],
-    icon: Zap,
-    thumbnailUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop",
-    isPremium: true
-  },
-  {
-    id: "floating-elements",
-    name: "Floating Elements",
-    description: "3D floating cards with physics-based animations",
-    preview: "Interactive portfolio with floating 3D elements that respond to mouse movement",
-    category: "3d",
-    features: ["3D Physics", "Mouse Interactions", "Floating Cards", "Depth Effects"],
-    icon: Box,
-    thumbnailUrl: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=300&fit=crop"
-  },
-  {
-    id: "particle-galaxy",
-    name: "Particle Galaxy",
-    description: "Space-themed portfolio with particle systems and cosmic animations",
-    preview: "Stunning galaxy background with animated particles and constellation effects",
-    category: "animated",
-    features: ["Particle Systems", "Space Theme", "Constellation Effects", "Cosmic Animations"],
-    icon: Sparkles,
-    thumbnailUrl: "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=400&h=300&fit=crop"
-  },
-  {
-    id: "minimal-swiss",
-    name: "Swiss Minimal",
-    description: "Clean Swiss design with subtle micro-interactions",
-    preview: "Elegant minimalist design focused on typography and whitespace",
-    category: "minimal",
-    features: ["Clean Typography", "Micro-interactions", "Grid Layout", "Responsive"],
-    icon: Monitor,
-    thumbnailUrl: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=400&h=300&fit=crop"
-  },
-  {
-    id: "creative-portfolio",
-    name: "Creative Studio",
-    description: "Bold creative design with animated illustrations",
-    preview: "Vibrant portfolio perfect for designers and creative professionals",
-    category: "creative",
-    features: ["Custom Illustrations", "Bold Colors", "Creative Layouts", "Animation"],
-    icon: Palette,
-    thumbnailUrl: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop"
-  },
-  {
-    id: "holographic-3d",
-    name: "Holographic 3D",
-    description: "Holographic effects with rotating 3D models and iridescent colors",
-    preview: "Next-gen portfolio with holographic elements and 3D model integration",
-    category: "3d",
-    features: ["Holographic Effects", "3D Models", "Iridescent Colors", "WebGL"],
-    icon: Crown,
-    thumbnailUrl: "https://images.unsplash.com/photo-1617791160588-241658c0f566?w=400&h=300&fit=crop",
-    isPremium: true
-  },
-  {
-    id: "morphing-shapes",
-    name: "Morphing Shapes",
-    description: "Dynamic portfolio with morphing geometric shapes and fluid animations",
-    preview: "Interactive shapes that transform and morph as you scroll",
-    category: "animated",
-    features: ["Morphing Animations", "Geometric Shapes", "Fluid Motion", "SVG Animations"],
-    icon: Layers,
-    thumbnailUrl: "https://images.unsplash.com/photo-1558655146-364adaf1fcc9?w=400&h=300&fit=crop"
-  },
-  {
-    id: "terminal-hacker",
-    name: "Terminal Hacker",
-    description: "Developer-focused design with terminal aesthetics and code animations",
-    preview: "Perfect for developers with terminal-style interface and typing animations",
-    category: "modern",
-    features: ["Terminal Theme", "Code Animations", "Matrix Effects", "Developer Focus"],
-    icon: Code,
-    thumbnailUrl: "https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=400&h=300&fit=crop"
-  },
-  {
-    id: "liquid-motion",
-    name: "Liquid Motion",
-    description: "Fluid liquid animations with blob morphing and wave effects",
-    preview: "Organic portfolio design with liquid animations and blob shapes",
-    category: "animated",
-    features: ["Liquid Animations", "Blob Morphing", "Wave Effects", "Organic Shapes"],
-    icon: Globe,
-    thumbnailUrl: "https://images.unsplash.com/photo-1617791160505-6f00504e3519?w=400&h=300&fit=crop"
-  },
-  {
-    id: "retro-synthwave",
-    name: "Retro Synthwave",
-    description: "80s-inspired synthwave design with neon grids and retro animations",
-    preview: "Nostalgic 80s aesthetic with neon colors and synthwave vibes",
-    category: "creative",
-    features: ["Synthwave Theme", "Neon Grids", "80s Aesthetic", "Retro Animations"],
-    icon: Star,
-    thumbnailUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop"
-  },
-  {
-    id: "paper-origami",
-    name: "Paper Origami",
-    description: "Paper-fold effects with origami-style transitions and 3D depth",
-    preview: "Elegant paper-fold animations with origami-inspired interactions",
-    category: "3d",
-    features: ["Paper Effects", "Origami Transitions", "3D Depth", "Fold Animations"],
-    icon: Layers,
-    thumbnailUrl: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=400&h=300&fit=crop"
-  },
-  {
-    id: "neural-network",
-    name: "Neural Network",
-    description: "AI-themed portfolio with neural network visualizations and data flow animations",
-    preview: "Tech-forward design with animated neural networks and data visualizations",
-    category: "animated",
-    features: ["Neural Networks", "Data Animations", "AI Theme", "Tech Visualizations"],
-    icon: Rocket,
-    thumbnailUrl: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=300&fit=crop"
-  },
-  {
-    id: "magnetic-hover",
-    name: "Magnetic Hover",
-    description: "Interactive elements with magnetic hover effects and smooth transitions",
-    preview: "Dynamic portfolio where elements magnetically attract to cursor movement",
-    category: "modern",
-    features: ["Magnetic Effects", "Hover Interactions", "Smooth Transitions", "Cursor Following"],
-    icon: Wand2,
-    thumbnailUrl: "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=400&h=300&fit=crop"
-  },
-  {
-    id: "isometric-world",
-    name: "Isometric World",
-    description: "3D isometric design with miniature world elements and perspective animations",
-    preview: "Unique isometric perspective with 3D world elements and miniature aesthetics",
-    category: "3d",
-    features: ["Isometric Design", "3D World", "Perspective Effects", "Miniature Style"],
-    icon: Box,
-    thumbnailUrl: "https://images.unsplash.com/photo-1617791160588-241658c0f566?w=400&h=300&fit=crop",
-    isPremium: true
-  }
-];
 
 interface TemplateSelectorProps {
   selectedTemplate: string | null;
@@ -202,278 +41,159 @@ interface TemplateSelectorProps {
   onClose: () => void;
 }
 
-export function TemplateSelector({ selectedTemplate, onTemplateSelect, onClose }: TemplateSelectorProps) {
-  const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [previewTemplate, setPreviewTemplate] = useState<PortfolioTemplate | null>(null);
+const categoryIcons: Record<string, any> = {
+  modern: Gem,
+  creative: Palette,
+  minimal: Monitor,
+  "3d": Box,
+  animated: Sparkles,
+  default: Code
+};
 
-  const { data: templatesData, isLoading } = useQuery({
+export function TemplateSelector({
+  selectedTemplate,
+  onTemplateSelect,
+  onClose,
+}: TemplateSelectorProps) {
+  const [filter, setFilter] = useState<string>("all");
+
+  const { data, isLoading, error } = useQuery<{ templates: PortfolioTemplate[] }>({
     queryKey: ['/api/templates'],
-    retry: false,
   });
 
-  const templates = templatesData?.templates || [];
+  const templates = data?.templates || [];
+  
+  const filteredTemplates =
+    filter === "all"
+      ? templates
+      : templates.filter((t) => t.category === filter);
 
-  const categories = [
-    { id: "all", name: "All Templates", count: templates.length },
-    { id: "modern", name: "Modern", count: templates.filter(t => t.category === "modern").length },
-    { id: "3d", name: "3D Effects", count: templates.filter(t => t.category === "3d").length },
-    { id: "animated", name: "Animated", count: templates.filter(t => t.category === "animated").length },
-    { id: "creative", name: "Creative", count: templates.filter(t => t.category === "creative").length },
-    { id: "minimal", name: "Minimal", count: templates.filter(t => t.category === "minimal").length },
-  ];
-
-  const filteredTemplates = activeCategory === "all"
-    ? templates
-    : templates.filter(template => template.category === activeCategory);
-
-  const handlePreview = (template: PortfolioTemplate) => {
-    setPreviewTemplate(template);
-  };
-
-  const handleSelect = (template: PortfolioTemplate) => {
-    onTemplateSelect(template);
-    onClose();
-  };
+  const categories = ["all", ...Array.from(new Set(templates.map((t) => t.category)))];
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2 text-muted-foreground">Loading templates...</span>
-        </div>
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center" data-testid="template-selector-loading">
+        <Card className="w-full max-w-4xl mx-4">
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">Loading templates...</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  if (!templates || templates.length === 0) {
+  if (error) {
     return (
-      <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No templates available yet.</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Contact admin to upload templates.
-          </p>
-        </div>
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center" data-testid="template-selector-error">
+        <Card className="w-full max-w-4xl mx-4">
+          <CardContent className="p-8">
+            <div className="text-center space-y-4">
+              <p className="text-destructive">Failed to load templates</p>
+              <Button onClick={onClose} data-testid="button-close-error">Close</Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 overflow-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" data-testid="template-selector-modal">
+      <Card className="w-full max-w-6xl max-h-[90vh] overflow-hidden">
+        <div className="p-6 border-b flex justify-between items-center">
           <div>
-            <h2 className="text-3xl font-bold">Choose Your Portfolio Template</h2>
-            <p className="text-muted-foreground mt-2">
-              Select a template that represents your style and personality
+            <h2 className="text-2xl font-bold" data-testid="text-template-selector-title">Choose Your Template</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Select a professional template for your portfolio
             </p>
           </div>
-          <Button variant="outline" onClick={onClose}>
-            Close
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            data-testid="button-close-template-selector"
+          >
+            <X className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant={activeCategory === category.id ? "default" : "outline"}
-              onClick={() => setActiveCategory(category.id)}
-              className="flex items-center space-x-2"
-            >
-              <span>{category.name}</span>
-              <Badge variant="secondary" className="ml-2">
-                {category.count}
-              </Badge>
-            </Button>
-          ))}
-        </div>
+        <ScrollArea className="h-[calc(90vh-180px)]">
+          <div className="p-6 space-y-6">
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <Badge
+                  key={category}
+                  variant={filter === category ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => setFilter(category)}
+                  data-testid={`filter-${category}`}
+                >
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </Badge>
+              ))}
+            </div>
 
-        {/* Templates Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredTemplates.map((template) => (
-            <Card
-              key={template.id}
-              className={`group cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${
-                selectedTemplate === template.id ? 'ring-2 ring-primary' : ''
-              }`}
-            >
-              <CardContent className="p-0">
-                {/* Template Preview */}
-                <div className="relative overflow-hidden rounded-t-lg">
-                  <img
-                    src={template.thumbnailUrl}
-                    alt={template.name}
-                    className="w-full h-48 object-cover transition-transform group-hover:scale-110"
-                  />
-
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => handlePreview(template)}
-                          className="flex-1"
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          Preview
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleSelect(template)}
-                          className="flex-1"
-                        >
-                          <Check className="mr-2 h-4 w-4" />
-                          Select
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Premium Badge */}
-                  {template.isPremium && (
-                    <div className="absolute top-3 right-3">
-                      <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-                        <Crown className="mr-1 h-3 w-3" />
-                        Premium
-                      </Badge>
-                    </div>
-                  )}
-
-                  {/* Selected Indicator */}
-                  {selectedTemplate === template.id && (
-                    <div className="absolute top-3 left-3">
-                      <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                        <Check className="h-4 w-4 text-primary-foreground" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Template Info */}
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold flex items-center">
-                      <template.icon className="mr-2 h-4 w-4" />
-                      {template.name}
-                    </h3>
-                    <Badge variant="outline" className="text-xs">
-                      {template.category}
-                    </Badge>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {template.description}
-                  </p>
-
-                  {/* Features */}
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {template.features.slice(0, 2).map((feature, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {feature}
-                      </Badge>
-                    ))}
-                    {template.features.length > 2 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{template.features.length - 2}
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handlePreview(template)}
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      Preview
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleSelect(template)}
-                    >
-                      <Check className="mr-2 h-4 w-4" />
-                      Select
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {filteredTemplates.length === 0 && (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">🎨</div>
-            <h3 className="text-2xl font-semibold mb-2">No templates found</h3>
-            <p className="text-muted-foreground">
-              Try selecting a different category to see more templates.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Preview Modal */}
-      {previewTemplate && (
-        <div className="fixed inset-0 bg-black/80 z-60 flex items-center justify-center p-4">
-          <div className="bg-background rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-2xl font-bold flex items-center">
-                  <previewTemplate.icon className="mr-3 h-6 w-6" />
-                  {previewTemplate.name}
-                </h3>
-                <p className="text-muted-foreground">{previewTemplate.description}</p>
+            {filteredTemplates.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No templates available</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Contact admin to upload templates
+                </p>
               </div>
-              <Button variant="outline" onClick={() => setPreviewTemplate(null)}>
-                Close Preview
-              </Button>
-            </div>
-
-            {/* Template Preview */}
-            <div className="mb-6">
-              <img
-                src={previewTemplate.thumbnailUrl}
-                alt={previewTemplate.name}
-                className="w-full h-64 object-cover rounded-lg"
-              />
-            </div>
-
-            {/* Features */}
-            <div className="mb-6">
-              <h4 className="font-semibold mb-3">Features Included:</h4>
-              <div className="grid md:grid-cols-2 gap-2">
-                {previewTemplate.features.map((feature, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">{feature}</span>
-                  </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredTemplates.map((template) => (
+                  <TemplatePreview
+                    key={template.templateId || template.id}
+                    template={{
+                      id: template.templateId || template.id,
+                      name: template.name,
+                      description: template.description || '',
+                      thumbnail: template.thumbnailUrl,
+                      features: template.features || [],
+                      category: template.category,
+                      isPremium: template.isPremium,
+                    }}
+                    isSelected={selectedTemplate === (template.templateId || template.id)}
+                    onClick={() => onTemplateSelect(template)}
+                  />
                 ))}
               </div>
-            </div>
+            )}
+          </div>
+        </ScrollArea>
 
-            {/* Actions */}
-            <div className="flex gap-3">
-              <Button onClick={() => handleSelect(previewTemplate)} className="flex-1">
-                <Check className="mr-2 h-4 w-4" />
-                Select This Template
-              </Button>
-              <Button variant="outline" onClick={() => setPreviewTemplate(null)}>
-                Continue Browsing
-              </Button>
-            </div>
+        <div className="p-6 border-t flex justify-between items-center">
+          <p className="text-sm text-muted-foreground">
+            {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''} available
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              data-testid="button-cancel-template-selection"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                const selected = templates.find(t => (t.templateId || t.id) === selectedTemplate);
+                if (selected) {
+                  onTemplateSelect(selected);
+                  onClose();
+                }
+              }}
+              disabled={!selectedTemplate}
+              data-testid="button-confirm-template-selection"
+            >
+              Continue with Selected
+            </Button>
           </div>
         </div>
-      )}
+      </Card>
     </div>
   );
 }

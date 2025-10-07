@@ -4,6 +4,11 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import passport from "./auth";
 import { startCleanupScheduler } from "./cleanup";
+import flowchartRoutes from './routes/flowchart.js';
+import portfolioGeneratorRoutes from './routes/portfolio-generator.js';
+import portfolioTemplatesRoutes from './routes/portfolio-templates.js';
+import adminTemplatesRoutes from './routes/admin-templates.js';
+import resumeImprovementsRoutes from './routes/resume-improvements.js';
 
 const app = express();
 app.use(express.json());
@@ -75,6 +80,14 @@ app.use((req, res, next) => {
   } else {
     serveStatic(app);
   }
+
+  // importantly, register all the routes after setting up vite
+  // to avoid collision with the catch-all route for serving static files
+  app.use(flowchartRoutes);
+  app.use(portfolioGeneratorRoutes);
+  app.use(portfolioTemplatesRoutes);
+  app.use(adminTemplatesRoutes);
+  app.use(resumeImprovementsRoutes);
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.

@@ -533,7 +533,12 @@ export default function RoadmapDetail() {
                         fitView
                         nodesDraggable={false}
                         nodesConnectable={false}
-                        elementsSelectable={false}
+                        elementsSelectable={true}
+                        defaultEdgeOptions={{
+                          type: 'smoothstep',
+                          animated: true,
+                          style: { stroke: '#94a3b8', strokeWidth: 2 }
+                        }}
                       >
                         <Controls showInteractive={false} />
                         <MiniMap />

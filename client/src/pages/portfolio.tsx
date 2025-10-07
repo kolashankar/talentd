@@ -26,6 +26,7 @@ import {
   Mail,
   Phone,
   Loader2,
+  ArrowRight,
 } from "lucide-react";
 
 export default function PortfolioPage() {
@@ -34,6 +35,7 @@ export default function PortfolioPage() {
   );
   const [showBuilder, setShowBuilder] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -53,6 +55,11 @@ export default function PortfolioPage() {
   const { data: portfolios = [], isLoading, refetch } = useQuery<Portfolio[]>({
     queryKey: ["/api/portfolios"],
     enabled: authStatus?.authenticated,
+  });
+
+  const { data: templatesData, isLoading: templatesLoading } = useQuery({
+    queryKey: ['/api/templates'],
+    retry: false,
   });
 
   const deletePortfolioMutation = useMutation({

@@ -4,8 +4,8 @@ import { fileURLToPath } from 'url';
 import type { TemplateRegistryEntry, TemplateManifest } from '@shared/template-types';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REGISTRY_PATH = path.join(__dirname, '..', 'client', 'public', 'templates', 'registry.json');
-const TEMPLATES_DIR = path.join(__dirname, '..', 'client', 'public', 'templates');
+const REGISTRY_PATH = path.join(__dirname, '..', 'public', 'templates', 'registry.json');
+const TEMPLATES_DIR = path.join(__dirname, '..', 'public', 'templates');
 
 export interface TemplateRegistry {
   version: string;

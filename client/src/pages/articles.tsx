@@ -20,6 +20,7 @@ import {
   MessageCircle
 } from "lucide-react";
 import { useLocation } from 'wouter';
+import { FAQSection, articlesFAQs } from "@/components/faq-section";
 
 interface Article {
   id: string;
@@ -419,6 +420,11 @@ export default function Articles() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="container mx-auto px-4 py-12">
+        <FAQSection faqs={articlesFAQs} />
       </div>
     </div>
   );

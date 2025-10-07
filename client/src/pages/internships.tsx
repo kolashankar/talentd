@@ -20,6 +20,7 @@ import {
   Calendar,
   Award
 } from "lucide-react";
+import { FAQSection, internshipsFAQs } from "@/components/faq-section";
 
 export default function Internships() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,7 +54,7 @@ export default function Internships() {
 
   // Extract unique values for filter options
   const filterOptions = useMemo(() => {
-    const locations = Array.from(new Set(internships.map(job => job.location).filter(Boolean)));
+    const locations = Array.from(new Set(internships.map(job => job.location).filter(Boolean) as string[]));
     const companies = Array.from(new Set(internships.map(job => job.company).filter(Boolean)));
     const skills = Array.from(new Set(internships.flatMap(job => job.skills || [])));
     const durations = ["1-3 months", "3-6 months", "6+ months"];
@@ -353,6 +354,11 @@ export default function Internships() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="container mx-auto px-4 py-12">
+        <FAQSection faqs={internshipsFAQs} />
       </div>
 
       {/* Internship Details Modal */}

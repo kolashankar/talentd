@@ -64,7 +64,16 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           {/* Desktop Auth */}
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-2">
+            <Link href="/register">
+              <Button 
+                variant={isActive("/register") ? "default" : "outline"} 
+                size="sm"
+                data-testid="link-register"
+              >
+                Register
+              </Button>
+            </Link>
             <GoogleAuth />
           </div>
 
@@ -77,7 +86,17 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="right" className="w-72">
               <div className="flex flex-col gap-4 mt-8">
-                <div className="mb-4">
+                <div className="mb-4 space-y-2">
+                  <Link href="/register">
+                    <Button
+                      variant={isActive("/register") ? "default" : "outline"}
+                      className="w-full"
+                      onClick={() => setIsMenuOpen(false)}
+                      data-testid="link-mobile-register"
+                    >
+                      Register
+                    </Button>
+                  </Link>
                   <GoogleAuth />
                 </div>
                 <nav className="flex flex-col gap-2">

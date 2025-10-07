@@ -119,8 +119,9 @@ export default function ResumeReview() {
     return "text-red-600";
   };
 
-  const getScoreBadge = (score: string) => {
-    switch (score.toLowerCase()) {
+  const getScoreBadge = (score: string | number) => {
+    const scoreString = String(score).toLowerCase();
+    switch (scoreString) {
       case 'excellent':
         return <Badge className="bg-green-100 text-green-800">Excellent</Badge>;
       case 'very good':
@@ -426,7 +427,7 @@ export default function ResumeReview() {
                           <FileText className="h-5 w-5 text-primary" />
                           <div>
                             <p className="font-medium text-sm" data-testid={`analysis-filename-${analysis.id}`}>
-                              {analysis.filename}
+                              {analysis.fileName}
                             </p>
                             <p className="text-xs text-muted-foreground" data-testid={`analysis-date-${analysis.id}`}>
                               {new Date(analysis.createdAt!).toLocaleDateString()}
@@ -434,8 +435,8 @@ export default function ResumeReview() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className={`text-xl font-bold ${getScoreColor(analysis.atsScore)}`} data-testid={`analysis-score-${analysis.id}`}>
-                            {analysis.atsScore}%
+                          <div className={`text-xl font-bold ${getScoreColor(analysis.atsScore || 0)}`} data-testid={`analysis-score-${analysis.id}`}>
+                            {analysis.atsScore || 0}%
                           </div>
                           <div className="text-xs text-muted-foreground">ATS Score</div>
                         </div>
@@ -444,11 +445,11 @@ export default function ResumeReview() {
                       <div className="space-y-2 mb-4">
                         <div className="flex justify-between text-sm">
                           <span>Format:</span>
-                          {getScoreBadge(analysis.formatScore)}
+                          {getScoreBadge(analysis.formatScore || 'N/A')}
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>Readability:</span>
-                          {getScoreBadge(analysis.readabilityScore)}
+                          {getScoreBadge(analysis.readabilityScore || 'N/A')}
                         </div>
                       </div>
 

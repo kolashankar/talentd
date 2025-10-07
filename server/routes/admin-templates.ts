@@ -72,7 +72,7 @@ router.post(
         features: manifest.features || [],
         isPremium: manifest.isPremium || false,
         isActive: true,
-        uploadedBy: req.user.id,
+        uploadedBy: req.user ? (req.user as any).id : null,
       }).returning();
 
       // Clean up uploaded zip file

@@ -647,6 +647,48 @@ Extract:
   }
 }
 
+export async function generateImprovedResume(data: {
+  originalText: string;
+  suggestions: string[];
+  keywordMatches: string[];
+}): Promise<string> {
+  try {
+    const systemPrompt = `You are an expert resume writer and career coach. Generate an improved version of the resume that:
+1. Incorporates all suggested improvements
+2. Adds missing keywords naturally
+3. Uses strong action verbs and quantifiable achievements
+4. Follows ATS-friendly formatting
+5. Maintains professional language and tone
+6. Organizes content logically and clearly
+
+Format the resume in a clean, professional text format that can be easily copied.`;
+
+    const userPrompt = `Original Resume:
+${data.originalText}
+
+Suggestions for Improvement:
+${data.suggestions.join('\n')}
+
+Missing Keywords to Include:
+${data.keywordMatches.join(', ')}
+
+Please generate an improved version of this resume incorporating all suggestions and keywords naturally.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash-exp",
+      contents: userPrompt,
+      config: {
+        systemInstruction: systemPrompt,
+      },
+    });
+
+    return response.text || data.originalText;
+  } catch (error) {
+    console.error('Resume improvement error:', error);
+    throw new Error('Failed to generate improved resume');
+  }
+}
+
 export async function generateFlowchartFromRoadmap(roadmapData: {
   title: string;
   description: string;
@@ -654,28 +696,45 @@ export async function generateFlowchartFromRoadmap(roadmapData: {
   difficulty: string;
 }): Promise<any> {
   try {
-    const systemPrompt = `You are an expert at creating interactive n8n-style learning workflows. Generate a comprehensive workflow structure with clickable nodes containing detailed content. Create a logical learning path with proper sequencing. Respond with JSON in this exact format: {
-      "nodes": [{
-        "id": "string (unique identifier like 'node-1')",
-        "type": "string (default, input, or output)",
-        "position": {"x": number, "y": number},
-        "data": {
-          "label": "string (node title, max 5 words)",
-          "description": "string (brief 1-2 sentence summary)",
-          "content": "string (detailed 3-5 paragraph explanation of this learning step)",
-          "resources": ["string (array of helpful resource links or names)"],
-          "redirectUrl": "string (optional external link)",
-          "color": "string (hex color like #3b82f6)"
-        }
-      }],
-      "edges": [{
-        "id": "string (unique like 'edge-1')",
-        "source": "string (source node id)",
-        "target": "string (target node id)",
-        "type": "string (smoothstep or step)",
-        "animated": boolean
-      }]
-    }`;
+    const systemPrompt = `You are an expert at creating interactive n8n-style learning workflows with multiple branches and paths. Generate a comprehensive workflow structure with:
+
+1. Multiple learning paths and branches (parallel tracks for different learning styles)
+2. Decision points where learners can choose different specialization paths
+3. Nodes with rich, detailed content
+4. Real external resource URLs
+
+Respond with JSON in this exact format:
+{
+  "nodes": [{
+    "id": "string (unique like 'node-1')",
+    "type": "string (input for start, output for end, default for others)",
+    "position": {"x": number, "y": number},
+    "data": {
+      "label": "string (node title, max 6 words)",
+      "description": "string (2-3 sentence summary visible on node)",
+      "content": "string (detailed 4-6 paragraph explanation with examples)",
+      "resources": ["string (5-10 real URLs to documentation, tutorials, courses)"],
+      "redirectUrl": "string (main resource URL like https://reactjs.org/docs)",
+      "color": "string (use different colors for different branches: #3b82f6, #10b981, #f59e0b, #ef4444, #8b5cf6)"
+    }
+  }],
+  "edges": [{
+    "id": "string (unique like 'edge-1-2')",
+    "source": "string (source node id)",
+    "target": "string (target node id)",
+    "type": "smoothstep",
+    "animated": true,
+    "style": {"stroke": "string (color matching nodes)", "strokeWidth": 2}
+  }]
+}
+
+IMPORTANT LAYOUT RULES:
+- Start node at x: 100, y: 400
+- Space nodes horizontally 300-400px apart
+- Create multiple vertical branches (y: 200, 400, 600) for parallel paths
+- End nodes at x: 1800+
+- Make it look like a real n8n workflow with branches converging and diverging
+- Include at least 15-20 nodes with multiple decision points`;
 
     const userPrompt = `Generate an interactive n8n-style learning workflow for this roadmap:
 

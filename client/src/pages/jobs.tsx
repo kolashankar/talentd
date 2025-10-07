@@ -23,6 +23,7 @@ import {
   Filter,
   X
 } from "lucide-react";
+import { FAQSection, jobsFAQs } from "@/components/faq-section";
 
 export default function Jobs() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,21 +46,23 @@ export default function Jobs() {
   const { data: jobs = [], isLoading } = useQuery<Job[]>({
     queryKey: ['/api/jobs'],
   });
+  
+  const allJobs = jobs || [];
 
   // Extract unique values for filter options
   const filterOptions = useMemo(() => {
-    const locations = Array.from(new Set(jobs.map(job => job.location).filter(Boolean)));
-    const companies = Array.from(new Set(jobs.map(job => job.company).filter(Boolean)));
-    const skills = Array.from(new Set(jobs.flatMap(job => job.skills || [])));
-    const experienceLevels = Array.from(new Set(jobs.map(job => job.experienceLevel).filter(Boolean)));
-    const jobTypes = Array.from(new Set(jobs.map(job => job.jobType).filter(Boolean)));
+    const locations = Array.from(new Set(allJobs.map(job => job.location).filter(Boolean) as string[]));
+    const companies = Array.from(new Set(allJobs.map(job => job.company).filter(Boolean)));
+    const skills = Array.from(new Set(allJobs.flatMap(job => job.skills || [])));
+    const experienceLevels = Array.from(new Set(allJobs.map(job => job.experienceLevel).filter(Boolean)));
+    const jobTypes = Array.from(new Set(allJobs.map(job => job.jobType).filter(Boolean)));
     
     return { locations, companies, skills, experienceLevels, jobTypes };
-  }, [jobs]);
+  }, [allJobs]);
 
   // Filter and sort jobs
   const filteredJobs = useMemo(() => {
-    let filtered = jobs.filter(job => {
+    let filtered = allJobs.filter(job => {
       const matchesSearch = !searchTerm || 
         job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -347,6 +350,11 @@ export default function Jobs() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="container mx-auto px-4 py-12">
+        <FAQSection faqs={jobsFAQs} />
       </div>
 
       {/* Job Details Modal */}

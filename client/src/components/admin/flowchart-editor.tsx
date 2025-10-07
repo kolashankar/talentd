@@ -1,4 +1,3 @@
-
 import { useCallback, useState, useRef } from 'react';
 import ReactFlow, {
   Node,
@@ -61,18 +60,17 @@ const nodeColor = (type: string) => {
   }
 };
 
-const CustomNode = ({ data, id }: any) => {
+const CustomFlowNode = ({ data, id }: any) => {
   const [showContent, setShowContent] = useState(false);
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleClick = () => {
     setShowContent(true);
   };
 
   const handleRedirect = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (data.redirectUrl) {
-      window.open(data.redirectUrl, '_blank', 'noopener,noreferrer');
+      window.open(data.redirectUrl, '_blank');
     }
   };
 
@@ -84,12 +82,12 @@ const CustomNode = ({ data, id }: any) => {
         style={{
           backgroundColor: data.color || '#ffffff',
           borderColor: data.color || '#3b82f6',
-          minWidth: '180px',
-          minHeight: '80px',
+          minWidth: '200px',
+          minHeight: '90px',
         }}
       >
         {/* Node Icon/Number */}
-        <div 
+        <div
           className="absolute -top-3 -left-3 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
           style={{ backgroundColor: data.color || '#3b82f6' }}
         >
@@ -107,6 +105,10 @@ const CustomNode = ({ data, id }: any) => {
           <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-white" title="Has external link" />
         )}
 
+        {/* Connection Points */}
+        <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2" style={{ borderColor: data.color || '#3b82f6' }} />
+        <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2" style={{ borderColor: data.color || '#3b82f6' }} />
+
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-black/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
@@ -114,17 +116,17 @@ const CustomNode = ({ data, id }: any) => {
       {/* Content Modal */}
       {showContent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowContent(false)}>
-          <div 
+          <div
             className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div 
+            <div
               className="px-6 py-4 border-b flex items-center justify-between"
               style={{ backgroundColor: `${data.color || '#3b82f6'}15` }}
             >
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
                   style={{ backgroundColor: data.color || '#3b82f6' }}
                 >
@@ -132,7 +134,7 @@ const CustomNode = ({ data, id }: any) => {
                 </div>
                 <h3 className="text-xl font-bold">{data.label}</h3>
               </div>
-              <button 
+              <button
                 onClick={() => setShowContent(false)}
                 className="text-gray-500 hover:text-gray-700 p-2"
               >
@@ -197,9 +199,9 @@ const CustomNode = ({ data, id }: any) => {
 };
 
 const nodeTypes = {
-  default: CustomNode,
-  input: CustomNode,
-  output: CustomNode,
+  default: CustomFlowNode,
+  input: CustomFlowNode,
+  output: CustomFlowNode,
 };
 
 export function FlowchartEditor({
@@ -408,6 +410,11 @@ export function FlowchartEditor({
                 fitView
                 snapToGrid
                 snapGrid={[15, 15]}
+                defaultEdgeOptions={{
+                  type: 'smoothstep',
+                  animated: true,
+                  style: { stroke: '#94a3b8', strokeWidth: 2 }
+                }}
               >
                 <Controls />
                 <MiniMap nodeColor={nodeColor} />
@@ -416,7 +423,7 @@ export function FlowchartEditor({
                   <div className="text-xs space-y-1">
                     <div>Click nodes to view content</div>
                     <div>Drag to move nodes</div>
-                    <div>Connect nodes to create flow</div>
+                    <div>Connect nodes for workflow</div>
                   </div>
                 </Panel>
               </ReactFlow>
@@ -487,9 +494,9 @@ export function FlowchartEditor({
                         if (e.key === 'Enter') {
                           e.preventDefault();
                           if (resourceInput.trim()) {
-                            setNodeForm({ 
-                              ...nodeForm, 
-                              resources: [...nodeForm.resources, resourceInput.trim()] 
+                            setNodeForm({
+                              ...nodeForm,
+                              resources: [...nodeForm.resources, resourceInput.trim()]
                             });
                             setResourceInput('');
                           }
@@ -500,9 +507,9 @@ export function FlowchartEditor({
                       type="button"
                       onClick={() => {
                         if (resourceInput.trim()) {
-                          setNodeForm({ 
-                            ...nodeForm, 
-                            resources: [...nodeForm.resources, resourceInput.trim()] 
+                          setNodeForm({
+                            ...nodeForm,
+                            resources: [...nodeForm.resources, resourceInput.trim()]
                           });
                           setResourceInput('');
                         }
@@ -598,15 +605,20 @@ export function FlowchartEditor({
           fitView
           snapToGrid
           snapGrid={[15, 15]}
+          defaultEdgeOptions={{
+            type: 'smoothstep',
+            animated: true,
+            style: { stroke: '#94a3b8', strokeWidth: 2 }
+          }}
         >
           <Controls />
           <MiniMap nodeColor={nodeColor} />
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
           <Panel position="top-right" className="bg-white p-2 rounded-lg shadow-lg">
             <div className="text-xs space-y-1">
-              <div>Click nodes to redirect</div>
-              <div>Drag to move</div>
-              <div>Connect nodes to create flow</div>
+              <div>Click nodes to view content</div>
+              <div>Drag to move nodes</div>
+              <div>Connect nodes for workflow</div>
             </div>
           </Panel>
         </ReactFlow>
