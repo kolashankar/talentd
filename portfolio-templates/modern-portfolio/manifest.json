@@ -1,0 +1,27 @@
+{
+  "id": "modern-portfolio-v1",
+  "name": "Modern Portfolio Template",
+  "version": "1.0.0",
+  "description": "A clean and modern portfolio template with responsive design, project showcase, skills section, and contact form",
+  "category": "portfolio",
+  "entryFile": "index.html",
+  "thumbnail": "assets/images/thumbnail.png",
+  "author": "Talentd Team",
+  "features": [
+    "Responsive Design",
+    "Project Gallery",
+    "Skills Showcase",
+    "Contact Form",
+    "Smooth Animations",
+    "Dark Mode Ready"
+  ],
+  "isPremium": false,
+  "dependencies": [],
+  "structure": {
+    "level1": "root",
+    "level2": ["assets", "pages", "components"],
+    "level3": ["images", "css", "js", "sections"],
+    "level4": ["profile", "projects", "components", "utils"],
+    "level5": ["thumbnails", "helpers", "info", "details"]
+  }
+}

@@ -3,6 +3,7 @@ import "dotenv/config";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
+import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
 import { generateContent, analyzeResume, extractTextFromFile, parseResumeForPortfolio } from "./services/gemini";
 import { insertJobSchema, insertRoadmapSchema, insertArticleSchema, insertDsaProblemSchema, insertPortfolioSchema, insertScholarshipSchema } from "@shared/schema";
@@ -75,12 +76,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
+  // Email registration endpoint
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const { fullName, email, phone, location, education, experience, skills, interests, goals } = req.body;
+
+      // Validation
+      if (!fullName || !email) {
+        return res.status(400).json({ 
+          error: 'Missing required fields',
+          message: 'Please provide your name and email' 
+        });
+      }
+
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ 
+          error: 'Invalid email',
+          message: 'Please provide a valid email address' 
+        });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ 
+          error: 'Email already registered',
+          message: 'An account with this email already exists. Please login instead.' 
+        });
+      }
+
+      // Create user account (without password for email-only registration)
+      const user = await storage.createUser({
+        username: fullName,
+        email: email,
+        password: '', // Email-only registration without password
+        role: 'user',
+      });
+
+      // Create portfolio with additional registration data
+      if (user) {
+        await storage.createPortfolio({
+          userId: user.id,
+          name: fullName,
+          title: education || 'Student',
+          bio: goals || '',
+          email: email,
+          phone: phone || null,
+          location: location || null,
+          skills: skills ? skills.split(',').map((s: string) => s.trim()) : [],
+          projects: [],
+          experience: experience ? [{
+            title: experience,
+            company: '',
+            duration: '',
+            description: ''
+          }] : [],
+          education: education ? [{
+            degree: education,
+            institution: '',
+            year: ''
+          }] : [],
+          isPublic: false,
+        });
+      }
+
+      res.status(201).json({ 
+        success: true,
+        message: 'Registration successful! Welcome to the community.',
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email
+        }
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ 
+        error: 'Registration failed',
+        message: 'An error occurred during registration. Please try again.' 
+      });
+    }
+  });
+
   app.post('/api/auth/logout', (req, res) => {
     req.logout((err) => {
       if (err) {
         return res.status(500).json({ error: 'Logout failed' });
       }
       res.json({ success: true });
+    });
+  });
+
+  // Admin authentication with rate limiting
+  const adminLoginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 requests per windowMs
+    message: 'Too many login attempts from this IP, please try again after 15 minutes',
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+      res.status(429).json({
+        error: 'Too many login attempts',
+        message: 'You have exceeded the maximum number of login attempts. Please try again after 15 minutes.',
+        retryAfter: 15 * 60
+      });
+    }
+  });
+
+  app.post('/api/admin/login', adminLoginLimiter, (req, res) => {
+    const { code } = req.body;
+    
+    // Get admin password from environment variable (more secure)
+    const validCodes = [
+      process.env.ADMIN_CODE || 'admin123',
+      'ADMIN2024'
+    ];
+
+    if (validCodes.includes(code)) {
+      // Set admin session
+      if (req.session) {
+        (req.session as any).isAdmin = true;
+        (req.session as any).adminLoginTime = Date.now();
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Admin access granted',
+        expiresIn: 3600000 // 1 hour in milliseconds
+      });
+    } else {
+      // Return same response time regardless of success to prevent timing attacks
+      setTimeout(() => {
+        res.status(401).json({ 
+          error: 'Invalid admin code',
+          message: 'The provided admin code is incorrect' 
+        });
+      }, 1000); // 1 second delay on failed attempts
+    }
+  });
+
+  app.post('/api/admin/logout', (req, res) => {
+    if (req.session) {
+      (req.session as any).isAdmin = false;
+      delete (req.session as any).adminLoginTime;
+    }
+    res.json({ success: true });
+  });
+
+  app.get('/api/admin/status', (req, res) => {
+    const isAdmin = (req.session as any)?.isAdmin === true;
+    const loginTime = (req.session as any)?.adminLoginTime;
+    
+    // Check if session has expired (1 hour)
+    if (isAdmin && loginTime) {
+      const sessionAge = Date.now() - loginTime;
+      if (sessionAge > 3600000) { // 1 hour
+        if (req.session) {
+          (req.session as any).isAdmin = false;
+          delete (req.session as any).adminLoginTime;
+        }
+        return res.json({ authenticated: false, expired: true });
+      }
+    }
+    
+    res.json({ 
+      authenticated: isAdmin,
+      loginTime: loginTime || null
     });
   });
 

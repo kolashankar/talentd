@@ -24,7 +24,9 @@ import {
   PlayCircle,
   Download,
   Share2,
-  ExternalLink
+  ExternalLink,
+  Maximize,
+  Minimize
 } from "lucide-react";
 
 interface RoadmapStep {
@@ -55,21 +57,21 @@ interface Roadmap {
 const CustomFlowNode = ({ data, id }: any) => {
   const [showContent, setShowContent] = useState(false);
 
-  const handleClick = () => {
-    setShowContent(true);
-  };
-
-  const handleRedirect = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleNodeClick = () => {
     if (data.redirectUrl) {
       window.open(data.redirectUrl, '_blank');
     }
   };
 
+  const handleInfoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowContent(true);
+  };
+
   return (
     <>
       <div
-        onClick={handleClick}
+        onClick={handleNodeClick}
         className={`px-4 py-3 rounded-xl border-2 shadow-lg transition-all hover:shadow-2xl cursor-pointer hover:scale-105 relative group`}
         style={{
           backgroundColor: data.color || '#ffffff',
@@ -77,6 +79,8 @@ const CustomFlowNode = ({ data, id }: any) => {
           minWidth: '180px',
           minHeight: '80px',
         }}
+        title={data.redirectUrl ? `Click to visit: ${data.redirectUrl}` : 'Click to learn more'}
+        data-testid={`flowchart-node-${id}`}
       >
         {/* Node Icon/Number */}
         <div 
@@ -92,13 +96,29 @@ const CustomFlowNode = ({ data, id }: any) => {
           <div className="text-xs text-gray-600 text-center line-clamp-2">{data.description}</div>
         )}
 
-        {/* Status Indicator */}
+        {/* External Link Indicator */}
         {data.redirectUrl && (
-          <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-white" title="Has external link" />
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center" title="Click to open resource">
+            <ExternalLink className="w-3 h-3 text-white" />
+          </div>
+        )}
+
+        {/* Info Button - shows detailed content */}
+        {(data.content || data.resources?.length > 0) && (
+          <button
+            onClick={handleInfoClick}
+            className="absolute bottom-1 right-1 w-5 h-5 bg-white/80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-white"
+            title="View detailed content"
+            data-testid={`info-button-${id}`}
+          >
+            <svg className="w-3 h-3 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
         )}
 
         {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-black/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-black/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
       </div>
 
       {/* Content Modal */}
@@ -164,19 +184,20 @@ const CustomFlowNode = ({ data, id }: any) => {
             {/* Footer with Actions */}
             <div className="px-6 py-4 border-t bg-gray-50 flex justify-between items-center">
               <div className="text-sm text-gray-500">
-                Click nodes to explore the learning path
+                Click nodes directly to visit resources
               </div>
               {data.redirectUrl && (
-                <button
-                  onClick={handleRedirect}
-                  className="px-4 py-2 rounded-lg font-medium text-white transition-colors flex items-center gap-2"
+                <a
+                  href={data.redirectUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 rounded-lg font-medium text-white transition-colors flex items-center gap-2 hover:opacity-90"
                   style={{ backgroundColor: data.color || '#3b82f6' }}
+                  data-testid={`redirect-link-${id}`}
                 >
-                  <span>Open Resource</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </button>
+                  <span>Visit Resource</span>
+                  <ExternalLink className="w-4 h-4" />
+                </a>
               )}
             </div>
           </div>
@@ -200,6 +221,7 @@ export default function RoadmapDetail() {
   const [currentStep, setCurrentStep] = useState(0);
   const [learningMode, setLearningMode] = useState(false);
   const [showFlowchart, setShowFlowchart] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const flowchartRef = useRef<HTMLDivElement>(null);
 
   const { data: roadmap, isLoading, error } = useQuery<Roadmap>({
@@ -324,6 +346,10 @@ export default function RoadmapDetail() {
     } catch (error) {
       console.error('Download failed:', error);
     }
+  };
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
   };
 
   if (isLoading) {
@@ -505,14 +531,26 @@ export default function RoadmapDetail() {
                       variant="outline"
                       size="sm"
                       onClick={() => setShowFlowchart(!showFlowchart)}
+                      data-testid="button-toggle-flowchart"
                     >
                       {showFlowchart ? 'Hide' : 'Show'} Flowchart
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={toggleFullscreen}
+                      disabled={!showFlowchart}
+                      data-testid="button-fullscreen-flowchart"
+                    >
+                      <Maximize className="mr-2 h-4 w-4" />
+                      Fullscreen
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={downloadFlowchart}
                       disabled={!showFlowchart}
+                      data-testid="button-download-flowchart"
                     >
                       <Download className="mr-2 h-4 w-4" />
                       Download
@@ -551,6 +589,60 @@ export default function RoadmapDetail() {
                   </CardContent>
                 )}
               </Card>
+            )}
+
+            {/* Fullscreen Flowchart Modal */}
+            {isFullscreen && roadmap.flowchartData && (
+              <div className="fixed inset-0 bg-black/90 z-50 flex flex-col">
+                <div className="flex items-center justify-between p-4 bg-black/50 backdrop-blur">
+                  <h2 className="text-white text-xl font-semibold">{roadmap.title} - Interactive Flowchart</h2>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={downloadFlowchart}
+                      data-testid="button-download-fullscreen"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={toggleFullscreen}
+                      data-testid="button-close-fullscreen"
+                    >
+                      <Minimize className="mr-2 h-4 w-4" />
+                      Exit Fullscreen
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex-1" style={{ backgroundColor: '#fafafa' }}>
+                  <ReactFlow
+                    nodes={roadmap.flowchartData.nodes}
+                    edges={roadmap.flowchartData.edges || []}
+                    nodeTypes={nodeTypes}
+                    fitView
+                    nodesDraggable={false}
+                    nodesConnectable={false}
+                    elementsSelectable={true}
+                    defaultEdgeOptions={{
+                      type: 'smoothstep',
+                      animated: true,
+                      style: { stroke: '#94a3b8', strokeWidth: 2 }
+                    }}
+                  >
+                    <Controls showInteractive={false} />
+                    <MiniMap />
+                    <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+                  </ReactFlow>
+                </div>
+                <div className="p-4 bg-black/50 backdrop-blur text-white text-center">
+                  <p className="text-sm">
+                    Click on nodes to access external resources • {roadmap.flowchartData.nodes.length} nodes • {roadmap.flowchartData.edges?.length || 0} connections
+                  </p>
+                </div>
+              </div>
             )}
 
             {/* Learning Steps */}

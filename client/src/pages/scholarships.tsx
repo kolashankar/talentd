@@ -6,6 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { 
   Search, 
   GraduationCap,
@@ -14,7 +20,8 @@ import {
   ExternalLink,
   Filter,
   Star,
-  School
+  School,
+  HelpCircle
 } from "lucide-react";
 
 interface Scholarship {
@@ -273,6 +280,129 @@ export default function Scholarships() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* FAQ Section - SEO Optimized */}
+        <div className="mt-16 mb-8">
+          <div className="max-w-4xl mx-auto">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-center mb-2">
+                  <HelpCircle className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-3xl text-center">Frequently Asked Questions About Scholarships</CardTitle>
+                <p className="text-muted-foreground text-center mt-2">
+                  Everything you need to know about scholarship applications, eligibility, and funding opportunities
+                </p>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="faq-1">
+                    <AccordionTrigger className="text-left">
+                      What are scholarships and how do they work?
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-muted-foreground">
+                        <strong>Scholarships</strong> are financial aid awards designed to help students pay for their education without the need for repayment. They are typically based on academic merit, financial need, athletic ability, community service, or specific talents. Scholarship funds can cover tuition fees, textbooks, accommodation, and other educational expenses. Unlike student loans, scholarships don't require repayment, making them an excellent way to reduce the financial burden of education.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="faq-2">
+                    <AccordionTrigger className="text-left">
+                      How can I find scholarships for engineering students and B.Tech programs?
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-muted-foreground">
+                        <strong>Engineering scholarships</strong> and <strong>B.Tech scholarships</strong> are available through various sources including government programs, private companies, educational institutions, and nonprofit organizations. You can find engineering-specific scholarships by filtering education level to "B.Tech / Engineering" on this page. Many scholarships target STEM students, women in engineering, minority groups, and students from economically disadvantaged backgrounds. Popular engineering scholarships include those from tech companies like Google, Microsoft, and Amazon, as well as government schemes for technical education.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="faq-3">
+                    <AccordionTrigger className="text-left">
+                      What scholarships are available for 12th class students and undergraduates?
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-muted-foreground">
+                        <strong>Scholarships for 12th class students</strong> and <strong>undergraduate scholarships</strong> include merit-based awards, need-based financial aid, and special category scholarships. Students completing 12th grade can apply for pre-matric and post-matric scholarships offered by central and state governments. Popular options include National Scholarship Portal (NSP) schemes, minority scholarships, SC/ST/OBC scholarships, and private foundation scholarships. Many universities also offer entrance exam-based scholarships for high-performing students.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="faq-4">
+                    <AccordionTrigger className="text-left">
+                      What are the eligibility criteria for scholarships in India?
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-muted-foreground">
+                        <strong>Scholarship eligibility criteria</strong> vary by program but commonly include factors such as academic performance (minimum percentage or CGPA), family income limits, domicile requirements, and educational level. For <strong>merit scholarships</strong>, students typically need to maintain high grades (often 60-75% or above). <strong>Need-based scholarships</strong> consider family income (usually below ₹6-8 lakhs annually). Other eligibility factors may include caste category, gender, minority status, field of study, and specific talents or achievements in sports, arts, or social service.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="faq-5">
+                    <AccordionTrigger className="text-left">
+                      How do I apply for government scholarships and when are the deadlines?
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-muted-foreground">
+                        To apply for <strong>government scholarships</strong>, visit the National Scholarship Portal (NSP) at <a href="https://scholarships.gov.in" className="text-primary underline" target="_blank" rel="noopener noreferrer">scholarships.gov.in</a> or your state scholarship portal. Register with required documents including Aadhaar card, income certificate, caste certificate (if applicable), mark sheets, and bank account details. <strong>Scholarship deadlines</strong> typically occur twice a year - fresh applications usually open from July-October for the current academic year, while renewal applications open from October-December. Always check specific scholarship deadlines on this page as they vary by program and state.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="faq-6">
+                    <AccordionTrigger className="text-left">
+                      Can I apply for multiple scholarships at the same time?
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-muted-foreground">
+                        Yes, you can and should apply for multiple scholarships to maximize your financial aid opportunities. However, note that some government scholarships prohibit receiving multiple government awards simultaneously. You can generally combine private scholarships with government scholarships, or receive multiple private scholarships together. Always read the terms and conditions of each scholarship carefully. Strategic tip: Apply to a mix of highly competitive national scholarships and local or niche scholarships to improve your chances of success.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="faq-7">
+                    <AccordionTrigger className="text-left">
+                      What documents are required for scholarship applications?
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-muted-foreground">
+                        Common <strong>scholarship documents</strong> include: (1) Academic certificates and mark sheets from previous examinations, (2) Income certificate from competent authority, (3) Caste/category certificate if applicable (SC/ST/OBC), (4) Aadhaar card and bank account details, (5) Passport-size photographs, (6) Proof of admission (fee receipt or admission letter), (7) Domicile or residence certificate, and (8) Disability certificate if applicable. Some scholarships may require additional documents like recommendation letters, essays, or proof of extracurricular achievements. Keep digital copies ready for online applications.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="faq-8">
+                    <AccordionTrigger className="text-left">
+                      Are there scholarships specifically for women, minorities, and SC/ST students?
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-muted-foreground">
+                        Yes, numerous <strong>scholarships for women</strong>, <strong>minority scholarships</strong>, and <strong>SC/ST scholarships</strong> exist to promote educational equity. Women can access programs like CBSE Merit Scholarship for Girls, WCD Scholarship, and PRAGATI/SAKSHAM schemes for technical education. Minority students (Muslim, Christian, Sikh, Buddhist, Jain, Parsi) can apply through Maulana Azad National Scholarship and state minority welfare schemes. SC/ST students have access to Pre-Matric and Post-Matric Scholarships, Dr. Ambedkar Central Sector Scheme, and various state-specific programs with relaxed eligibility criteria and higher financial assistance.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
+                <div className="mt-8 p-6 bg-muted rounded-lg">
+                  <h3 className="font-semibold text-lg mb-2">Still have questions?</h3>
+                  <p className="text-muted-foreground mb-4">
+                    For more information about specific scholarships, check the individual scholarship details above or visit the official scholarship provider websites. Remember to verify eligibility requirements and deadlines before applying.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline">Merit Scholarships</Badge>
+                    <Badge variant="outline">Need-Based Aid</Badge>
+                    <Badge variant="outline">Engineering Scholarships</Badge>
+                    <Badge variant="outline">Graduate Funding</Badge>
+                    <Badge variant="outline">Financial Aid</Badge>
+                    <Badge variant="outline">Education Grants</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

@@ -58,30 +58,45 @@ export default function Register() {
     }
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast({
-        title: "Registration Successful!",
-        description: "Welcome to the Talentd community. Check your email for next steps.",
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(formData),
       });
 
-      // Reset form
-      setFormData({
-        fullName: "",
-        email: "",
-        phone: "",
-        location: "",
-        education: "",
-        experience: "",
-        skills: "",
-        interests: "",
-        goals: ""
-      });
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Registration Successful!",
+          description: data.message || "Welcome to the Talentd community. Check your email for next steps.",
+        });
+
+        // Reset form
+        setFormData({
+          fullName: "",
+          email: "",
+          phone: "",
+          location: "",
+          education: "",
+          experience: "",
+          skills: "",
+          interests: "",
+          goals: ""
+        });
+      } else {
+        toast({
+          title: "Registration Failed",
+          description: data.message || "Please try again later",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
+      console.error('Registration error:', error);
       toast({
         title: "Registration Failed",
-        description: "Please try again later",
+        description: "An error occurred. Please try again later.",
         variant: "destructive",
       });
     } finally {

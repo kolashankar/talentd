@@ -1,0 +1,50 @@
+<!-- Level 5 nested component - Personal information section -->
+<div class="personal-info-component">
+    <div class="info-grid">
+        <div class="info-item">
+            <span class="info-label">Name:</span>
+            <span class="info-value">{{name}}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Email:</span>
+            <span class="info-value">{{email}}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Location:</span>
+            <span class="info-value">{{location}}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Phone:</span>
+            <span class="info-value">{{phone}}</span>
+        </div>
+    </div>
+</div>
+
+<style>
+.personal-info-component {
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border-radius: 0.5rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.info-value {
+    color: var(--text-color);
+}
+</style>

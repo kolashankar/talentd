@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Professional portfolio showcasing projects, skills, and experience">
+    <title>{{name}} - Portfolio</title>
+    
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/components/sections/hero.css">
+    <link rel="stylesheet" href="assets/css/components/sections/projects.css">
+</head>
+<body>
+    <nav id="navbar" class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <a href="#" class="logo">{{name}}</a>
+                <ul class="nav-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#projects">Projects</a></li>
+                    <li><a href="#skills">Skills</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <button class="mobile-menu-btn" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title">Hi, I'm <span class="highlight">{{name}}</span></h1>
+                    <p class="hero-subtitle">{{title}}</p>
+                    <p class="hero-description">{{bio}}</p>
+                    <div class="hero-buttons">
+                        <a href="#contact" class="btn btn-primary">Get in Touch</a>
+                        <a href="#projects" class="btn btn-secondary">View Work</a>
+                    </div>
+                    <div class="social-links">
+                        {{#if github}}<a href="{{github}}" target="_blank" aria-label="GitHub">GitHub</a>{{/if}}
+                        {{#if linkedin}}<a href="{{linkedin}}" target="_blank" aria-label="LinkedIn">LinkedIn</a>{{/if}}
+                        {{#if email}}<a href="mailto:{{email}}" aria-label="Email">Email</a>{{/if}}
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="image-wrapper">
+                        <img src="{{profileImage}}" alt="{{name}}" class="profile-img">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about-section">
+        <div class="container">
+            <h2 class="section-title">About Me</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>{{bio}}</p>
+                    <div class="about-info">
+                        <div class="info-item">
+                            <strong>Email:</strong> {{email}}
+                        </div>
+                        {{#if phone}}
+                        <div class="info-item">
+                            <strong>Phone:</strong> {{phone}}
+                        </div>
+                        {{/if}}
+                        {{#if location}}
+                        <div class="info-item">
+                            <strong>Location:</strong> {{location}}
+                        </div>
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects" class="projects-section">
+        <div class="container">
+            <h2 class="section-title">Featured Projects</h2>
+            <div class="projects-grid" id="projects-container">
+                <!-- Projects will be dynamically inserted here -->
+            </div>
+        </div>
+    </section>
+
+    <section id="skills" class="skills-section">
+        <div class="container">
+            <h2 class="section-title">Skills & Technologies</h2>
+            <div class="skills-grid" id="skills-container">
+                <!-- Skills will be dynamically inserted here -->
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <h2 class="section-title">Get In Touch</h2>
+            <form class="contact-form" id="contact-form">
+                <div class="form-group">
+                    <input type="text" name="name" placeholder="Your Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" name="email" placeholder="Your Email" required>
+                </div>
+                <div class="form-group">
+                    <textarea name="message" placeholder="Your Message" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Send Message</button>
+            </form>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 {{name}}. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/utils/helpers/dom.js"></script>
+</body>
+</html>

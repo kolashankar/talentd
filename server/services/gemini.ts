@@ -165,17 +165,23 @@ export async function generateContent(request: ContentGenerationRequest): Promis
           roadmapPrompt += ` Difficulty: ${request.details.difficulty}.`;
         }
         
-        roadmapPrompt += ` Include real-world projects, relevant resources, career-focused learning path suitable for Indian job market, and appropriate roadmap visualization images. IMPORTANT: Generate a complete interactive workflow with at least 8-10 nodes showing the learning progression. Each node should have:
-- Unique id (e.g., "node-1", "node-2")
-- Position with x and y coordinates (spread nodes vertically and horizontally for clarity)
-- Label (short title, max 5 words)
-- Description (brief 1-2 sentence summary)
-- Content (detailed explanation, 3-5 paragraphs about what to learn in this step)
-- Resources array (list of 3-5 helpful links or resource names)
-- RedirectUrl (optional external learning resource link)
-- Color (hex code based on node type: fundamentals=#3b82f6, frameworks=#8b5cf6, practice=#10b981, advanced=#f59e0b)
+        roadmapPrompt += ` Include real-world projects, relevant resources, career-focused learning path suitable for Indian job market, and appropriate roadmap visualization images. 
 
-Create edges connecting the nodes to show the complete learning flow from start to finish. Make it like an n8n workflow where users can click each node to see detailed content.`;
+CRITICAL: Generate a complete interactive workflow-style flowchart with 10-15 nodes covering the ENTIRE learning journey from beginner to advanced. Each node represents a CHAPTER in the learning roadmap with comprehensive, detailed content.
+
+Each node MUST have:
+- Unique id (e.g., "node-1", "node-2", etc.)
+- Position with x and y coordinates (arrange in workflow pattern: start at top-left, flow downward and rightward. Use coordinates like: node-1: x=100, y=50; node-2: x=400, y=50; node-3: x=100, y=200; etc. Space nodes 300px apart horizontally and 150px apart vertically)
+- Label (concise chapter title, 3-5 words, e.g., "Introduction to React", "Building REST APIs", "Database Design")
+- Description (comprehensive 2-3 sentence overview of what this chapter covers)
+- Content (DETAILED chapter content with 4-6 paragraphs explaining concepts, key points, what to learn, common challenges, best practices, and practical tips. This should read like a complete chapter from a technical book - at least 300-400 words)
+- Resources array (list of 4-6 specific, helpful learning resources with actual resource names like "MDN Web Docs", "freeCodeCamp Tutorial", "Official Documentation", "YouTube Course by [name]", etc.)
+- RedirectUrl (provide a real, relevant external learning resource URL - use actual URLs like https://developer.mozilla.org, https://www.freecodecamp.org, https://reactjs.org/docs, https://www.youtube.com for each node)
+- Color (hex code based on node type: fundamentals=#3b82f6, frameworks=#8b5cf6, practice=#10b981, advanced=#f59e0b, projects=#ef4444)
+
+Create edges connecting ALL nodes to show the complete sequential learning flow from start to finish. Every node should be connected to at least one other node.
+
+The workflow should tell the complete story of learning this topic - from absolute basics to advanced mastery. Make each node a complete learning chapter that users can click to redirect to external resources and view detailed content via info button.`;
         userPrompt = roadmapPrompt;
         break;
 
