@@ -1,5 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import connectPg from "connect-pg-simple";
+import pkg from "pg";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import passport from "./auth";
@@ -10,18 +12,33 @@ import portfolioTemplatesRoutes from './routes/portfolio-templates.js';
 import adminTemplatesRoutes from './routes/admin-templates.js';
 import resumeImprovementsRoutes from './routes/resume-improvements.js';
 
+const { Pool } = pkg;
+const PostgresSessionStore = connectPg(session);
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration
+// PostgreSQL session store for persistent sessions
+const sessionPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
+
+// Session configuration with PostgreSQL store
 app.use(session({
+  store: new PostgresSessionStore({
+    pool: sessionPool,
+    createTableIfMissing: true,
+  }),
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   }
 }));
 

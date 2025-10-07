@@ -34,6 +34,12 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  ExternalLink,
+  Clock,
+  Star,
+  CheckCircle2,
+  Zap,
+  Circle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -74,43 +80,120 @@ const CustomFlowNode = ({ data, id }: any) => {
     }
   };
 
+  // Status-based pastel colors
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'done': return { bg: '#d4f4dd', border: '#86e8ab', text: '#1d7a3e' };
+      case 'in-progress': return { bg: '#fff3cd', border: '#ffd966', text: '#b8860b' };
+      case 'todo': return { bg: '#e3f2fd', border: '#90caf9', text: '#1976d2' };
+      default: return { bg: '#f5f5f5', border: '#bdbdbd', text: '#616161' };
+    }
+  };
+
+  const statusColor = getStatusColor(data.status || 'todo');
+  const completion = data.completion || 0;
+  const difficulty = data.difficulty || 'medium';
+  const timeSpent = data.timeSpent || '0h';
+
   return (
     <>
       <div
         onClick={handleClick}
-        className={`px-4 py-3 rounded-xl border-2 shadow-lg transition-all hover:shadow-2xl cursor-pointer hover:scale-105 relative group`}
+        className={`rounded-2xl border-2 shadow-xl transition-all hover:shadow-2xl cursor-pointer hover:scale-105 relative group overflow-hidden`}
         style={{
-          backgroundColor: data.color || '#ffffff',
-          borderColor: data.color || '#3b82f6',
-          minWidth: '200px',
-          minHeight: '90px',
+          backgroundColor: statusColor.bg,
+          borderColor: statusColor.border,
+          minWidth: '240px',
+          minHeight: '140px',
         }}
       >
-        {/* Node Icon/Number */}
+        {/* Status Badge */}
         <div
-          className="absolute -top-3 -left-3 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
-          style={{ backgroundColor: data.color || '#3b82f6' }}
+          className="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1"
+          style={{
+            backgroundColor: statusColor.border,
+            color: statusColor.text,
+          }}
+        >
+          {data.status === 'done' ? (
+            <>
+              <CheckCircle2 className="w-3 h-3" />
+              <span>Done</span>
+            </>
+          ) : data.status === 'in-progress' ? (
+            <>
+              <Zap className="w-3 h-3" />
+              <span>In Progress</span>
+            </>
+          ) : (
+            <>
+              <Circle className="w-3 h-3" />
+              <span>To Do</span>
+            </>
+          )}
+        </div>
+
+        {/* Node Number */}
+        <div
+          className="absolute -top-3 -left-3 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-lg"
+          style={{ backgroundColor: statusColor.border }}
         >
           {id.split('-')[1] || '1'}
         </div>
 
-        {/* Content */}
-        <div className="font-semibold text-sm text-center mb-1">{data.label}</div>
-        {data.description && (
-          <div className="text-xs text-gray-600 text-center line-clamp-2">{data.description}</div>
-        )}
+        {/* Main Content */}
+        <div className="p-4 pt-6">
+          <div className="font-bold text-base mb-2" style={{ color: statusColor.text }}>
+            {data.label}
+          </div>
+          {data.description && (
+            <div className="text-xs text-gray-600 line-clamp-2 mb-3">{data.description}</div>
+          )}
 
-        {/* Status Indicator */}
+          {/* Metrics Row */}
+          <div className="flex items-center gap-3 text-xs mb-2">
+            <div className="flex items-center gap-1" title="Completion">
+              <span className="font-semibold" style={{ color: statusColor.text }}>
+                {completion}%
+              </span>
+            </div>
+            <div className="w-px h-3 bg-gray-300" />
+            <div className="flex items-center gap-1" title="Time Spent">
+              <Clock className="w-3 h-3" style={{ color: statusColor.text }} />
+              <span>{timeSpent}</span>
+            </div>
+            <div className="w-px h-3 bg-gray-300" />
+            <div className="flex items-center gap-1" title="Difficulty">
+              <Star className="w-3 h-3" style={{ color: statusColor.text }} />
+              <span className="capitalize">{difficulty}</span>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="w-full h-1.5 bg-white/50 rounded-full overflow-hidden">
+            <div
+              className="h-full transition-all duration-500"
+              style={{
+                width: `${completion}%`,
+                backgroundColor: statusColor.border,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* External Link Indicator */}
         {data.redirectUrl && (
-          <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-white" title="Has external link" />
+          <div
+            className="absolute bottom-2 right-2 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center shadow-sm"
+            style={{ backgroundColor: statusColor.border }}
+            title="Has external link"
+          >
+            <ExternalLink className="w-3 h-3 text-white" />
+          </div>
         )}
-
-        {/* Connection Points */}
-        <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2" style={{ borderColor: data.color || '#3b82f6' }} />
-        <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2" style={{ borderColor: data.color || '#3b82f6' }} />
 
         {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-black/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/0 to-black/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
 
       {/* Content Modal */}
@@ -123,16 +206,16 @@ const CustomFlowNode = ({ data, id }: any) => {
             {/* Header */}
             <div
               className="px-6 py-4 border-b flex items-center justify-between"
-              style={{ backgroundColor: `${data.color || '#3b82f6'}15` }}
+              style={{ backgroundColor: `${statusColor.border}20` }}
             >
               <div className="flex items-center gap-3">
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-                  style={{ backgroundColor: data.color || '#3b82f6' }}
+                  style={{ backgroundColor: statusColor.border }}
                 >
                   {id.split('-')[1] || '1'}
                 </div>
-                <h3 className="text-xl font-bold">{data.label}</h3>
+                <h3 className="text-xl font-bold" style={{ color: statusColor.text }}>{data.label}</h3>
               </div>
               <button
                 onClick={() => setShowContent(false)}
@@ -182,7 +265,7 @@ const CustomFlowNode = ({ data, id }: any) => {
                 <button
                   onClick={handleRedirect}
                   className="px-4 py-2 rounded-lg font-medium text-white transition-colors flex items-center gap-2"
-                  style={{ backgroundColor: data.color || '#3b82f6' }}
+                  style={{ backgroundColor: statusColor.border }}
                 >
                   <span>Open Resource</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -413,7 +496,15 @@ export function FlowchartEditor({
                 defaultEdgeOptions={{
                   type: 'smoothstep',
                   animated: true,
-                  style: { stroke: '#94a3b8', strokeWidth: 2 }
+                  style: { 
+                    stroke: '#94a3b8', 
+                    strokeWidth: 3,
+                    strokeDasharray: '5 5'
+                  },
+                  markerEnd: {
+                    type: 'arrowclosed',
+                    color: '#94a3b8',
+                  }
                 }}
               >
                 <Controls />
@@ -608,7 +699,15 @@ export function FlowchartEditor({
           defaultEdgeOptions={{
             type: 'smoothstep',
             animated: true,
-            style: { stroke: '#94a3b8', strokeWidth: 2 }
+            style: { 
+              stroke: '#94a3b8', 
+              strokeWidth: 3,
+              strokeDasharray: '5 5'
+            },
+            markerEnd: {
+              type: 'arrowclosed',
+              color: '#94a3b8',
+            }
           }}
         >
           <Controls />

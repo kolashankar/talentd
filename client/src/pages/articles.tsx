@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useLocation } from 'wouter';
 import { FAQSection, articlesFAQs } from "@/components/faq-section";
+import { SEOKeywords } from "@/components/seo-keywords";
 
 interface Article {
   id: string;
@@ -420,6 +421,27 @@ export default function Articles() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* SEO Keywords Section */}
+      <div className="container mx-auto px-4 py-8">
+        <SEOKeywords 
+          keywords={[
+            "tech articles",
+            "software development tutorials",
+            "web development guides",
+            "programming best practices",
+            "career advice tech",
+            "coding tutorials",
+            "react tutorials",
+            "node.js guides",
+            "system design articles",
+            "cloud computing guides",
+            "DevOps tutorials",
+            "machine learning articles"
+          ]}
+          title="Popular Tech Topics"
+        />
       </div>
 
       {/* FAQ Section */}

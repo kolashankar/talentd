@@ -23,6 +23,7 @@ import {
   School,
   HelpCircle
 } from "lucide-react";
+import { SEOKeywords } from "@/components/seo-keywords";
 
 interface Scholarship {
   id: number;
@@ -283,8 +284,29 @@ export default function Scholarships() {
           </div>
         </div>
 
+        {/* SEO Keywords Section */}
+        <div className="mt-8 mb-8">
+          <SEOKeywords 
+            keywords={[
+              "scholarship programs India",
+              "merit scholarships",
+              "need-based scholarships",
+              "engineering scholarships",
+              "government scholarships",
+              "minority scholarships",
+              "SC/ST scholarships",
+              "national scholarship portal",
+              "post-matric scholarship",
+              "undergraduate scholarships",
+              "graduate scholarships",
+              "women education scholarships"
+            ]}
+            title="Popular Scholarship Categories"
+          />
+        </div>
+
         {/* FAQ Section - SEO Optimized */}
-        <div className="mt-16 mb-8">
+        <div className="mt-8 mb-8">
           <div className="max-w-4xl mx-auto">
             <Card>
               <CardHeader>

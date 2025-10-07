@@ -54,7 +54,13 @@ router.post(
       const zipPath = req.file.path;
 
       // Extract and validate template
-      const manifest = await extractTemplate(zipPath);
+      let manifest;
+      try {
+        manifest = await extractTemplate(zipPath);
+      } catch (error) {
+        await fs.unlink(zipPath).catch(() => {});
+        throw new Error(`Invalid template structure: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
 
       // Install template to public directory
       const templateDir = await installTemplate(zipPath, manifest);
@@ -90,7 +96,7 @@ router.post(
       });
     } catch (error) {
       console.error('Template upload error:', error);
-      
+
       // Clean up uploaded file on error
       if (req.file) {
         try {
@@ -196,7 +202,7 @@ router.patch(
 router.get('/api/templates', async (req, res) => {
   try {
     const activeTemplates = await getActiveTemplates();
-    
+
     res.json({
       templates: activeTemplates,
     });

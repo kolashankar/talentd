@@ -504,9 +504,9 @@ export default function PortfolioPage() {
             </div>
           ) : (
             <TemplateSelector
-              templates={templatesData || []}
               selectedTemplate={selectedTemplate}
-              onSelectTemplate={setSelectedTemplate}
+              onTemplateSelect={(template) => setSelectedTemplate(template.templateId || template.id)}
+              onClose={() => setSelectedTemplate(null)}
             />
           )}
 

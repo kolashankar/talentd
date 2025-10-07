@@ -71,23 +71,23 @@ export async function generateContent(request: ContentGenerationRequest): Promis
           "mindmapImages": ["string (skills mindmap URLs)"],
           "isAIGenerated": true
         }`;
-        
+
         let enhancedPrompt = `Generate a realistic ${isInternship ? 'internship' : 'job'} posting for: ${request.prompt}.`;
-        
+
         if (request.details?.location) {
           enhancedPrompt += ` Location focus: ${request.details.location}.`;
         } else {
           enhancedPrompt += ` Focus on opportunities in India (major cities like Bangalore, Mumbai, Delhi, Hyderabad, Pune).`;
         }
-        
+
         if (request.details?.company) {
           enhancedPrompt += ` Company: ${request.details.company}.`;
         }
-        
+
         if (request.details?.fetchFromWeb) {
           enhancedPrompt += ` Create realistic content based on current market trends and actual company practices in India.`;
         }
-        
+
         if (request.details?.includeCompanyLogo) {
           enhancedPrompt += ` Include a realistic company logo URL using https://logo.clearbit.com/[company-domain] format for real companies.`;
         }
@@ -107,7 +107,7 @@ export async function generateContent(request: ContentGenerationRequest): Promis
         if (request.details?.includeAnimations) {
           enhancedPrompt += ` Include suggestions for interactive animations and transitions for the job posting display.`;
         }
-        
+
         enhancedPrompt += ` Ensure all details are authentic and competitive for the Indian job market.`;
         userPrompt = enhancedPrompt;
         break;
@@ -123,17 +123,17 @@ export async function generateContent(request: ContentGenerationRequest): Promis
           "readTime": number,
           "featuredImage": "string (use Unsplash URLs like https://images.unsplash.com/photo-[id]?w=800&h=400&fit=crop or relevant tech images)"
         }`;
-        
+
         let articlePrompt = `Generate a comprehensive, current technical article about: ${request.prompt}.`;
-        
+
         if (request.details?.fetchFromWeb) {
           articlePrompt += ` Base the content on current industry trends, latest best practices, and real-world examples from the Indian and global tech industry.`;
         }
-        
+
         if (request.details?.category) {
           articlePrompt += ` Category: ${request.details.category}.`;
         }
-        
+
         articlePrompt += ` Include practical examples, code snippets where relevant, actionable insights, and appropriate featured images from Unsplash that match the article topic.`;
         userPrompt = articlePrompt;
         break;
@@ -154,34 +154,58 @@ export async function generateContent(request: ContentGenerationRequest): Promis
             "edges": [{"id": "string", "source": "string", "target": "string", "type": "smoothstep", "animated": true}]
           }
         }`;
-        
-        let roadmapPrompt = `Generate a comprehensive, industry-aligned learning roadmap for: ${request.prompt}.`;
-        
-        if (request.details?.fetchFromWeb) {
-          roadmapPrompt += ` Base the roadmap on current industry requirements, popular technologies in Indian tech companies, and latest market trends.`;
-        }
-        
-        if (request.details?.difficulty) {
-          roadmapPrompt += ` Difficulty: ${request.details.difficulty}.`;
-        }
-        
-        roadmapPrompt += ` Include real-world projects, relevant resources, career-focused learning path suitable for Indian job market, and appropriate roadmap visualization images. 
 
-CRITICAL: Generate a complete interactive workflow-style flowchart with 10-15 nodes covering the ENTIRE learning journey from beginner to advanced. Each node represents a CHAPTER in the learning roadmap with comprehensive, detailed content.
+        let roadmapPrompt = `You are an expert learning path designer. Create a detailed, metric-based workflow for learning: "${request.prompt}".
 
-Each node MUST have:
-- Unique id (e.g., "node-1", "node-2", etc.)
-- Position with x and y coordinates (arrange in workflow pattern: start at top-left, flow downward and rightward. Use coordinates like: node-1: x=100, y=50; node-2: x=400, y=50; node-3: x=100, y=200; etc. Space nodes 300px apart horizontally and 150px apart vertically)
-- Label (concise chapter title, 3-5 words, e.g., "Introduction to React", "Building REST APIs", "Database Design")
-- Description (comprehensive 2-3 sentence overview of what this chapter covers)
-- Content (DETAILED chapter content with 4-6 paragraphs explaining concepts, key points, what to learn, common challenges, best practices, and practical tips. This should read like a complete chapter from a technical book - at least 300-400 words)
-- Resources array (list of 4-6 specific, helpful learning resources with actual resource names like "MDN Web Docs", "freeCodeCamp Tutorial", "Official Documentation", "YouTube Course by [name]", etc.)
-- RedirectUrl (provide a real, relevant external learning resource URL - use actual URLs like https://developer.mozilla.org, https://www.freecodecamp.org, https://reactjs.org/docs, https://www.youtube.com for each node)
-- Color (hex code based on node type: fundamentals=#3b82f6, frameworks=#8b5cf6, practice=#10b981, advanced=#f59e0b, projects=#ef4444)
+CRITICAL REQUIREMENTS:
+1. Create EXACTLY 20-30 interconnected nodes for a comprehensive learning journey
+2. Each node MUST include:
+   - A specific, actionable title (e.g., "Master JavaScript Fundamentals - Week 1-2")
+   - Detailed description with learning objectives, key concepts, and metrics (hours, difficulty level)
+   - A valid redirect URL to quality learning resources (YouTube playlists, official docs, Udemy, freeCodeCamp)
+   - Appropriate color: #4CAF50 (beginner), #FF9800 (intermediate), #F44336 (advanced), #9C27B0 (projects)
+3. Design a progressive flow: Basics → Fundamentals → Intermediate → Advanced → Projects → Mastery
+4. Include milestone/checkpoint nodes every 5-7 nodes to track progress
+5. Add practical project nodes with real-world applications
 
-Create edges connecting ALL nodes to show the complete sequential learning flow from start to finish. Every node should be connected to at least one other node.
+Return ONLY valid JSON (no markdown, no explanation):
+{
+  "nodes": [
+    {
+      "id": "node-1",
+      "type": "default",
+      "position": { "x": 100, "y": 50 },
+      "data": {
+        "label": "Start: Prerequisites (Week 0)",
+        "description": "Essential prerequisites: Basic programming, command line, Git. Duration: 5-10 hours. Resources: freeCodeCamp basics",
+        "redirectUrl": "https://www.youtube.com/results?search_query=${encodeURIComponent(request.prompt)}+prerequisites",
+        "color": "#4CAF50"
+      }
+    },
+    {
+      "id": "node-2",
+      "type": "default",
+      "position": { "x": 100, "y": 150 },
+      "data": {
+        "label": "Fundamentals Part 1 (Week 1-2)",
+        "description": "Core concepts and syntax. Duration: 20 hours. Difficulty: Beginner. Practice: 50+ exercises",
+        "redirectUrl": "https://www.youtube.com/results?search_query=${encodeURIComponent(request.prompt)}+fundamentals+tutorial",
+        "color": "#4CAF50"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1-2",
+      "source": "node-1",
+      "target": "node-2",
+      "type": "smoothstep",
+      "animated": true
+    }
+  ]
+}
 
-The workflow should tell the complete story of learning this topic - from absolute basics to advanced mastery. Make each node a complete learning chapter that users can click to redirect to external resources and view detailed content via info button.`;
+IMPORTANT: Generate at least 25 nodes covering the complete learning path from beginner to expert level with measurable metrics.`;
         userPrompt = roadmapPrompt;
         break;
 
@@ -198,21 +222,21 @@ The workflow should tell the complete story of learning this topic - from absolu
           "tags": ["string"],
           "companies": ["string (include Indian and global companies)"]
         }`;
-        
+
         let dsaPrompt = `Generate a realistic DSA problem for: ${request.prompt}.`;
-        
+
         if (request.details?.fetchFromWeb) {
           dsaPrompt += ` Base the problem on actual interview questions asked at top tech companies in India like TCS, Infosys, Wipro, Flipkart, Zomato, as well as global companies with Indian offices.`;
         }
-        
+
         if (request.details?.difficulty) {
           dsaPrompt += ` Difficulty: ${request.details.difficulty}.`;
         }
-        
+
         if (request.details?.category) {
           dsaPrompt += ` Category: ${request.details.category}.`;
         }
-        
+
         dsaPrompt += ` Include multiple solution approaches, edge cases, and detailed explanations.`;
         userPrompt = dsaPrompt;
         break;
@@ -253,41 +277,41 @@ The workflow should tell the complete story of learning this topic - from absolu
             "resumeDownload": "string (downloadable resume feature)"
           }
         }`;
-        
+
         let portfolioPrompt = `Generate a complete, professional portfolio website: ${request.prompt}.`;
-        
+
         if (request.details?.portfolioData) {
           portfolioPrompt += ` Use this portfolio data: ${JSON.stringify(request.details.portfolioData)}.`;
         }
-        
+
         if (request.details?.fetchFromWeb) {
           portfolioPrompt += ` Fetch real data from web sources, use current design trends, and incorporate industry best practices for portfolio websites.`;
         }
-        
+
         if (request.details?.generateImages) {
           portfolioPrompt += ` Generate high-quality, professional images from Unsplash for profile photos, project screenshots, company logos, and background visuals. Use URLs like https://images.unsplash.com/photo-[id]?w=800&h=600&fit=crop for relevant images.`;
         }
-        
+
         if (request.details?.generateAnimations) {
           portfolioPrompt += ` Include modern CSS animations, scroll-triggered effects, hover interactions, and smooth transitions throughout the website.`;
         }
-        
+
         if (request.details?.generateLogos) {
           portfolioPrompt += ` Generate or include company logos using https://logo.clearbit.com/[domain] format and skill icons from reliable CDNs.`;
         }
-        
+
         if (request.details?.customStyling) {
           portfolioPrompt += ` Apply custom styling with modern gradients, shadows, typography, and responsive design that works on all devices.`;
         }
-        
+
         if (request.details?.generateWorkflows) {
           portfolioPrompt += ` Include workflow diagrams and visual representations of development processes and project timelines.`;
         }
-        
+
         if (request.details?.generateMindmap) {
           portfolioPrompt += ` Create visual skill mindmaps and technology relationship diagrams.`;
         }
-        
+
         portfolioPrompt += ` Make the website fully responsive, accessible, and optimized for performance. Include modern features like dark mode toggle, smooth scrolling, and professional animations.`;
         userPrompt = portfolioPrompt;
         break;
@@ -317,25 +341,25 @@ The workflow should tell the complete story of learning this topic - from absolu
           "brandGuidelines": "string",
           "downloadFiles": ["string"]
         }`;
-        
+
         let templatePrompt = `Generate a professional advertising template: ${request.prompt}.`;
-        
+
         if (request.details?.templateType) {
           templatePrompt += ` Template type: ${request.details.templateType}.`;
         }
-        
+
         if (request.details?.contentData) {
           templatePrompt += ` Content to promote: ${JSON.stringify(request.details.contentData)}.`;
         }
-        
+
         if (request.details?.generateLogos) {
           templatePrompt += ` Include professional logo concepts and branding elements.`;
         }
-        
+
         if (request.details?.colorGrading) {
           templatePrompt += ` Apply professional color grading and visual hierarchy.`;
         }
-        
+
         templatePrompt += ` Make it modern, professional, and conversion-focused.`;
         userPrompt = templatePrompt;
         break;
@@ -358,21 +382,21 @@ The workflow should tell the complete story of learning this topic - from absolu
           "isActive": true,
           "featured": boolean
         }`;
-        
+
         let scholarshipPrompt = `Generate a comprehensive scholarship program: ${request.prompt}.`;
-        
+
         if (request.details?.fetchFromWeb) {
           scholarshipPrompt += ` Base this on real scholarship programs available in India from organizations like UGC, AICTE, state governments, and private foundations. Ensure all details are authentic and current for 2024-2025.`;
         }
-        
+
         if (request.details?.educationLevel) {
           scholarshipPrompt += ` Focus on scholarships for ${request.details.educationLevel} students.`;
         }
-        
+
         if (request.details?.category) {
           scholarshipPrompt += ` Category: ${request.details.category}.`;
         }
-        
+
         scholarshipPrompt += ` Include realistic amounts in INR (e.g., ₹5,000 to ₹2,00,000), genuine application processes, appropriate deadlines (within next 3-6 months), and clear eligibility criteria. Make it helpful for Indian students with proper government/institutional URLs where applicable.`;
         userPrompt = scholarshipPrompt;
         break;
@@ -547,10 +571,10 @@ Provide a thorough analysis including:
     });
 
     const analysis = JSON.parse(response.text || '{}');
-    
+
     // Ensure score is within valid range
     analysis.atsScore = Math.max(0, Math.min(100, analysis.atsScore));
-    
+
     return analysis;
   } catch (error) {
     console.error('Resume analysis error:', error);

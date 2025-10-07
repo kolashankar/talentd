@@ -21,6 +21,7 @@ import {
   Award
 } from "lucide-react";
 import { FAQSection, internshipsFAQs } from "@/components/faq-section";
+import { SEOKeywords } from "@/components/seo-keywords";
 
 export default function Internships() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -354,6 +355,27 @@ export default function Internships() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* SEO Keywords Section */}
+      <div className="container mx-auto px-4 py-8">
+        <SEOKeywords 
+          keywords={[
+            "internship opportunities",
+            "paid internships",
+            "software engineering internship",
+            "data science internship",
+            "summer internship programs",
+            "remote internships",
+            "tech internships",
+            "startup internships",
+            "product management internship",
+            "UI/UX design internship",
+            "college internships",
+            "fresher internship programs"
+          ]}
+          title="Popular Internship Categories"
+        />
       </div>
 
       {/* FAQ Section */}

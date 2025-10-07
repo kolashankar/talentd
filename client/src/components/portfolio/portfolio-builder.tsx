@@ -85,7 +85,7 @@ export function PortfolioBuilder({
   const [editPrompt, setEditPrompt] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<PortfolioTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [templateCode, setTemplateCode] = useState({ html: "", css: "", js: "" });
 
   const { toast } = useToast();
@@ -153,15 +153,15 @@ export function PortfolioBuilder({
     mutationFn: async (data: { prompt: string; resumeFile?: File; portfolioData?: any; details?: any }) => {
       const formData = new FormData();
       formData.append('prompt', data.prompt);
-      
+
       if (data.portfolioData) {
         formData.append('portfolioData', JSON.stringify(data.portfolioData));
       }
-      
+
       if (data.details) {
         formData.append('details', JSON.stringify(data.details));
       }
-      
+
       if (data.resumeFile) {
         formData.append('resume', data.resumeFile);
       }
@@ -367,37 +367,40 @@ export function PortfolioBuilder({
   const handleTemplateSelect = async (template: PortfolioTemplate) => {
     setSelectedTemplate(template);
     setShowTemplateSelector(false);
-    
+
     // Generate template with current portfolio data
     const currentPortfolioData = {
-      name: form.watch("name"),
-      title: form.watch("title"),
-      bio: form.watch("bio"),
-      email: form.watch("email"),
-      phone: form.watch("phone"),
-      website: form.watch("website"),
-      linkedin: form.watch("linkedin"),
-      github: form.watch("github"),
-      skills: skills,
-      projects: projects,
-      experience: experience,
-      education: education,
-      profileImage: profileImage ? URL.createObjectURL(profileImage) : form.watch("profileImage"),
+      name: form.watch("name") || "Your Name",
+      title: form.watch("title") || "Your Title",
+      bio: form.watch("bio") || "Your bio",
+      email: form.watch("email") || "",
+      phone: form.watch("phone") || "",
+      website: form.watch("website") || "",
+      linkedin: form.watch("linkedin") || "",
+      github: form.watch("github") || "",
+      skills: skills.length > 0 ? skills : ["JavaScript", "React", "Node.js"],
+      projects: projects.length > 0 ? projects : [],
+      experience: experience.length > 0 ? experience : [],
+      education: education.length > 0 ? education : [],
+      profileImage: profileImage ? URL.createObjectURL(profileImage) : form.watch("profileImage") || "",
     };
 
     // Generate template code
     try {
-      const code = await generateTemplateCode(template.id, currentPortfolioData);
+      const code = await generateTemplateCode(template.templateId || template.id, currentPortfolioData);
       setTemplateCode(code);
       setWebsiteCode(code);
+      setActiveTab("ai-assistant");
+      setPreviewMode(true);
       toast({
         title: "Template Applied!",
         description: `${template.name} template has been applied to your portfolio`,
       });
     } catch (error) {
+      console.error('Template generation error:', error);
       toast({
         title: "Error",
-        description: "Failed to generate template. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate template. Please try again.",
         variant: "destructive",
       });
     }
@@ -980,47 +983,35 @@ export function PortfolioBuilder({
                         Select from our collection of stunning portfolio templates. 
                         Each template features modern design, 3D animations, and responsive layouts.
                       </p>
-                      
+
                       {selectedTemplate ? (
                         <div className="bg-muted/30 border border-border rounded-lg p-6 mb-6">
                           <div className="flex items-center justify-center space-x-4 mb-4">
-                            <selectedTemplate.icon className="h-8 w-8 text-primary" />
-                            <div>
-                              <h4 className="text-lg font-semibold">{selectedTemplate.name}</h4>
+                            <div className="text-center">
+                              <h4 className="text-xl font-semibold">{selectedTemplate.name}</h4>
                               <p className="text-sm text-muted-foreground">{selectedTemplate.description}</p>
                             </div>
                           </div>
-                          <div className="flex flex-wrap gap-2 justify-center mb-4">
-                            {selectedTemplate.features.map((feature, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {feature}
-                              </Badge>
+                          <div className="flex justify-center gap-2 mb-4">
+                            {selectedTemplate.features?.map((feature: string, i: number) => (
+                              <Badge key={i} variant="secondary">{feature}</Badge>
                             ))}
                           </div>
-                          <div className="flex gap-2 justify-center">
-                            <Button 
-                              variant="outline" 
-                              onClick={() => setShowTemplateSelector(true)}
-                            >
-                              <Layout className="mr-2 h-4 w-4" />
-                              Change Template
-                            </Button>
-                            {templateCode.html && (
-                              <Button onClick={() => setPreviewMode(true)}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Preview Template
-                              </Button>
-                            )}
-                          </div>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setShowTemplateSelector(true)}
+                            className="w-full"
+                          >
+                            Change Template
+                          </Button>
                         </div>
                       ) : (
                         <Button 
-                          size="lg" 
                           onClick={() => setShowTemplateSelector(true)}
-                          className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                          className="w-full"
+                          size="lg"
                         >
-                          <Layout className="mr-2 h-5 w-5" />
-                          Browse Templates
+                          Select Template
                         </Button>
                       )}
 

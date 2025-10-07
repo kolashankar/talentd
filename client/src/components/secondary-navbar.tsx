@@ -7,7 +7,7 @@ export function SecondaryNavbar() {
   const [location] = useLocation();
 
   return (
-    <div className="border-b bg-background">
+    <div className="border-b bg-background hidden md:block">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center gap-4">

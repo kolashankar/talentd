@@ -155,7 +155,7 @@ export default function AdminTemplatesPage() {
             </p>
           </div>
 
-          <div>
+          <div className="flex gap-2">
             <input
               type="file"
               accept=".zip"
@@ -166,23 +166,22 @@ export default function AdminTemplatesPage() {
             />
             <label htmlFor="template-upload">
               <Button
-                asChild
+                type="button"
                 disabled={uploading}
                 data-testid="button-upload-template"
+                className="cursor-pointer"
               >
-                <span className="cursor-pointer">
-                  {uploading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload Template
-                    </>
-                  )}
-                </span>
+                {uploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Template
+                  </>
+                )}
               </Button>
             </label>
           </div>

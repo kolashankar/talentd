@@ -83,27 +83,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validation
       if (!fullName || !email) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: 'Missing required fields',
-          message: 'Please provide your name and email' 
+          message: 'Please provide your name and email'
         });
       }
 
       // Email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: 'Invalid email',
-          message: 'Please provide a valid email address' 
+          message: 'Please provide a valid email address'
         });
       }
 
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
-        return res.status(409).json({ 
+        return res.status(409).json({
           error: 'Email already registered',
-          message: 'An account with this email already exists. Please login instead.' 
+          message: 'An account with this email already exists. Please login instead.'
         });
       }
 
@@ -142,7 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      res.status(201).json({ 
+      res.status(201).json({
         success: true,
         message: 'Registration successful! Welcome to the community.',
         user: {
@@ -153,9 +153,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Registration error:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Registration failed',
-        message: 'An error occurred during registration. Please try again.' 
+        message: 'An error occurred during registration. Please try again.'
       });
     }
   });
@@ -187,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/login', adminLoginLimiter, (req, res) => {
     const { code } = req.body;
-    
+
     // Get admin password from environment variable (more secure)
     const validCodes = [
       process.env.ADMIN_CODE || 'admin123',
@@ -200,18 +200,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (req.session as any).isAdmin = true;
         (req.session as any).adminLoginTime = Date.now();
       }
-      
-      res.json({ 
-        success: true, 
+
+      res.json({
+        success: true,
         message: 'Admin access granted',
         expiresIn: 3600000 // 1 hour in milliseconds
       });
     } else {
       // Return same response time regardless of success to prevent timing attacks
       setTimeout(() => {
-        res.status(401).json({ 
+        res.status(401).json({
           error: 'Invalid admin code',
-          message: 'The provided admin code is incorrect' 
+          message: 'The provided admin code is incorrect'
         });
       }, 1000); // 1 second delay on failed attempts
     }
@@ -228,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/admin/status', (req, res) => {
     const isAdmin = (req.session as any)?.isAdmin === true;
     const loginTime = (req.session as any)?.adminLoginTime;
-    
+
     // Check if session has expired (1 hour)
     if (isAdmin && loginTime) {
       const sessionAge = Date.now() - loginTime;
@@ -240,8 +240,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ authenticated: false, expired: true });
       }
     }
-    
-    res.json({ 
+
+    res.json({
       authenticated: isAdmin,
       loginTime: loginTime || null
     });
@@ -351,10 +351,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Roadmaps routes
+  // Get all roadmaps
   app.get("/api/roadmaps", async (req, res) => {
     try {
-      const roadmaps = await storage.getRoadmaps();
-      res.json(roadmaps);
+      const roadmapsData = await storage.getRoadmaps();
+      // Ensure we always return an array
+      res.json(Array.isArray(roadmapsData) ? roadmapsData : []);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch roadmaps" });
     }

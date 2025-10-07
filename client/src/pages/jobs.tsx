@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Job } from "@shared/schema";
@@ -24,6 +23,7 @@ import {
   X
 } from "lucide-react";
 import { FAQSection, jobsFAQs } from "@/components/faq-section";
+import { SEOKeywords } from "@/components/seo-keywords"; // Assuming SEOKeywords component is available
 
 export default function Jobs() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,7 +46,7 @@ export default function Jobs() {
   const { data: jobs = [], isLoading } = useQuery<Job[]>({
     queryKey: ['/api/jobs'],
   });
-  
+
   const allJobs = jobs || [];
 
   // Extract unique values for filter options
@@ -56,7 +56,7 @@ export default function Jobs() {
     const skills = Array.from(new Set(allJobs.flatMap(job => job.skills || [])));
     const experienceLevels = Array.from(new Set(allJobs.map(job => job.experienceLevel).filter(Boolean)));
     const jobTypes = Array.from(new Set(allJobs.map(job => job.jobType).filter(Boolean)));
-    
+
     return { locations, companies, skills, experienceLevels, jobTypes };
   }, [allJobs]);
 
@@ -125,7 +125,7 @@ export default function Jobs() {
             <p className="text-xl text-muted-foreground mb-8">
               Discover amazing entry-level opportunities at top companies
             </p>
-            
+
             {/* Search Bar */}
             <div className="max-w-2xl mx-auto">
               <div className="relative">
@@ -283,7 +283,7 @@ export default function Jobs() {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex items-center space-x-4">
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-48" data-testid="sort-filter">
@@ -352,17 +352,32 @@ export default function Jobs() {
         </div>
       </div>
 
+      {/* SEO Keywords Section */}
+      <div className="container mx-auto px-4 py-8">
+        <SEOKeywords 
+          keywords={[
+            "fresher jobs 2024",
+            "entry level jobs",
+            "graduate jobs India",
+            "campus placements",
+            "tech jobs for freshers",
+            "software engineer fresher",
+            "IT jobs fresher",
+            "work from home jobs",
+            "remote jobs India",
+            "startup jobs fresher",
+            "MNC jobs India",
+            "engineering jobs fresher",
+            "developer jobs fresher"
+          ]}
+          title="Popular Job Searches"
+        />
+      </div>
+
       {/* FAQ Section */}
       <div className="container mx-auto px-4 py-12">
         <FAQSection faqs={jobsFAQs} />
       </div>
-
-      {/* Job Details Modal */}
-      <JobDetailsModal
-        job={selectedJob}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
     </div>
   );
 }

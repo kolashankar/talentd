@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { GoogleAuth } from "@/components/auth/google-auth";
-import { Menu, X, Briefcase, Users, MapPin, Code, FileText } from "lucide-react";
+import { Menu, X, Briefcase, Users, MapPin, Code, FileText, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Header() {
@@ -65,15 +65,6 @@ export function Header() {
         <div className="flex items-center gap-2">
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-2">
-            <Link href="/register">
-              <Button 
-                variant={isActive("/register") ? "default" : "outline"} 
-                size="sm"
-                data-testid="link-register"
-              >
-                Register
-              </Button>
-            </Link>
             <GoogleAuth />
           </div>
 
@@ -87,16 +78,6 @@ export function Header() {
             <SheetContent side="right" className="w-72">
               <div className="flex flex-col gap-4 mt-8">
                 <div className="mb-4 space-y-2">
-                  <Link href="/register">
-                    <Button
-                      variant={isActive("/register") ? "default" : "outline"}
-                      className="w-full"
-                      onClick={() => setIsMenuOpen(false)}
-                      data-testid="link-mobile-register"
-                    >
-                      Register
-                    </Button>
-                  </Link>
                   <GoogleAuth />
                 </div>
                 <nav className="flex flex-col gap-2">
@@ -127,6 +108,41 @@ export function Header() {
                       Scholarships
                     </Button>
                   </Link>
+                  
+                  {/* Secondary Nav Items */}
+                  <div className="border-t pt-2 mt-2">
+                    <Link href="/portfolio">
+                      <Button
+                        variant={isActive("/portfolio") ? "default" : "ghost"}
+                        className="w-full justify-start gap-3"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <FileText className="h-4 w-4" />
+                        Portfolio Builder
+                      </Button>
+                    </Link>
+                    <Link href="/resume-review">
+                      <Button
+                        variant={isActive("/resume-review") ? "default" : "ghost"}
+                        className="w-full justify-start gap-3"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <FileText className="h-4 w-4" />
+                        Resume Reviewer
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-3 text-green-600"
+                      onClick={() => {
+                        window.open('https://whatsapp.com/channel/0029VajVvKSE51Ub6kRq4b06', '_blank');
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Join WhatsApp
+                    </Button>
+                  </div>
                 </nav>
               </div>
             </SheetContent>

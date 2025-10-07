@@ -20,6 +20,7 @@ import {
   Target
 } from "lucide-react";
 import { FAQSection, roadmapsFAQs } from "@/components/faq-section";
+import { SEOKeywords } from "@/components/seo-keywords";
 
 interface Roadmap {
   id: string;
@@ -45,23 +46,26 @@ export default function Roadmaps() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: roadmaps = [], isLoading } = useQuery<Roadmap[]>({
+  const { data: roadmaps, isLoading } = useQuery<Roadmap[]>({
     queryKey: ['/api/roadmaps'],
   });
 
+  // Ensure roadmaps is always an array
+  const safeRoadmaps = Array.isArray(roadmaps) ? roadmaps : [];
+
   // Extract unique values for filter options
   const filterOptions = useMemo(() => {
-    const categories = Array.from(new Set(roadmaps.map(roadmap => roadmap.category).filter(Boolean)));
-    const skills = Array.from(new Set(roadmaps.flatMap(roadmap => roadmap.skills || [])));
+    const categories = Array.from(new Set(safeRoadmaps.map(roadmap => roadmap.category).filter(Boolean)));
+    const skills = Array.from(new Set(safeRoadmaps.flatMap(roadmap => roadmap.skills || [])));
     const difficulties = ['beginner', 'intermediate', 'advanced'];
     const durations = ['1-2 weeks', '1 month', '2-3 months', '3+ months'];
     
     return { categories, skills, difficulties, durations };
-  }, [roadmaps]);
+  }, [safeRoadmaps]);
 
   // Filter and sort roadmaps
   const filteredRoadmaps = useMemo(() => {
-    let filtered = roadmaps.filter(roadmap => {
+    let filtered = safeRoadmaps.filter(roadmap => {
       const matchesSearch = !searchTerm || 
         roadmap.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         roadmap.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -89,7 +93,7 @@ export default function Roadmaps() {
       default:
         return filtered;
     }
-  }, [roadmaps, searchTerm, categoryFilter, difficultyFilter, selectedSkills, sortBy]);
+  }, [safeRoadmaps, searchTerm, categoryFilter, difficultyFilter, selectedSkills, sortBy]);
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -458,6 +462,27 @@ export default function Roadmaps() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* SEO Keywords Section */}
+      <div className="container mx-auto px-4 py-8">
+        <SEOKeywords 
+          keywords={[
+            "web development roadmap",
+            "full stack developer path",
+            "frontend developer guide",
+            "backend development learning",
+            "react learning path",
+            "DSA preparation roadmap",
+            "machine learning roadmap",
+            "DevOps learning path",
+            "cloud computing guide",
+            "mobile app development",
+            "career roadmap tech",
+            "programming learning path"
+          ]}
+          title="Popular Learning Paths"
+        />
       </div>
 
       {/* FAQ Section */}

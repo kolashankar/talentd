@@ -20,6 +20,7 @@ import {
   Brain
 } from "lucide-react";
 import { FAQSection, dsaFAQs } from "@/components/faq-section";
+import { SEOKeywords } from "@/components/seo-keywords";
 
 interface DsaProblem {
   id: string;
@@ -456,6 +457,27 @@ export default function DSACorner() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* SEO Keywords Section */}
+      <div className="container mx-auto px-4 py-8">
+        <SEOKeywords 
+          keywords={[
+            "data structures and algorithms",
+            "DSA practice problems",
+            "coding interview preparation",
+            "leetcode problems",
+            "competitive programming",
+            "array problems",
+            "tree algorithms",
+            "graph algorithms",
+            "dynamic programming",
+            "system design questions",
+            "FAANG interview prep",
+            "algorithm patterns"
+          ]}
+          title="Popular DSA Topics"
+        />
       </div>
 
       {/* FAQ Section */}

@@ -183,7 +183,6 @@ export function TemplateSelector({
                 const selected = templates.find(t => (t.templateId || t.id) === selectedTemplate);
                 if (selected) {
                   onTemplateSelect(selected);
-                  onClose();
                 }
               }}
               disabled={!selectedTemplate}

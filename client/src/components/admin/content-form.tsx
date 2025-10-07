@@ -177,33 +177,40 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
             nodes: flowchartNodes,
             edges: flowchartEdges,
           }
+        } : type === 'roadmaps' ? {
+          flowchartData: null
         } : {})
       };
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(submitData),
-      });
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(submitData),
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { message: errorText || 'Unknown error' };
+        if (!response.ok) {
+          const errorText = await response.text();
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch {
+            errorData = { message: errorText || 'Unknown error' };
+          }
+          console.error('API Error:', errorData);
+          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
         }
-        console.error('API Error:', errorData);
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
 
-      const result = await response.json();
-      console.log('Save successful:', result);
-      return result;
+        const result = await response.json();
+        console.log('Save successful:', result);
+        return result;
+      } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       toast({
