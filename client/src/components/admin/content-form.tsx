@@ -54,6 +54,12 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
   const [flowchartNodes, setFlowchartNodes] = useState<Node[]>(item?.flowchartData?.nodes || []);
   const [flowchartEdges, setFlowchartEdges] = useState<Edge[]>(item?.flowchartData?.edges || []);
   const [companyLogo, setCompanyLogo] = useState<File | null>(null);
+  const [companyLogoUrl, setCompanyLogoUrl] = useState<string>("");
+  const [featuredImageUrl, setFeaturedImageUrl] = useState<string>("");
+  const [roadmapImageUrl, setRoadmapImageUrl] = useState<string>("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [flowchartFile, setFlowchartFile] = useState<File | null>(null);
+  const [flowchartImageUrl, setFlowchartImageUrl] = useState<string>("");
   const [workflowImages, setWorkflowImages] = useState<string[]>([]);
   const [mindmapImages, setMindmapImages] = useState<string[]>([]);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -241,6 +247,8 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         return "/api/roadmaps";
       case "dsa-corner":
         return "/api/dsa-problems";
+      case "scholarships":
+        return "/api/scholarships";
       default:
         return "/api/jobs";
     }
@@ -303,7 +311,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         companyWebsite: data.companyWebsite || '',
         applicationUrl: data.applicationUrl || '',
         sourceUrl: data.sourceUrl || '',
-        companyLogo: companyLogo ? `https://via.placeholder.com/200x200?text=${encodeURIComponent(companyLogo.name)}` : data.companyLogo || '',
+        companyLogo: companyLogoUrl || data.companyLogo || '',
         skills: skills,
         category: type === "fresher-jobs" ? "fresher-job" : type === "internships" ? "internship" : data.category || "job",
         isActive: data.isActive ?? true,
@@ -319,7 +327,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
         tags: tags,
         isPublished: data.isPublished ?? true,
         readTime: data.readTime || 5,
-        featuredImage: uploadedImage ? `https://via.placeholder.com/600x400?text=${encodeURIComponent(uploadedImage.name)}` : data.featuredImage || '',
+        featuredImage: featuredImageUrl || data.featuredImage || '',
         expiresAt: data.expiresAt || undefined,
       };
     } else if (type === "roadmaps") {
@@ -336,7 +344,7 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
           edges: flowchartEdges,
         } : null,
         isPublished: data.isPublished ?? true,
-        image: uploadedImage ? `https://via.placeholder.com/600x400?text=${encodeURIComponent(uploadedImage.name)}` : data.image || '',
+        image: roadmapImageUrl || data.image || '',
       };
     } else if (type === "dsa-corner") {
       formData = {
@@ -371,6 +379,139 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
 
   const addStep = () => {
     setSteps([...steps, { title: "", description: "", resources: [] }]);
+  };
+
+  const uploadImageToCloudinary = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload image');
+    }
+
+    const data = await response.json();
+    return data.secure_url;
+  };
+
+  const handleCompanyLogoUpload = async (file: File) => {
+    setCompanyLogo(file);
+    setIsUploadingImage(true);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      setCompanyLogoUrl(url);
+      form.setValue("companyLogo", url);
+      toast({
+        title: "Success",
+        description: "Company logo uploaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload company logo",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleFeaturedImageUpload = async (file: File) => {
+    setUploadedImage(file);
+    setIsUploadingImage(true);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      setFeaturedImageUrl(url);
+      form.setValue("featuredImage", url);
+      toast({
+        title: "Success",
+        description: "Featured image uploaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload featured image",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleRoadmapImageUpload = async (file: File) => {
+    setUploadedImage(file);
+    setIsUploadingImage(true);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      setRoadmapImageUrl(url);
+      form.setValue("image", url);
+      toast({
+        title: "Success",
+        description: "Roadmap image uploaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload roadmap image",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleFlowchartUpload = async (file: File) => {
+    setFlowchartFile(file);
+    
+    if (file.type === 'application/json') {
+      // Handle JSON file
+      try {
+        const text = await file.text();
+        const flowchartData = JSON.parse(text);
+        
+        // Validate flowchart structure
+        if (flowchartData.nodes && Array.isArray(flowchartData.nodes)) {
+          setFlowchartNodes(flowchartData.nodes);
+          setFlowchartEdges(flowchartData.edges || []);
+          toast({
+            title: "Success",
+            description: "Flowchart JSON loaded successfully",
+          });
+        } else {
+          throw new Error('Invalid flowchart JSON structure');
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to parse flowchart JSON",
+          variant: "destructive",
+        });
+      }
+    } else if (file.type.startsWith('image/')) {
+      // Handle image file
+      setIsUploadingImage(true);
+      try {
+        const url = await uploadImageToCloudinary(file);
+        setFlowchartImageUrl(url);
+        toast({
+          title: "Success",
+          description: "Flowchart image uploaded successfully",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to upload flowchart image",
+          variant: "destructive",
+        });
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
   };
 
   const updateStep = (index: number, field: string, value: any) => {
@@ -565,15 +706,22 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
       <div>
         <Label>Company Logo</Label>
         <FileUpload
-          onFileSelect={setCompanyLogo}
+          onFileSelect={handleCompanyLogoUpload}
           acceptedTypes={['.jpg', '.jpeg', '.png', '.svg']}
           maxSize={2 * 1024 * 1024} // 2MB
           data-testid="company-logo-upload"
         />
-        {companyLogo && (
+        {isUploadingImage && (
           <p className="text-sm text-muted-foreground mt-2">
-            Selected: {companyLogo.name}
+            <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
+            Uploading...
           </p>
+        )}
+        {companyLogoUrl && (
+          <div className="mt-2">
+            <img src={companyLogoUrl} alt="Company logo preview" className="w-20 h-20 object-contain border rounded" />
+            <p className="text-sm text-muted-foreground">Uploaded successfully</p>
+          </div>
         )}
       </div>
 
@@ -779,15 +927,22 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
       <div>
         <Label>Featured Image</Label>
         <FileUpload
-          onFileSelect={setUploadedImage}
+          onFileSelect={handleFeaturedImageUpload}
           acceptedTypes={['.jpg', '.jpeg', '.png']}
           maxSize={5 * 1024 * 1024} // 5MB
           data-testid="featured-image-upload"
         />
-        {uploadedImage && (
+        {isUploadingImage && (
           <p className="text-sm text-muted-foreground mt-2">
-            Selected: {uploadedImage.name}
+            <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
+            Uploading...
           </p>
+        )}
+        {featuredImageUrl && (
+          <div className="mt-2">
+            <img src={featuredImageUrl} alt="Featured image preview" className="w-40 h-24 object-cover border rounded" />
+            <p className="text-sm text-muted-foreground">Uploaded successfully</p>
+          </div>
         )}
       </div>
 
@@ -994,21 +1149,64 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
       <div>
         <Label>Roadmap Image</Label>
         <FileUpload
-          onFileSelect={setUploadedImage}
+          onFileSelect={handleRoadmapImageUpload}
           acceptedTypes={['.jpg', '.jpeg', '.png']}
           maxSize={5 * 1024 * 1024} // 5MB
           data-testid="roadmap-image-upload"
         />
-        {uploadedImage && (
+        {isUploadingImage && (
           <p className="text-sm text-muted-foreground mt-2">
-            Selected: {uploadedImage.name}
+            <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
+            Uploading...
           </p>
+        )}
+        {roadmapImageUrl && (
+          <div className="mt-2">
+            <img src={roadmapImageUrl} alt="Roadmap image preview" className="w-40 h-24 object-cover border rounded" />
+            <p className="text-sm text-muted-foreground">Uploaded successfully</p>
+          </div>
+        )}
+      </div>
+
+      {/* Flowchart Upload */}
+      <div>
+        <Label>Upload Flowchart (JSON or Image)</Label>
+        <FileUpload
+          onFileSelect={handleFlowchartUpload}
+          acceptedTypes={['.json', '.jpg', '.jpeg', '.png']}
+          maxSize={5 * 1024 * 1024} // 5MB
+          data-testid="flowchart-upload"
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          Upload a JSON file with flowchart data (nodes and edges) or an image of your flowchart
+        </p>
+        {isUploadingImage && (
+          <p className="text-sm text-muted-foreground mt-2">
+            <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
+            Uploading flowchart...
+          </p>
+        )}
+        {flowchartFile && flowchartFile.type === 'application/json' && (
+          <div className="mt-2">
+            <p className="text-sm text-green-600">
+              ✓ Flowchart JSON loaded: {flowchartNodes.length} nodes, {flowchartEdges.length} edges
+            </p>
+          </div>
+        )}
+        {flowchartImageUrl && (
+          <div className="mt-2">
+            <img src={flowchartImageUrl} alt="Flowchart preview" className="w-full max-w-md border rounded" />
+            <p className="text-sm text-muted-foreground">Flowchart image uploaded successfully</p>
+          </div>
         )}
       </div>
 
       {/* Flowchart Editor for Roadmaps */}
       <div className="space-y-4">
-        <Label>Interactive Flowchart</Label>
+        <Label>Interactive Flowchart Editor</Label>
+        <p className="text-xs text-muted-foreground">
+          Create or edit your flowchart visually. You can also upload a JSON file above.
+        </p>
         <FlowchartEditor
           initialNodes={flowchartNodes}
           initialEdges={flowchartEdges}

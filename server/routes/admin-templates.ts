@@ -63,7 +63,13 @@ router.post(
       }
 
       // Install template to public directory
-      const templateDir = await installTemplate(zipPath, manifest);
+      let templateDir;
+      try {
+        templateDir = await installTemplate(zipPath, manifest);
+      } catch (error) {
+        await fs.unlink(zipPath).catch(() => {});
+        throw new Error(`Failed to install template: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
 
       // Save template metadata to database
       const [dbTemplate] = await db.insert(templates).values({

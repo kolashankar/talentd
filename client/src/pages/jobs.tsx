@@ -352,6 +352,13 @@ export default function Jobs() {
         </div>
       </div>
 
+      {/* Job Details Modal */}
+      <JobDetailsModal
+        job={selectedJob}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+
       {/* SEO Keywords Section */}
       <div className="container mx-auto px-4 py-8">
         <SEOKeywords 

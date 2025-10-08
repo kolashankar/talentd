@@ -3,12 +3,35 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { GoogleAuth } from "@/components/auth/google-auth";
-import { Menu, X, Briefcase, Users, MapPin, Code, FileText, MessageCircle } from "lucide-react";
+import {
+  Menu,
+  X,
+  Briefcase,
+  Users,
+  MapPin,
+  Code,
+  FileText,
+  MessageCircle,
+  UserPlus,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
 
 export function Header() {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Check authentication status
+  const { data: authStatus } = useQuery({
+    queryKey: ["/api/auth/status"],
+    queryFn: async () => {
+      const response = await fetch("/api/auth/status", {
+        credentials: "include",
+      });
+      if (!response.ok) return { authenticated: false };
+      return response.json();
+    },
+  });
 
   const navItems = [
     { label: "Jobs", path: "/jobs", icon: Briefcase },
@@ -24,7 +47,11 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 hover-elevate active-elevate-2 px-3 py-1 rounded-md transition-all" data-testid="link-home">
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover-elevate active-elevate-2 px-3 py-1 rounded-md transition-all"
+            data-testid="link-home"
+          >
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Talentd
             </span>
@@ -65,19 +92,47 @@ export function Header() {
         <div className="flex items-center gap-2">
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-2">
+            {!authStatus?.authenticated && (
+              <Link href="/register">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Register
+                </Button>
+              </Link>
+            )}
             <GoogleAuth />
           </div>
 
           {/* Mobile Menu */}
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon" data-testid="button-menu-toggle">
-                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <Button
+                variant="ghost"
+                size="icon"
+                data-testid="button-menu-toggle"
+              >
+                {isMenuOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-72">
               <div className="flex flex-col gap-4 mt-8">
                 <div className="mb-4 space-y-2">
+                  {!authStatus?.authenticated && (
+                    <Link href="/register">
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start gap-3"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        Register
+                      </Button>
+                    </Link>
+                  )}
                   <GoogleAuth />
                 </div>
                 <nav className="flex flex-col gap-2">
@@ -108,7 +163,7 @@ export function Header() {
                       Scholarships
                     </Button>
                   </Link>
-                  
+
                   {/* Secondary Nav Items */}
                   <div className="border-t pt-2 mt-2">
                     <Link href="/portfolio">
@@ -123,7 +178,9 @@ export function Header() {
                     </Link>
                     <Link href="/resume-review">
                       <Button
-                        variant={isActive("/resume-review") ? "default" : "ghost"}
+                        variant={
+                          isActive("/resume-review") ? "default" : "ghost"
+                        }
                         className="w-full justify-start gap-3"
                         onClick={() => setIsMenuOpen(false)}
                       >
@@ -135,7 +192,10 @@ export function Header() {
                       variant="ghost"
                       className="w-full justify-start gap-3 text-green-600"
                       onClick={() => {
-                        window.open('https://whatsapp.com/channel/0029VajVvKSE51Ub6kRq4b06', '_blank');
+                        window.open(
+                          "https://whatsapp.com/channel/0029VajVvKSE51Ub6kRq4b06",
+                          "_blank",
+                        );
                         setIsMenuOpen(false);
                       }}
                     >

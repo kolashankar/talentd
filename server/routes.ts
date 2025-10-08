@@ -379,10 +379,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Creating roadmap with data:', req.body);
       const roadmapData = insertRoadmapSchema.parse(req.body);
 
-      // Ensure flowchartData is properly formatted
+      // Ensure flowchartData is properly formatted with defaults
       const formattedData = {
         ...roadmapData,
-        flowchartData: roadmapData.flowchartData || null
+        flowchartData: roadmapData.flowchartData || null,
+        rating: 0,
+        ratingCount: 0,
+        enrolledCount: 0,
+        downloadCount: 0,
+        shareCount: 0
       };
 
       const roadmap = await storage.createRoadmap(formattedData);

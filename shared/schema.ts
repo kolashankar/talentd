@@ -254,43 +254,16 @@ export const insertArticleSchema = z.object({
   expiresAt: z.string().optional(),
 });
 
-export const insertRoadmapSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().min(1),
-  content: z.string().min(1),
-  difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
-  educationLevel: z.enum(['upto-10th', '12th', 'btech', 'degree', 'postgrad', 'professional']).default('btech'),
-  estimatedTime: z.string().optional(),
-  technologies: z.array(z.string()).default([]),
-  steps: z.array(z.object({
-    title: z.string(),
-    description: z.string(),
-    resources: z.array(z.string()).default([])
-  })).default([]),
-  flowchartData: z.object({
-    nodes: z.array(z.object({
-      id: z.string(),
-      type: z.string(),
-      position: z.object({ x: z.number(), y: z.number() }),
-      data: z.object({
-        label: z.string(),
-        description: z.string().optional(),
-        redirectUrl: z.string().optional(),
-        color: z.string().optional(),
-      })
-    })),
-    edges: z.array(z.object({
-      id: z.string(),
-      source: z.string(),
-      target: z.string(),
-      type: z.string().optional(),
-      animated: z.boolean().optional(),
-    }))
-  }).optional().nullable(),
-  image: z.string().optional(),
-  isPublished: z.boolean().default(true),
-  rating: z.number().optional(),
-  ratingCount: z.number().optional(),
+// Assuming createInsertSchema is imported from drizzle-zod
+import { createInsertSchema } from "drizzle-zod";
+
+export const insertRoadmapSchema = createInsertSchema(roadmaps).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  rating: z.number().optional().default(0),
+  ratingCount: z.number().optional().default(0),
 });
 
 export const insertScholarshipSchema = z.object({
