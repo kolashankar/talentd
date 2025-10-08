@@ -101,35 +101,63 @@ export function ContentForm({ type, item, onSave, onCancel }: ContentFormProps) 
 
   useEffect(() => {
     if (item && Object.keys(item).length > 0) {
-      // Update all form fields with AI-generated content
-      Object.keys(item).forEach(key => {
-        if (form.getValues()[key] !== undefined || key in form.getValues()) {
-          form.setValue(key as any, item[key]);
-        }
+      // Reset form with new item data
+      form.reset({
+        ...item,
+        category: type === "fresher-jobs" ? "fresher-job" : type === "internships" ? "internship" : item?.category || "job",
       });
 
       // Update arrays
-      if (item.skills) setSkills(item.skills);
-      if (item.tags) setTags(item.tags);
-      if (item.technologies) setTechnologies(item.technologies);
-      if (item.companies) setCompanies(item.companies);
-      if (item.steps) setSteps(item.steps);
-      if (item.hints) setHints(item.hints);
+      setSkills(item.skills || []);
+      setTags(item.tags || []);
+      setTechnologies(item.technologies || []);
+      setCompanies(item.companies || []);
+      setSteps(item.steps || []);
+      setHints(item.hints || []);
       
       // Update flowchart data for roadmaps
       if (item.flowchartData) {
         setFlowchartNodes(item.flowchartData.nodes || []);
         setFlowchartEdges(item.flowchartData.edges || []);
+      } else {
+        setFlowchartNodes([]);
+        setFlowchartEdges([]);
       }
 
       // Update image states
-      if (item.workflowImages) setWorkflowImages(item.workflowImages);
-      if (item.mindmapImages) setMindmapImages(item.mindmapImages);
-      if (item.generatedImages) setGeneratedImages(item.generatedImages);
+      setWorkflowImages(item.workflowImages || []);
+      setMindmapImages(item.mindmapImages || []);
+      setGeneratedImages(item.generatedImages || []);
+      
+      // Update image URLs
+      setCompanyLogoUrl(item.companyLogo || '');
+      setFeaturedImageUrl(item.featuredImage || '');
+      setRoadmapImageUrl(item.image || '');
+      setFlowchartImageUrl(item.flowchartImage || '');
 
       setFormData(item);
+    } else {
+      // Reset to empty form when creating new item
+      form.reset({
+        category: type === "fresher-jobs" ? "fresher-job" : type === "internships" ? "internship" : "job",
+      });
+      setSkills([]);
+      setTags([]);
+      setTechnologies([]);
+      setCompanies([]);
+      setSteps([]);
+      setHints([]);
+      setFlowchartNodes([]);
+      setFlowchartEdges([]);
+      setWorkflowImages([]);
+      setMindmapImages([]);
+      setGeneratedImages([]);
+      setCompanyLogoUrl('');
+      setFeaturedImageUrl('');
+      setRoadmapImageUrl('');
+      setFlowchartImageUrl('');
     }
-  }, [item]);
+  }, [item, form, type]);
 
 
   // Mutation for AI asset generation

@@ -835,7 +835,13 @@ function AdminDashboard() {
                 }
                 onSave={() => {
                   setSelectedItem(null);
-                  queryClient.invalidateQueries();
+                  // Invalidate specific queries based on content type
+                  const queryKey = activeTab === "jobs" || activeTab === "fresher-jobs" || activeTab === "internships" 
+                    ? "/api/jobs" 
+                    : activeTab === "dsa-corner" 
+                      ? "/api/dsa-problems" 
+                      : `/api/${activeTab}`;
+                  queryClient.invalidateQueries({ queryKey: [queryKey] });
                 }}
                 onCancel={() => setSelectedItem(null)}
               />

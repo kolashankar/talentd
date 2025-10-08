@@ -38,6 +38,7 @@ export const articles = pgTable('articles', {
   author: text('author').notNull(),
   category: varchar('category', { length: 100 }),
   tags: json('tags').$type<string[]>().default([]),
+  featuredImage: text('featured_image'),
   isPublished: boolean('is_published').default(true),
   readTime: integer('read_time'),
   expiresAt: timestamp('expires_at'),
@@ -74,6 +75,7 @@ export const roadmaps = pgTable('roadmaps', {
       animated?: boolean;
     }>;
   }>(),
+  flowchartImage: text('flowchart_image'),
   isPublished: boolean('is_published').default(true),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   rating: real('rating').default(0),
@@ -101,6 +103,41 @@ export const scholarships = pgTable('scholarships', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// DSA Topics Table
+export const dsaTopics = pgTable('dsa_topics', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  description: text('description'),
+  difficulty: varchar('difficulty', { length: 50 }).notNull(),
+  problemCount: integer('problem_count').default(0),
+  isPublished: boolean('is_published').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// DSA Companies Table
+export const dsaCompanies = pgTable('dsa_companies', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  logo: text('logo'),
+  problemCount: integer('problem_count').default(0),
+  isPublished: boolean('is_published').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// DSA Sheets Table
+export const dsaSheets = pgTable('dsa_sheets', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  creator: text('creator').notNull(),
+  type: varchar('type', { length: 50 }).notNull().default('public'),
+  problemCount: integer('problem_count').default(0),
+  followerCount: integer('follower_count').default(0),
+  isPublished: boolean('is_published').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Updated DSA Problems Table with relations
 export const dsaProblems = pgTable('dsa_problems', {
   id: serial('id').primaryKey(),
   title: text('title').notNull(),
@@ -113,7 +150,20 @@ export const dsaProblems = pgTable('dsa_problems', {
   spaceComplexity: text('space_complexity'),
   tags: json('tags').$type<string[]>().default([]),
   companies: json('companies').$type<string[]>().default([]),
+  topics: json('topics').$type<string[]>().default([]),
+  videoUrl: text('video_url'),
+  leetcodeUrl: text('leetcode_url'),
+  status: varchar('status', { length: 20 }).default('unsolved'),
   isPublished: boolean('is_published').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// DSA Sheet Problems Junction Table
+export const dsaSheetProblems = pgTable('dsa_sheet_problems', {
+  id: serial('id').primaryKey(),
+  sheetId: integer('sheet_id').references(() => dsaSheets.id).notNull(),
+  problemId: integer('problem_id').references(() => dsaProblems.id).notNull(),
+  orderIndex: integer('order_index').default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -249,6 +299,7 @@ export const insertArticleSchema = z.object({
   author: z.string().min(1),
   category: z.string().optional(),
   tags: z.array(z.string()).default([]),
+  featuredImage: z.string().optional(),
   isPublished: z.boolean().default(true),
   readTime: z.number().optional(),
   expiresAt: z.string().optional(),
@@ -296,7 +347,42 @@ export const insertDsaProblemSchema = z.object({
   spaceComplexity: z.string().optional(),
   tags: z.array(z.string()).default([]),
   companies: z.array(z.string()).default([]),
+  topics: z.array(z.string()).default([]),
+  videoUrl: z.string().optional(),
+  leetcodeUrl: z.string().optional(),
+  status: z.enum(['unsolved', 'solved', 'attempted']).default('unsolved'),
   isPublished: z.boolean().default(true),
+});
+
+export const insertDsaTopicSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
+  problemCount: z.number().default(0),
+  isPublished: z.boolean().default(true),
+});
+
+export const insertDsaCompanySchema = z.object({
+  name: z.string().min(1),
+  logo: z.string().optional(),
+  problemCount: z.number().default(0),
+  isPublished: z.boolean().default(true),
+});
+
+export const insertDsaSheetSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  creator: z.string().min(1),
+  type: z.enum(['official', 'public', 'community']).default('public'),
+  problemCount: z.number().default(0),
+  followerCount: z.number().default(0),
+  isPublished: z.boolean().default(true),
+});
+
+export const insertDsaSheetProblemSchema = z.object({
+  sheetId: z.number(),
+  problemId: z.number(),
+  orderIndex: z.number().default(0),
 });
 
 export const insertPortfolioSchema = z.object({
@@ -405,3 +491,11 @@ export type Scholarship = typeof scholarships.$inferSelect;
 export type InsertScholarship = typeof scholarships.$inferInsert;
 export type RoadmapReview = typeof roadmapReviews.$inferSelect;
 export type InsertRoadmapReview = typeof roadmapReviews.$inferInsert;
+export type DsaTopic = typeof dsaTopics.$inferSelect;
+export type InsertDsaTopic = typeof dsaTopics.$inferInsert;
+export type DsaCompany = typeof dsaCompanies.$inferSelect;
+export type InsertDsaCompany = typeof dsaCompanies.$inferInsert;
+export type DsaSheet = typeof dsaSheets.$inferSelect;
+export type InsertDsaSheet = typeof dsaSheets.$inferInsert;
+export type DsaSheetProblem = typeof dsaSheetProblems.$inferSelect;
+export type InsertDsaSheetProblem = typeof dsaSheetProblems.$inferInsert;

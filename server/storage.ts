@@ -12,6 +12,14 @@ import {
   type InsertArticle,
   type DsaProblem,
   type InsertDsaProblem,
+  type DsaTopic,
+  type InsertDsaTopic,
+  type DsaCompany,
+  type InsertDsaCompany,
+  type DsaSheet,
+  type InsertDsaSheet,
+  type DsaSheetProblem,
+  type InsertDsaSheetProblem,
   type Portfolio,
   type InsertPortfolio,
   type ResumeAnalysis,
@@ -25,6 +33,10 @@ import {
   articles,
   roadmaps,
   dsaProblems,
+  dsaTopics,
+  dsaCompanies,
+  dsaSheets,
+  dsaSheetProblems,
   portfolios,
   resumeAnalyses,
   solvedProblems,
@@ -114,6 +126,41 @@ export interface IStorage {
     data: Partial<InsertScholarship>,
   ): Promise<Scholarship | undefined>;
   deleteScholarship(id: number): Promise<boolean>;
+
+  // DSA Topics operations
+  getDsaTopics(): Promise<DsaTopic[]>;
+  getDsaTopic(id: number): Promise<DsaTopic | undefined>;
+  createDsaTopic(topic: InsertDsaTopic): Promise<DsaTopic>;
+  updateDsaTopic(
+    id: number,
+    topic: Partial<InsertDsaTopic>,
+  ): Promise<DsaTopic | undefined>;
+  deleteDsaTopic(id: number): Promise<boolean>;
+
+  // DSA Companies operations
+  getDsaCompanies(): Promise<DsaCompany[]>;
+  getDsaCompany(id: number): Promise<DsaCompany | undefined>;
+  createDsaCompany(company: InsertDsaCompany): Promise<DsaCompany>;
+  updateDsaCompany(
+    id: number,
+    company: Partial<InsertDsaCompany>,
+  ): Promise<DsaCompany | undefined>;
+  deleteDsaCompany(id: number): Promise<boolean>;
+
+  // DSA Sheets operations
+  getDsaSheets(): Promise<DsaSheet[]>;
+  getDsaSheet(id: number): Promise<DsaSheet | undefined>;
+  createDsaSheet(sheet: InsertDsaSheet): Promise<DsaSheet>;
+  updateDsaSheet(
+    id: number,
+    sheet: Partial<InsertDsaSheet>,
+  ): Promise<DsaSheet | undefined>;
+  deleteDsaSheet(id: number): Promise<boolean>;
+
+  // DSA Sheet Problems operations
+  getDsaSheetProblems(sheetId: number): Promise<DsaSheetProblem[]>;
+  addProblemToSheet(data: InsertDsaSheetProblem): Promise<DsaSheetProblem>;
+  removeProblemFromSheet(id: number): Promise<boolean>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -569,6 +616,166 @@ export class PostgresStorage implements IStorage {
     const result = await db
       .delete(schema.scholarships)
       .where(eq(schema.scholarships.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // DSA Topics operations
+  async getDsaTopics(): Promise<DsaTopic[]> {
+    return db
+      .select()
+      .from(dsaTopics)
+      .where(eq(dsaTopics.isPublished, true))
+      .orderBy(desc(dsaTopics.createdAt));
+  }
+
+  async getDsaTopic(id: number): Promise<DsaTopic | undefined> {
+    const results = await db
+      .select()
+      .from(dsaTopics)
+      .where(eq(dsaTopics.id, id));
+    return results[0];
+  }
+
+  async createDsaTopic(topic: InsertDsaTopic): Promise<DsaTopic> {
+    const result = await db
+      .insert(dsaTopics)
+      .values(topic)
+      .returning();
+    return result[0];
+  }
+
+  async updateDsaTopic(
+    id: number,
+    topic: Partial<InsertDsaTopic>,
+  ): Promise<DsaTopic | undefined> {
+    const result = await db
+      .update(dsaTopics)
+      .set(topic)
+      .where(eq(dsaTopics.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDsaTopic(id: number): Promise<boolean> {
+    const result = await db
+      .delete(dsaTopics)
+      .where(eq(dsaTopics.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // DSA Companies operations
+  async getDsaCompanies(): Promise<DsaCompany[]> {
+    return db
+      .select()
+      .from(dsaCompanies)
+      .where(eq(dsaCompanies.isPublished, true))
+      .orderBy(desc(dsaCompanies.problemCount));
+  }
+
+  async getDsaCompany(id: number): Promise<DsaCompany | undefined> {
+    const results = await db
+      .select()
+      .from(dsaCompanies)
+      .where(eq(dsaCompanies.id, id));
+    return results[0];
+  }
+
+  async createDsaCompany(company: InsertDsaCompany): Promise<DsaCompany> {
+    const result = await db
+      .insert(dsaCompanies)
+      .values(company)
+      .returning();
+    return result[0];
+  }
+
+  async updateDsaCompany(
+    id: number,
+    company: Partial<InsertDsaCompany>,
+  ): Promise<DsaCompany | undefined> {
+    const result = await db
+      .update(dsaCompanies)
+      .set(company)
+      .where(eq(dsaCompanies.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDsaCompany(id: number): Promise<boolean> {
+    const result = await db
+      .delete(dsaCompanies)
+      .where(eq(dsaCompanies.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // DSA Sheets operations
+  async getDsaSheets(): Promise<DsaSheet[]> {
+    return db
+      .select()
+      .from(dsaSheets)
+      .where(eq(dsaSheets.isPublished, true))
+      .orderBy(desc(dsaSheets.createdAt));
+  }
+
+  async getDsaSheet(id: number): Promise<DsaSheet | undefined> {
+    const results = await db
+      .select()
+      .from(dsaSheets)
+      .where(eq(dsaSheets.id, id));
+    return results[0];
+  }
+
+  async createDsaSheet(sheet: InsertDsaSheet): Promise<DsaSheet> {
+    const result = await db
+      .insert(dsaSheets)
+      .values(sheet)
+      .returning();
+    return result[0];
+  }
+
+  async updateDsaSheet(
+    id: number,
+    sheet: Partial<InsertDsaSheet>,
+  ): Promise<DsaSheet | undefined> {
+    const result = await db
+      .update(dsaSheets)
+      .set(sheet)
+      .where(eq(dsaSheets.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteDsaSheet(id: number): Promise<boolean> {
+    const result = await db
+      .delete(dsaSheets)
+      .where(eq(dsaSheets.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // DSA Sheet Problems operations
+  async getDsaSheetProblems(sheetId: number): Promise<DsaSheetProblem[]> {
+    return db
+      .select()
+      .from(dsaSheetProblems)
+      .where(eq(dsaSheetProblems.sheetId, sheetId))
+      .orderBy(dsaSheetProblems.orderIndex);
+  }
+
+  async addProblemToSheet(data: InsertDsaSheetProblem): Promise<DsaSheetProblem> {
+    const result = await db
+      .insert(dsaSheetProblems)
+      .values(data)
+      .returning();
+    return result[0];
+  }
+
+  async removeProblemFromSheet(id: number): Promise<boolean> {
+    const result = await db
+      .delete(dsaSheetProblems)
+      .where(eq(dsaSheetProblems.id, id))
       .returning();
     return result.length > 0;
   }

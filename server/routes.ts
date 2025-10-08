@@ -932,6 +932,240 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DSA Topics routes
+  app.get("/api/dsa-topics", async (req, res) => {
+    try {
+      const topics = await storage.getDsaTopics();
+      res.json(topics);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch DSA topics" });
+    }
+  });
+
+  app.get("/api/dsa-topics/:id", async (req, res) => {
+    try {
+      const topic = await storage.getDsaTopic(parseInt(req.params.id));
+      if (!topic) {
+        return res.status(404).json({ message: "DSA topic not found" });
+      }
+      res.json(topic);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch DSA topic" });
+    }
+  });
+
+  app.post("/api/dsa-topics", async (req, res) => {
+    try {
+      const { insertDsaTopicSchema } = await import("@shared/schema");
+      const topicData = insertDsaTopicSchema.parse(req.body);
+      const topic = await storage.createDsaTopic(topicData);
+      res.status(201).json(topic);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid DSA topic data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create DSA topic" });
+    }
+  });
+
+  app.put("/api/dsa-topics/:id", async (req, res) => {
+    try {
+      const { insertDsaTopicSchema } = await import("@shared/schema");
+      const topicData = insertDsaTopicSchema.partial().parse(req.body);
+      const topic = await storage.updateDsaTopic(parseInt(req.params.id), topicData);
+      if (!topic) {
+        return res.status(404).json({ message: "DSA topic not found" });
+      }
+      res.json(topic);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid DSA topic data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update DSA topic" });
+    }
+  });
+
+  app.delete("/api/dsa-topics/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteDsaTopic(parseInt(req.params.id));
+      if (!deleted) {
+        return res.status(404).json({ message: "DSA topic not found" });
+      }
+      res.json({ message: "DSA topic deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete DSA topic" });
+    }
+  });
+
+  // DSA Companies routes
+  app.get("/api/dsa-companies", async (req, res) => {
+    try {
+      const companies = await storage.getDsaCompanies();
+      res.json(companies);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch DSA companies" });
+    }
+  });
+
+  app.get("/api/dsa-companies/:id", async (req, res) => {
+    try {
+      const company = await storage.getDsaCompany(parseInt(req.params.id));
+      if (!company) {
+        return res.status(404).json({ message: "DSA company not found" });
+      }
+      res.json(company);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch DSA company" });
+    }
+  });
+
+  app.post("/api/dsa-companies", async (req, res) => {
+    try {
+      const { insertDsaCompanySchema } = await import("@shared/schema");
+      const companyData = insertDsaCompanySchema.parse(req.body);
+      const company = await storage.createDsaCompany(companyData);
+      res.status(201).json(company);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid DSA company data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create DSA company" });
+    }
+  });
+
+  app.put("/api/dsa-companies/:id", async (req, res) => {
+    try {
+      const { insertDsaCompanySchema } = await import("@shared/schema");
+      const companyData = insertDsaCompanySchema.partial().parse(req.body);
+      const company = await storage.updateDsaCompany(parseInt(req.params.id), companyData);
+      if (!company) {
+        return res.status(404).json({ message: "DSA company not found" });
+      }
+      res.json(company);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid DSA company data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update DSA company" });
+    }
+  });
+
+  app.delete("/api/dsa-companies/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteDsaCompany(parseInt(req.params.id));
+      if (!deleted) {
+        return res.status(404).json({ message: "DSA company not found" });
+      }
+      res.json({ message: "DSA company deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete DSA company" });
+    }
+  });
+
+  // DSA Sheets routes
+  app.get("/api/dsa-sheets", async (req, res) => {
+    try {
+      const sheets = await storage.getDsaSheets();
+      res.json(sheets);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch DSA sheets" });
+    }
+  });
+
+  app.get("/api/dsa-sheets/:id", async (req, res) => {
+    try {
+      const sheet = await storage.getDsaSheet(parseInt(req.params.id));
+      if (!sheet) {
+        return res.status(404).json({ message: "DSA sheet not found" });
+      }
+      res.json(sheet);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch DSA sheet" });
+    }
+  });
+
+  app.post("/api/dsa-sheets", async (req, res) => {
+    try {
+      const { insertDsaSheetSchema } = await import("@shared/schema");
+      const sheetData = insertDsaSheetSchema.parse(req.body);
+      const sheet = await storage.createDsaSheet(sheetData);
+      res.status(201).json(sheet);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid DSA sheet data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create DSA sheet" });
+    }
+  });
+
+  app.put("/api/dsa-sheets/:id", async (req, res) => {
+    try {
+      const { insertDsaSheetSchema } = await import("@shared/schema");
+      const sheetData = insertDsaSheetSchema.partial().parse(req.body);
+      const sheet = await storage.updateDsaSheet(parseInt(req.params.id), sheetData);
+      if (!sheet) {
+        return res.status(404).json({ message: "DSA sheet not found" });
+      }
+      res.json(sheet);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid DSA sheet data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update DSA sheet" });
+    }
+  });
+
+  app.delete("/api/dsa-sheets/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteDsaSheet(parseInt(req.params.id));
+      if (!deleted) {
+        return res.status(404).json({ message: "DSA sheet not found" });
+      }
+      res.json({ message: "DSA sheet deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete DSA sheet" });
+    }
+  });
+
+  // DSA Sheet Problems routes
+  app.get("/api/dsa-sheets/:id/problems", async (req, res) => {
+    try {
+      const problems = await storage.getDsaSheetProblems(parseInt(req.params.id));
+      res.json(problems);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch sheet problems" });
+    }
+  });
+
+  app.post("/api/dsa-sheets/:id/problems", async (req, res) => {
+    try {
+      const { insertDsaSheetProblemSchema } = await import("@shared/schema");
+      const data = insertDsaSheetProblemSchema.parse({
+        ...req.body,
+        sheetId: parseInt(req.params.id),
+      });
+      const sheetProblem = await storage.addProblemToSheet(data);
+      res.status(201).json(sheetProblem);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid sheet problem data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to add problem to sheet" });
+    }
+  });
+
+  app.delete("/api/dsa-sheet-problems/:id", async (req, res) => {
+    try {
+      const deleted = await storage.removeProblemFromSheet(parseInt(req.params.id));
+      if (!deleted) {
+        return res.status(404).json({ message: "Sheet problem not found" });
+      }
+      res.json({ message: "Problem removed from sheet successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove problem from sheet" });
+    }
+  });
+
   // Portfolio routes (Protected)
   app.get("/api/portfolios", requireAuth, async (req, res) => {
     try {
