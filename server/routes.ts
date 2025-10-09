@@ -1699,7 +1699,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin routes - redirect to content management
   app.get("/admin", (req, res) => {
-    res.redirect("/admin/internships");
+    res.redirect("/admin");
   });
 
   // Register template management routers

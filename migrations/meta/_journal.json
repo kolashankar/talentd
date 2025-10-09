@@ -15,6 +15,13 @@
       "when": 1759874340619,
       "tag": "0001_heavy_post",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1760023208517,
+      "tag": "0002_workable_adam_warlock",
+      "breakpoints": true
     }
   ]
 }
