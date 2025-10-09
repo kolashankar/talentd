@@ -1,9 +1,9 @@
 
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Job } from "@shared/schema";
 import { JobCard } from "@/components/job-card";
-import { JobDetailsModal } from "@/components/job-details-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +24,7 @@ import { FAQSection, internshipsFAQs } from "@/components/faq-section";
 import { SEOKeywords } from "@/components/seo-keywords";
 
 export default function Internships() {
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
@@ -32,12 +33,9 @@ export default function Internships() {
   const [sortBy, setSortBy] = useState("newest");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedInternship, setSelectedInternship] = useState<Job | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleViewDetails = (internship: Job) => {
-    setSelectedInternship(internship);
-    setIsModalOpen(true);
+    setLocation(`/internships/${internship.id}`);
   };
 
   const { data: allJobs = [], isLoading } = useQuery<Job[]>({
@@ -382,13 +380,6 @@ export default function Internships() {
       <div className="container mx-auto px-4 py-12">
         <FAQSection faqs={internshipsFAQs} />
       </div>
-
-      {/* Internship Details Modal */}
-      <JobDetailsModal
-        job={selectedInternship}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
     </div>
   );
 }

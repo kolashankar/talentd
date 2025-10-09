@@ -53,7 +53,7 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
           customStyling: details.customStyling
         }
       };
-      
+
       const response = await apiRequest('POST', '/api/ai/generate-content', enhancedData);
       const result = await response.json();
       return result;
@@ -63,7 +63,7 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
         title: "Content Generated",
         description: "AI has successfully generated your content",
       });
-      
+
       // Enrich content with required fields and ensure all data is properly structured
       let enrichedContent: any = {
         ...result,
@@ -107,6 +107,33 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
           tags: result.tags || [],
           companies: result.companies || [],
         };
+      } else if (contentType === 'dsa-topic') {
+        enrichedContent = {
+          ...enrichedContent,
+          name: result.name || result.title || '',
+          difficulty: result.difficulty || 'beginner',
+          problemCount: result.problemCount || 0,
+          topicIds: result.topicIds || [],
+          companyIds: result.companyIds || [],
+        };
+      } else if (contentType === 'dsa-company') {
+        enrichedContent = {
+          ...enrichedContent,
+          name: result.name || result.title || '',
+          logo: result.logo || '',
+          problemCount: result.problemCount || 0,
+          topicIds: result.topicIds || [],
+          companyIds: result.companyIds || [],
+        };
+      } else if (contentType === 'dsa-sheet') {
+        enrichedContent = {
+          ...enrichedContent,
+          name: result.name || result.title || '',
+          creator: result.creator || 'AI Generated',
+          type: result.type || 'public',
+          problemCount: result.problemCount || 0,
+          followerCount: 0,
+        };
       } else if (contentType === 'scholarship') {
         enrichedContent = {
           ...enrichedContent,
@@ -115,7 +142,7 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
           featured: result.featured ?? false,
         };
       }
-      
+
       onContentGenerated?.(enrichedContent);
     },
     onError: (error: Error) => {
@@ -156,6 +183,12 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
         return "e.g., Complete Frontend Developer learning path";
       case "dsa-problem":
         return "e.g., Array problem about finding duplicates";
+      case "dsa-topic":
+        return "e.g., Binary Trees topic with problem recommendations";
+      case "dsa-company":
+        return "e.g., Google interview preparation company profile";
+      case "dsa-sheet":
+        return "e.g., Complete DSA preparation sheet for beginners";
       case "scholarship":
         return "e.g., Merit scholarship for engineering students";
       default:
@@ -244,6 +277,85 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
             </div>
           </div>
         );
+      case "dsa-topic":
+        return (
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="difficulty">Difficulty Level (Optional)</Label>
+              <Select onValueChange={(value) => setDetails({ ...details, difficulty: value })}>
+                <SelectTrigger data-testid="select-difficulty">
+                  <SelectValue placeholder="Select difficulty" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="problemCount">Problem Count (Optional)</Label>
+              <Input
+                type="number"
+                value={details.problemCount || ''}
+                onChange={(e) => setDetails({ ...details, problemCount: e.target.value })}
+                placeholder="e.g., 25"
+                data-testid="input-problem-count"
+              />
+            </div>
+          </div>
+        );
+      case "dsa-company":
+        return (
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="company">Company Name (Optional)</Label>
+              <Input
+                value={details.company}
+                onChange={(e) => setDetails({ ...details, company: e.target.value })}
+                placeholder="e.g., Google, Amazon"
+                data-testid="input-company"
+              />
+            </div>
+            <div>
+              <Label htmlFor="problemCount">Problem Count (Optional)</Label>
+              <Input
+                type="number"
+                value={details.problemCount || ''}
+                onChange={(e) => setDetails({ ...details, problemCount: e.target.value })}
+                placeholder="e.g., 150"
+                data-testid="input-problem-count"
+              />
+            </div>
+          </div>
+        );
+      case "dsa-sheet":
+        return (
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="creator">Creator Name (Optional)</Label>
+              <Input
+                value={details.creator || ''}
+                onChange={(e) => setDetails({ ...details, creator: e.target.value })}
+                placeholder="e.g., Striver, Love Babbar"
+                data-testid="input-creator"
+              />
+            </div>
+            <div>
+              <Label htmlFor="type">Sheet Type (Optional)</Label>
+              <Select onValueChange={(value) => setDetails({ ...details, type: value })}>
+                <SelectTrigger data-testid="select-type">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="official">Official</SelectItem>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="community">Community</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -279,6 +391,9 @@ export function AiGenerator({ className, onContentGenerated }: AiGeneratorProps)
               <SelectItem value="article">Article</SelectItem>
               <SelectItem value="roadmap">Roadmap</SelectItem>
               <SelectItem value="dsa-problem">DSA Problem</SelectItem>
+              <SelectItem value="dsa-topic">DSA Topic</SelectItem>
+              <SelectItem value="dsa-company">DSA Company</SelectItem>
+              <SelectItem value="dsa-sheet">DSA Sheet</SelectItem>
               <SelectItem value="scholarship">Scholarship</SelectItem>
             </SelectContent>
           </Select>

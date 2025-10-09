@@ -41,6 +41,11 @@ export function Header() {
     { label: "Articles", path: "/articles", icon: FileText },
   ];
 
+  const secondaryNavItems = [
+    { label: "About Us", path: "/about" },
+    { label: "Contact", path: "/contact" },
+  ];
+
   const isActive = (path: string) => location === path;
 
   return (
@@ -86,6 +91,17 @@ export function Header() {
                 Scholarships
               </Button>
             </Link>
+            {secondaryNavItems.map((item) => (
+              <Link key={item.path} href={item.path}>
+                <Button
+                  variant={isActive(item.path) ? "default" : "ghost"}
+                  size="sm"
+                  data-testid={`link-${item.label.toLowerCase().replace(" ", "-")}`}
+                >
+                  {item.label}
+                </Button>
+              </Link>
+            ))}
           </nav>
         </div>
 
@@ -202,6 +218,17 @@ export function Header() {
                       <MessageCircle className="h-4 w-4" />
                       Join WhatsApp
                     </Button>
+                    {secondaryNavItems.map((item) => (
+                      <Link key={item.path} href={item.path}>
+                        <Button
+                          variant={isActive(item.path) ? "default" : "ghost"}
+                          className="w-full justify-start gap-3"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {item.label}
+                        </Button>
+                      </Link>
+                    ))}
                   </div>
                 </nav>
               </div>

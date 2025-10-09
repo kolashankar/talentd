@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Job } from "@shared/schema";
 import { JobCard } from "@/components/job-card";
-import { JobDetailsModal } from "@/components/job-details-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,6 +26,7 @@ import { FAQSection, jobsFAQs } from "@/components/faq-section";
 import { SEOKeywords } from "@/components/seo-keywords"; // Assuming SEOKeywords component is available
 
 export default function Jobs() {
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
@@ -35,12 +36,9 @@ export default function Jobs() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [salaryRange, setSalaryRange] = useState([0, 1000000]);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleViewDetails = (job: Job) => {
-    setSelectedJob(job);
-    setIsModalOpen(true);
+    setLocation(`/jobs/${job.id}`);
   };
 
   const { data: jobs = [], isLoading } = useQuery<Job[]>({
@@ -351,13 +349,6 @@ export default function Jobs() {
           </div>
         </div>
       </div>
-
-      {/* Job Details Modal */}
-      <JobDetailsModal
-        job={selectedJob}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
 
       {/* SEO Keywords Section */}
       <div className="container mx-auto px-4 py-8">

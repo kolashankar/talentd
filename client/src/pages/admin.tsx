@@ -132,8 +132,12 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState("jobs");
+interface AdminDashboardProps {
+  initialTab?: string;
+}
+
+function AdminDashboard({ initialTab = "jobs" }: AdminDashboardProps) {
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [showAiGenerator, setShowAiGenerator] = useState(false);
   const [uploadingTemplate, setUploadingTemplate] = useState(false);
@@ -190,12 +194,6 @@ function AdminDashboard() {
       label: "Articles",
       icon: FileText,
       count: articles.length,
-    },
-    {
-      id: "dsa-corner",
-      label: "DSA Corner",
-      icon: Code,
-      count: dsaProblems.length,
     },
     {
       id: "scholarships",
@@ -677,6 +675,14 @@ function AdminDashboard() {
             <div className="flex items-center space-x-4">
               <Button
                 variant="outline"
+                onClick={() => window.location.href = '/admin/dsa'}
+                data-testid="button-dsa-management"
+              >
+                <Code className="mr-2 h-4 w-4" />
+                DSA Management
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => setShowAiGenerator(!showAiGenerator)}
                 data-testid="button-ai-generator"
               >
@@ -872,12 +878,16 @@ function AdminDashboard() {
   );
 }
 
-export default function Admin() {
+interface AdminProps {
+  initialTab?: string;
+}
+
+export default function Admin({ initialTab }: AdminProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   if (!isAuthenticated) {
     return <AdminLogin onLogin={() => setIsAuthenticated(true)} />;
   }
 
-  return <AdminDashboard />;
+  return <AdminDashboard initialTab={initialTab} />;
 }

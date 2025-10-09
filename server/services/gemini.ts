@@ -11,7 +11,7 @@ import { GoogleGenAI } from "@google/genai";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export interface ContentGenerationRequest {
-  type: 'job' | 'internship' | 'article' | 'roadmap' | 'dsa-problem' | 'portfolio-website' | 'advertising-template' | 'scholarship';
+  type: 'job' | 'internship' | 'article' | 'roadmap' | 'dsa-problem' | 'dsa-topic' | 'dsa-company' | 'dsa-sheet' | 'portfolio-website' | 'advertising-template' | 'scholarship';
   prompt: string;
   details?: {
     company?: string;
@@ -53,7 +53,7 @@ export async function generateContent(request: ContentGenerationRequest): Promis
         const isInternship = request.type === 'internship';
         systemPrompt = `You are an expert ${isInternship ? 'internship' : 'job'} posting creator with access to real-time web data. Generate a comprehensive, realistic ${isInternship ? 'internship' : 'job'} posting based on current market trends in India. Include genuine company information, competitive salary ranges, and authentic requirements. Generate visual assets when requested. Respond with JSON in this exact format: {
           "title": "string",
-          "company": "string", 
+          "company": "string",
           "location": "string",
           "salaryRange": "string",
           "jobType": "string",
@@ -214,7 +214,7 @@ IMPORTANT: Generate at least 25 nodes covering the complete learning path from b
           "title": "string",
           "description": "string",
           "difficulty": "string",
-          "category": "string", 
+          "category": "string",
           "solution": "string (with detailed code examples and explanations)",
           "hints": ["string"],
           "timeComplexity": "string",
@@ -241,11 +241,62 @@ IMPORTANT: Generate at least 25 nodes covering the complete learning path from b
         userPrompt = dsaPrompt;
         break;
 
+      case 'dsa-topic':
+        systemPrompt = `You are an expert DSA educator. Create a comprehensive DSA topic with:
+- Topic name and description
+- Difficulty level (beginner/intermediate/advanced)
+- Key concepts covered
+- Estimated problem count
+- Learning resources
+- Common problem patterns
+
+Return as JSON with: name, description, difficulty (beginner/intermediate/advanced), problemCount (number), concepts (array), resources (array)`;
+        userPrompt = `Generate a comprehensive DSA topic about: ${request.prompt}.`;
+        break;
+
+      case 'dsa-company':
+        systemPrompt = `You are an expert on company interview patterns. Create a company profile for DSA preparation with:
+- Company name
+- Interview difficulty level
+- Common problem categories
+- Problem count
+- Tips for preparation
+- Recent interview patterns
+
+Return as JSON with: name, description, logo (placeholder URL), problemCount (number), difficulty, categories (array), tips (array)`;
+        userPrompt = `Generate a DSA preparation profile for the company: ${request.prompt}.`;
+        if (request.details?.difficulty) {
+          userPrompt += ` Focus on ${request.details.difficulty} level interviews.`;
+        }
+        if (request.details?.category) {
+          userPrompt += ` Common categories include: ${request.details.category}.`;
+        }
+        break;
+
+      case 'dsa-sheet':
+        systemPrompt = `You are an expert DSA sheet curator. Create a comprehensive problem sheet with:
+- Sheet name and description
+- Target difficulty level
+- Creator name
+- Problem selection strategy
+- Estimated problem count
+- Learning path
+
+Return as JSON with: name, description, creator, type (official/public/community), problemCount (number), difficulty, topics (array), learningPath (string)`;
+        userPrompt = `Generate a DSA problem sheet named: "${request.prompt}".`;
+        if (request.details?.difficulty) {
+          userPrompt += ` Target difficulty: ${request.details.difficulty}.`;
+        }
+        if (request.details?.category) {
+          userPrompt += ` Topics covered: ${request.details.category}.`;
+        }
+        break;
+
       case 'portfolio-website':
         systemPrompt = `You are an expert web developer and designer specializing in creating stunning, professional portfolio websites. Generate complete, modern portfolio websites with HTML, CSS, and JavaScript. Include responsive design, animations, and professional styling. When enhanced features are requested, integrate real data, generate relevant images, create visual assets, and implement advanced functionality. Respond with JSON in this exact format: {
           "portfolioData": {
             "name": "string",
-            "title": "string", 
+            "title": "string",
             "bio": "string",
             "skills": ["string"],
             "projects": [{"title": "string", "description": "string", "technologies": ["string"], "demoUrl": "string", "githubUrl": "string"}],
@@ -459,7 +510,7 @@ export async function analyzeResume(request: ResumeAnalysisRequest): Promise<{
       "atsScore": number (0-100),
       "keywordMatches": {
         "matched": ["string"],
-        "missing": ["string"], 
+        "missing": ["string"],
         "total": number
       },
       "suggestions": ["string"],

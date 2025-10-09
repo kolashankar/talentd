@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { Header } from "@/components/header";
 import { SecondaryNavbar } from "@/components/secondary-navbar";
+import { Footer } from "@/components/footer";
 import { lazy, Suspense } from "react";
 import Home from "./pages/home";
 import Admin from "./pages/admin";
@@ -26,22 +27,46 @@ import DsaProblemDetail from "./pages/dsa-problem-detail";
 import PrivacyPolicy from "./pages/privacy-policy";
 import TermsOfService from "./pages/terms-of-service";
 import Support from "./pages/support";
+import AboutUs from "./pages/about";
+import ContactUs from "./pages/contact";
+import JobDetail from "./pages/job-detail";
+import InternshipDetail from "./pages/internship-detail";
+import AdminDSA from "./pages/admin-dsa";
+import DsaDashboard from "./pages/dsa-dashboard";
+import DsaQuestions from "./pages/dsa-questions";
+import DsaTopics from "./pages/dsa-topics";
+import DsaCompanies from "./pages/dsa-companies";
+import DsaSheets from "./pages/dsa-sheets";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/admin" component={Admin} />
+      <Route path="/admin/dsa" component={AdminDSA} />
+      <Route path="/admin/jobs" component={() => <Admin initialTab="jobs" />} />
+      <Route path="/admin/internships" component={() => <Admin initialTab="internships" />} />
+      <Route path="/admin/scholarships" component={() => <Admin initialTab="scholarships" />} />
+      <Route path="/admin/roadmaps" component={() => <Admin initialTab="roadmaps" />} />
+      <Route path="/admin/articles" component={() => <Admin initialTab="articles" />} />
       <Route path="/register" component={Register} />
       <Route path="/jobs" component={Jobs} />
+      <Route path="/jobs/:id" component={JobDetail} />
       <Route path="/internships" component={Internships} />
+      <Route path="/internships/:id" component={InternshipDetail} />
       <Route path="/roadmaps" component={Roadmaps} />
       <Route path="/dsa" component={DSACorner} />
+      <Route path="/dsa-corner" component={DsaDashboard} />
+      <Route path="/dsa-corner/questions" component={DsaQuestions} />
+      <Route path="/dsa-corner/questions/:id" component={DsaProblemDetail} />
+      <Route path="/dsa-corner/topics" component={DsaTopics} />
+      <Route path="/dsa-corner/companies" component={DsaCompanies} />
+      <Route path="/dsa-corner/sheets" component={DsaSheets} />
       <Route path="/articles" component={Articles} />
       <Route path="/scholarships" component={Scholarships} />
       <Route path="/portfolio" component={PortfolioPage} />
       <Route path="/portfolio/:id" component={PortfolioView} />
       <Route path="/resume-review" component={ResumeReviewPage} />
-      <Route path="/admin" component={Admin} />
       <Route path="/admin/templates" component={AdminTemplates} />
       <Route path="/articles/:id" component={ArticleDetail} />
       <Route path="/roadmaps/:id" component={RoadmapDetail} />
@@ -49,6 +74,8 @@ function Router() {
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/support" component={Support} />
+      <Route path="/about" component={AboutUs} />
+      <Route path="/contact" component={ContactUs} />
       <Route path="/tax-calculator" component={() => {
         const TaxCalculator = lazy(() => import("./pages/tax-calculator"));
         return <Suspense fallback={<div>Loading...</div>}><TaxCalculator /></Suspense>;
@@ -68,6 +95,7 @@ function App() {
           <main className="flex-1">
             <Router />
           </main>
+          <Footer />
         </div>
         <Toaster />
       </TooltipProvider>

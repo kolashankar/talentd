@@ -1,0 +1,22 @@
+{
+  "id": "tech-portfolio",
+  "name": "Tech Portfolio",
+  "version": "1.0.0",
+  "description": "A modern tech-focused portfolio with terminal-style design elements",
+  "author": "Portfolio Builder",
+  "category": "professional",
+  "thumbnail": "/templates/tech-portfolio/thumbnail.png",
+  "entryFile": "index.tsx",
+  "features": [
+    "Terminal Design",
+    "Code Snippets",
+    "Project Showcase",
+    "Dark Mode First"
+  ],
+  "isPremium": false,
+  "config": {
+    "supportsEmailJS": true,
+    "supportsThemes": true,
+    "supportsAnimations": true
+  }
+}

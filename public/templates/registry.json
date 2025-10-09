@@ -1,7 +1,6 @@
-
 {
   "version": "1.0.0",
-  "lastUpdated": "2025-01-27T00:00:00.000Z",
+  "lastUpdated": "2025-01-27T12:00:00.000Z",
   "templates": [
     {
       "id": "modern-minimal",
@@ -21,7 +20,47 @@
       "isPremium": false,
       "isActive": true,
       "uploadedAt": "2025-01-27T00:00:00.000Z",
-      "updatedAt": "2025-01-27T00:00:00.000Z"
+      "updatedAt": "2025-01-27T12:00:00.000Z"
+    },
+    {
+      "id": "creative-professional",
+      "name": "Creative Professional",
+      "version": "1.0.0",
+      "description": "A vibrant and creative portfolio design perfect for designers and creatives",
+      "category": "creative",
+      "thumbnail": "/templates/creative-professional/thumbnail.png",
+      "manifestPath": "/templates/creative-professional/manifest.json",
+      "entryPath": "/templates/creative-professional/index.tsx",
+      "features": [
+        "Colorful Design",
+        "Image Galleries",
+        "Responsive Layout",
+        "Interactive Elements"
+      ],
+      "isPremium": false,
+      "isActive": true,
+      "uploadedAt": "2025-01-27T00:00:00.000Z",
+      "updatedAt": "2025-01-27T12:00:00.000Z"
+    },
+    {
+      "id": "tech-portfolio",
+      "name": "Tech Portfolio",
+      "version": "1.0.0",
+      "description": "A modern tech-focused portfolio with terminal-style design elements",
+      "category": "professional",
+      "thumbnail": "/templates/tech-portfolio/thumbnail.png",
+      "manifestPath": "/templates/tech-portfolio/manifest.json",
+      "entryPath": "/templates/tech-portfolio/index.tsx",
+      "features": [
+        "Terminal Design",
+        "Code Snippets",
+        "Project Showcase",
+        "Dark Mode First"
+      ],
+      "isPremium": false,
+      "isActive": true,
+      "uploadedAt": "2025-01-27T00:00:00.000Z",
+      "updatedAt": "2025-01-27T12:00:00.000Z"
     }
   ]
 }

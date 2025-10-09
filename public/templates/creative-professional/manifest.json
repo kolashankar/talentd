@@ -1,0 +1,22 @@
+{
+  "id": "creative-professional",
+  "name": "Creative Professional",
+  "version": "1.0.0",
+  "description": "A vibrant and creative portfolio design perfect for designers and creatives",
+  "author": "Portfolio Builder",
+  "category": "creative",
+  "thumbnail": "/templates/creative-professional/thumbnail.png",
+  "entryFile": "index.tsx",
+  "features": [
+    "Colorful Design",
+    "Image Galleries",
+    "Responsive Layout",
+    "Interactive Elements"
+  ],
+  "isPremium": false,
+  "config": {
+    "supportsEmailJS": true,
+    "supportsThemes": true,
+    "supportsAnimations": true
+  }
+}
