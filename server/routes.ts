@@ -997,6 +997,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/dsa-topics/:id/problems", async (req, res) => {
+    try {
+      const problems = await storage.getDsaProblemsByTopic(parseInt(req.params.id));
+      res.json(problems);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch problems for topic" });
+    }
+  });
+
   // DSA Companies routes
   app.get("/api/dsa-companies", async (req, res) => {
     try {
@@ -1059,6 +1068,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "DSA company deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete DSA company" });
+    }
+  });
+
+  app.get("/api/dsa-companies/:id/problems", async (req, res) => {
+    try {
+      const problems = await storage.getDsaProblemsByCompany(parseInt(req.params.id));
+      res.json(problems);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch problems for company" });
     }
   });
 
@@ -1677,6 +1695,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Template download error:', error);
       res.status(500).json({ message: "Failed to create template download" });
     }
+  });
+
+  // Admin routes - redirect to content management
+  app.get("/admin", (req, res) => {
+    res.redirect("/admin/internships");
   });
 
   // Register template management routers

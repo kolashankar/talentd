@@ -99,6 +99,8 @@ export interface IStorage {
   deleteDsaProblem(id: number): Promise<boolean>;
   markProblemAsSolved(userId: number, problemId: number): Promise<boolean>;
   isProblemSolved(userId: number, problemId: number): Promise<boolean>;
+  getDsaProblemsByTopic(topicId: number): Promise<DsaProblem[]>;
+  getDsaProblemsByCompany(companyId: number): Promise<DsaProblem[]>;
 
   // Portfolio operations
   getPortfolios(): Promise<Portfolio[]>;
@@ -432,6 +434,30 @@ export class PostgresStorage implements IStorage {
       .limit(1);
 
     return !!result;
+  }
+
+  async getDsaProblemsByTopic(topicId: number): Promise<DsaProblem[]> {
+    const results = await db
+      .select()
+      .from(schema.dsaProblems)
+      .innerJoin(
+        schema.problemTopics,
+        eq(schema.dsaProblems.id, schema.problemTopics.problemId),
+      )
+      .where(eq(schema.problemTopics.topicId, topicId));
+    return results.map((r: any) => r.dsa_problems);
+  }
+
+  async getDsaProblemsByCompany(companyId: number): Promise<DsaProblem[]> {
+    const results = await db
+      .select()
+      .from(schema.dsaProblems)
+      .innerJoin(
+        schema.problemCompanies,
+        eq(schema.dsaProblems.id, schema.problemCompanies.problemId),
+      )
+      .where(eq(schema.problemCompanies.companyId, companyId));
+    return results.map((r: any) => r.dsa_problems);
   }
 
   async createRoadmapReview(data: any): Promise<any> {
